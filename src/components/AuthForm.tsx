@@ -8,6 +8,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 export default function AuthForm() {
     const [email, setEmail] = useState('')
     const [password, setPassword] = useState('')
+    const [name, setName] = useState('')
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState<string | null>(null)
     const router = useRouter()
@@ -25,6 +26,11 @@ export default function AuthForm() {
                 const { error } = await supabase.auth.signUp({
                     email,
                     password,
+                    options: {
+                        data: {
+                            full_name: name,
+                        },
+                    },
                 })
                 if (error) throw error
                 alert('Check your email for the confirmation link!')
@@ -52,6 +58,19 @@ export default function AuthForm() {
                 </Heading>
 
                 <Stack gap={4} w="full">
+                    {mode === 'signup' && (
+                        <Box>
+                            <Text mb={2} fontWeight="medium">Name</Text>
+                            <Input
+                                type="text"
+                                value={name}
+                                onChange={(e) => setName(e.target.value)}
+                                placeholder="Your Name"
+                                required
+                            />
+                        </Box>
+                    )}
+
                     <Box>
                         <Text mb={2} fontWeight="medium">Email</Text>
                         <Input
