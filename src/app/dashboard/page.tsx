@@ -182,8 +182,8 @@ export default function DashboardPage() {
                                 size="lg"
                                 w="full"
                                 onClick={() => setIsCustomMealDialogOpen(true)}
-                                leftIcon={<IoAdd />}
                             >
+                                <IoAdd />
                                 Add Custom Meal
                             </Button>
                         </MotionBox>

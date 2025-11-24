@@ -11,31 +11,47 @@ interface DateSelectorProps {
 
 const MotionBox = motion.create(Box);
 
+// Helper function to parse YYYY-MM-DD string as local date
+const parseLocalDate = (dateString: string): Date => {
+    const [year, month, day] = dateString.split('-').map(Number);
+    return new Date(year, month - 1, day);
+};
+
+// Helper function to format date as YYYY-MM-DD in local timezone
+const formatLocalDate = (date: Date): string => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+};
+
 export function DateSelector({ currentDate, onDateChange }: DateSelectorProps) {
-    const date = new Date(currentDate);
+    // Parse the current date in local timezone
+    const date = parseLocalDate(currentDate);
+    
+    // Get today's date at midnight in local timezone
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    date.setHours(0, 0, 0, 0);
     
     const isToday = date.getTime() === today.getTime();
-    const isFuture = date.getTime() > today.getTime();
 
     const handlePreviousDay = () => {
         const newDate = new Date(date);
         newDate.setDate(newDate.getDate() - 1);
-        onDateChange(newDate.toISOString().split('T')[0]);
+        onDateChange(formatLocalDate(newDate));
     };
 
     const handleNextDay = () => {
-        if (isFuture) return;
+        if (isToday) return;
         const newDate = new Date(date);
         newDate.setDate(newDate.getDate() + 1);
-        onDateChange(newDate.toISOString().split('T')[0]);
+        onDateChange(formatLocalDate(newDate));
     };
 
     const handleToday = () => {
-        onDateChange(new Date().toISOString().split('T')[0]);
+        onDateChange(formatLocalDate(today));
     };
+
 
     return (
         <HStack gap={3} justify="center">
@@ -81,8 +97,8 @@ export function DateSelector({ currentDate, onDateChange }: DateSelectorProps) {
                 variant="ghost"
                 colorPalette="brand"
                 size="sm"
-                disabled={isFuture}
-                opacity={isFuture ? 0.3 : 1}
+                disabled={isToday}
+                opacity={isToday ? 0.3 : 1}
             >
                 <IoChevronForward />
             </IconButton>

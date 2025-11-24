@@ -163,8 +163,8 @@ export function MealSection({ mealName, entries, onFoodAdded }: MealSectionProps
                             colorPalette="brand"
                             size="sm"
                             onClick={() => setIsSearchOpen(true)}
-                            leftIcon={<IoAdd />}
                         >
+                            <IoAdd />
                             Add Food
                         </Button>
                     </HStack>
