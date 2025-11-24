@@ -8,10 +8,14 @@ import {
     Heading,
     Grid,
     Progress,
+    Button,
 } from "@chakra-ui/react";
 import { motion, useSpring, useTransform } from "framer-motion";
 import { useEffect, useState } from "react";
 import { FoodLogEntry } from "@/app/actions/foodLog";
+import { getUserGoals, UserGoals } from "@/app/actions/userGoals";
+import { IoSettings } from "react-icons/io5";
+import Link from "next/link";
 
 interface DailySummaryProps {
     entries: FoodLogEntry[];
@@ -40,16 +44,32 @@ function AnimatedNumber({ value, suffix = "" }: { value: number; suffix?: string
 }
 
 export function DailySummary({ entries }: DailySummaryProps) {
+    const [goals, setGoals] = useState<UserGoals | null>(null);
+    const [loadingGoals, setLoadingGoals] = useState(true);
+
+    useEffect(() => {
+        loadUserGoals();
+    }, []);
+
+    const loadUserGoals = async () => {
+        setLoadingGoals(true);
+        const response = await getUserGoals();
+        if (response.success && response.data) {
+            setGoals(response.data);
+        }
+        setLoadingGoals(false);
+    };
+
     const totalCalories = entries.reduce((sum, entry) => sum + (entry.calories || 0), 0);
     const totalProtein = entries.reduce((sum, entry) => sum + (entry.protein || 0), 0);
     const totalCarbs = entries.reduce((sum, entry) => sum + (entry.carbohydrates || 0), 0);
     const totalFat = entries.reduce((sum, entry) => sum + (entry.total_fat || 0), 0);
 
-    // Example daily goals (these could be user-configurable later)
-    const calorieGoal = 2000;
-    const proteinGoal = 150; // grams
-    const carbGoal = 250; // grams
-    const fatGoal = 65; // grams
+    // Use user's goals or defaults
+    const calorieGoal = goals?.calorie_goal || 2000;
+    const proteinGoal = goals?.protein_goal || 150;
+    const carbGoal = goals?.carb_goal || 250;
+    const fatGoal = goals?.fat_goal || 65;
 
     const calorieProgress = Math.min((totalCalories / calorieGoal) * 100, 100);
     const proteinProgress = Math.min((totalProtein / proteinGoal) * 100, 100);
@@ -73,9 +93,21 @@ export function DailySummary({ entries }: DailySummaryProps) {
         >
             <VStack align="stretch" gap={6}>
                 {/* Header */}
-                <Heading size="lg" color="text.default">
-                    Today's Summary
-                </Heading>
+                <HStack justify="space-between" align="center">
+                    <Heading size="lg" color="text.default">
+                        Today's Summary
+                    </Heading>
+                    <Link href="/profile">
+                        <Button 
+                            size="sm" 
+                            variant="ghost" 
+                            colorPalette="brand"
+                        >
+                            <IoSettings />
+                            Settings
+                        </Button>
+                    </Link>
+                </HStack>
 
                 {/* Total Calories - Featured */}
                 <Box

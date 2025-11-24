@@ -1,18 +1,23 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Box, Button, Input, VStack, Heading, Text, Stack, Container } from '@chakra-ui/react'
+import { Box, Button, Input, VStack, Heading, Text, Stack, Container, HStack } from '@chakra-ui/react'
 import { createClient } from '@/utils/supabase/client'
 import { useRouter } from 'next/navigation'
 import { User } from '@supabase/supabase-js'
+import { GoalSettings } from '@/components/profile/GoalSettings'
+import { motion } from 'framer-motion'
+import { IoArrowBack } from 'react-icons/io5'
+import Link from 'next/link'
+import { Toaster, toaster } from '@/components/ui/toaster'
+
+const MotionBox = motion.create(Box)
 
 export default function ProfilePage() {
     const [user, setUser] = useState<User | null>(null)
     const [name, setName] = useState('')
     const [password, setPassword] = useState('')
     const [loading, setLoading] = useState(false)
-    const [message, setMessage] = useState<string | null>(null)
-    const [error, setError] = useState<string | null>(null)
     const router = useRouter()
     const supabase = createClient()
 
@@ -32,8 +37,6 @@ export default function ProfilePage() {
     const handleUpdateProfile = async (e: React.FormEvent) => {
         e.preventDefault()
         setLoading(true)
-        setMessage(null)
-        setError(null)
 
         try {
             const updates: any = {
@@ -47,13 +50,25 @@ export default function ProfilePage() {
             const { error } = await supabase.auth.updateUser(updates)
 
             if (error) throw error
-            setMessage('Profile updated successfully!')
+            
+            toaster.create({
+                title: 'Profile updated!',
+                description: 'Your profile has been updated successfully.',
+                type: 'success',
+                duration: 3000,
+            })
+            
             setPassword('') // clear password field
 
             // Refresh user data to update navbar
             router.refresh()
         } catch (err: any) {
-            setError(err.message)
+            toaster.create({
+                title: 'Error',
+                description: err.message || 'Failed to update profile',
+                type: 'error',
+                duration: 5000,
+            })
         } finally {
             setLoading(false)
         }
@@ -62,64 +77,91 @@ export default function ProfilePage() {
     if (!user) return null
 
     return (
-        <Box minH="100vh" bg="bg.canvas">
-            <Container maxW="md" py={12}>
-                <Box p={8} borderRadius="xl" bg="bg.panel" shadow="lg" borderWidth="1px" borderColor="border.muted">
-                    <VStack gap={6} as="form" onSubmit={handleUpdateProfile}>
-                        <Heading size="xl" textAlign="center">
-                            Profile Settings
-                        </Heading>
+        <Box minH="100vh" bg="background.canvas" py={8}>
+            <Container maxW="4xl">
+                <VStack align="stretch" gap={8}>
+                    {/* Header with back button */}
+                    <MotionBox
+                        initial={{ opacity: 0, y: -20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.4 }}
+                    >
+                        <HStack justify="space-between" align="center">
+                            <HStack gap={4}>
+                                <Link href="/dashboard">
+                                    <Button variant="ghost" colorPalette="brand">
+                                        <IoArrowBack />
+                                        Back to Dashboard
+                                    </Button>
+                                </Link>
+                            </HStack>
+                        </HStack>
+                    </MotionBox>
 
-                        <Stack gap={4} w="full">
-                            <Box>
-                                <Text mb={2} fontWeight="medium">Email</Text>
-                                <Input
-                                    value={user.email}
-                                    readOnly
-                                    disabled
-                                    color="text.muted"
-                                />
-                            </Box>
+                    {/* Profile Settings Card */}
+                    <MotionBox
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.4, delay: 0.1 }}
+                    >
+                        <Box 
+                            p={8} 
+                            borderRadius="xl" 
+                            bg="background.panel" 
+                            borderWidth="1px" 
+                            borderColor="border.default"
+                            backdropFilter="blur(12px)"
+                            boxShadow="0 4px 30px rgba(0, 0, 0, 0.1)"
+                        >
+                            <VStack gap={6} as="form" onSubmit={handleUpdateProfile}>
+                                <Heading size="lg" color="text.default">
+                                    Profile Settings
+                                </Heading>
 
-                            <Box>
-                                <Text mb={2} fontWeight="medium">Name</Text>
-                                <Input
-                                    type="text"
-                                    value={name}
-                                    onChange={(e) => setName(e.target.value)}
-                                    placeholder="Your Name"
-                                />
-                            </Box>
+                                <Stack gap={4} w="full">
+                                    <Box>
+                                        <Text mb={2} fontWeight="medium" color="text.default">Email</Text>
+                                        <Input
+                                            value={user.email}
+                                            readOnly
+                                            disabled
+                                            color="text.muted"
+                                        />
+                                    </Box>
 
-                            <Box>
-                                <Text mb={2} fontWeight="medium">New Password</Text>
-                                <Input
-                                    type="password"
-                                    value={password}
-                                    onChange={(e) => setPassword(e.target.value)}
-                                    placeholder="Leave blank to keep current"
-                                />
-                            </Box>
-                        </Stack>
+                                    <Box>
+                                        <Text mb={2} fontWeight="medium" color="text.default">Name</Text>
+                                        <Input
+                                            type="text"
+                                            value={name}
+                                            onChange={(e) => setName(e.target.value)}
+                                            placeholder="Your Name"
+                                        />
+                                    </Box>
 
-                        {message && (
-                            <Text color="green.500" fontSize="sm">
-                                {message}
-                            </Text>
-                        )}
+                                    <Box>
+                                        <Text mb={2} fontWeight="medium" color="text.default">New Password</Text>
+                                        <Input
+                                            type="password"
+                                            value={password}
+                                            onChange={(e) => setPassword(e.target.value)}
+                                            placeholder="Leave blank to keep current"
+                                        />
+                                    </Box>
+                                </Stack>
 
-                        {error && (
-                            <Text color="red.500" fontSize="sm">
-                                {error}
-                            </Text>
-                        )}
+                                <Button type="submit" colorPalette="brand" w="full" loading={loading}>
+                                    Update Profile
+                                </Button>
+                            </VStack>
+                        </Box>
+                    </MotionBox>
 
-                        <Button type="submit" colorPalette="brand" w="full" loading={loading}>
-                            Update Profile
-                        </Button>
-                    </VStack>
-                </Box>
+                    {/* Goal Settings */}
+                    <GoalSettings />
+                </VStack>
             </Container>
+            <Toaster />
         </Box>
     )
 }
