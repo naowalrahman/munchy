@@ -14,11 +14,12 @@ import {
 import { useState } from "react";
 import { FoodLogEntry, deleteFoodEntry, updateFoodEntry } from "@/app/actions/foodLog";
 import { getFoodNutrition, NutritionalData } from "@/app/actions/food";
-import { FoodSearchDialog } from "./FoodSearchDialog";
-import { NutritionFactsDrawer } from "./NutritionFactsDrawer";
 import { motion, AnimatePresence } from "framer-motion";
 import { IoAdd, IoTrash, IoPencil } from "react-icons/io5";
 import { toaster } from "@/components/ui/toaster";
+import dynamic from "next/dynamic";
+import type { FoodSearchDialogProps } from "./FoodSearchDialog";
+import type { NutritionFactsDrawerProps } from "./NutritionFactsDrawer";
 
 interface MealSectionProps {
     mealName: string;
@@ -27,6 +28,16 @@ interface MealSectionProps {
 }
 
 const MotionBox = motion.create(Box);
+
+const FoodSearchDialog = dynamic<FoodSearchDialogProps>(
+    () => import("./FoodSearchDialog").then((mod) => mod.FoodSearchDialog),
+    { ssr: false, loading: () => null }
+);
+
+const NutritionFactsDrawer = dynamic<NutritionFactsDrawerProps>(
+    () => import("./NutritionFactsDrawer").then((mod) => mod.NutritionFactsDrawer),
+    { ssr: false }
+);
 
 export function MealSection({ mealName, entries, onFoodAdded }: MealSectionProps) {
     const [isSearchOpen, setIsSearchOpen] = useState(false);

@@ -17,7 +17,7 @@ import { ServingSizeControl } from "./ServingSizeControl";
 import { motion, AnimatePresence } from "framer-motion";
 import { IoClose } from "react-icons/io5";
 
-interface NutritionFactsDrawerProps {
+export interface NutritionFactsDrawerProps {
     nutritionData: NutritionalData | null;
     mealName: string;
     isOpen: boolean;

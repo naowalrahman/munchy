@@ -19,6 +19,7 @@ import Link from "next/link";
 
 interface DailySummaryProps {
     entries: FoodLogEntry[];
+    initialGoals?: UserGoals | null;
 }
 
 const MotionText = motion.create(Text);
@@ -43,22 +44,28 @@ function AnimatedNumber({ value, suffix = "" }: { value: number; suffix?: string
     );
 }
 
-export function DailySummary({ entries }: DailySummaryProps) {
-    const [goals, setGoals] = useState<UserGoals | null>(null);
-    const [loadingGoals, setLoadingGoals] = useState(true);
+export function DailySummary({ entries, initialGoals = null }: DailySummaryProps) {
+    const [goals, setGoals] = useState<UserGoals | null>(initialGoals);
+    const [loadingGoals, setLoadingGoals] = useState(!initialGoals);
 
     useEffect(() => {
-        loadUserGoals();
-    }, []);
-
-    const loadUserGoals = async () => {
-        setLoadingGoals(true);
-        const response = await getUserGoals();
-        if (response.success && response.data) {
-            setGoals(response.data);
+        if (initialGoals) {
+            setGoals(initialGoals);
+            setLoadingGoals(false);
+            return;
         }
-        setLoadingGoals(false);
-    };
+
+        const loadUserGoals = async () => {
+            setLoadingGoals(true);
+            const response = await getUserGoals();
+            if (response.success && response.data) {
+                setGoals(response.data);
+            }
+            setLoadingGoals(false);
+        };
+
+        loadUserGoals();
+    }, [initialGoals]);
 
     const totalCalories = entries.reduce((sum, entry) => sum + (entry.calories || 0), 0);
     const totalProtein = entries.reduce((sum, entry) => sum + (entry.protein || 0), 0);
