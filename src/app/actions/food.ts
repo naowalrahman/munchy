@@ -60,9 +60,6 @@ export interface NutritionalData {
     iron: Nutrient | null;
     vitaminC: Nutrient | null;
     vitaminA: Nutrient | null;
-
-    // All nutrients (for additional data)
-    allNutrients: Nutrient[];
 }
 
 /**
@@ -301,12 +298,18 @@ export async function getFoodNutrition(fdcId: number): Promise<NutritionalData> 
             throw new Error(`No nutritional data available for this food (FDC ID: ${fdcId})`);
         }
 
-        // Extract all nutrients for reference
-        const allNutrients: Nutrient[] = data.foodNutrients.map(fn => ({
-            name: fn.nutrient?.name || fn.nutrientName || 'Unknown',
-            amount: fn.amount,
-            unit: fn.nutrient?.unitName || fn.unitName || '',
-        }));
+        // Calculate adjustment factor for serving size
+        // USDA API returns nutrient values per 100 units, so we need to adjust based on serving size
+        const servingSizeMultiplier = data.servingSize ? data.servingSize / 100 : 1.0;
+
+        // Helper function to adjust nutrient object (handles null case)
+        const adjustNutrient = (nutrient: Nutrient | null): Nutrient | null => {
+            if (!nutrient) return null;
+            return {
+                ...nutrient,
+                amount: nutrient.amount * servingSizeMultiplier,
+            };
+        };
 
         // Build the nutritional data object
         return {
@@ -316,26 +319,23 @@ export async function getFoodNutrition(fdcId: number): Promise<NutritionalData> 
             servingSize: data.servingSize,
             servingSizeUnit: data.servingSizeUnit,
 
-            // Energy (ensure it's in kcal)
-            calories: extractCalories(data.foodNutrients),
+            // Energy (ensure it's in kcal, adjusted for serving size)
+            calories: extractCalories(data.foodNutrients) * servingSizeMultiplier,
 
-            // Macronutrients
-            protein: findNutrient(data.foodNutrients, NUTRIENT_IDS.PROTEIN),
-            carbohydrates: findNutrient(data.foodNutrients, NUTRIENT_IDS.CARBOHYDRATES),
-            totalFat: findNutrient(data.foodNutrients, NUTRIENT_IDS.TOTAL_FAT),
-            fiber: findNutrient(data.foodNutrients, NUTRIENT_IDS.FIBER),
-            sugars: findNutrient(data.foodNutrients, NUTRIENT_IDS.SUGARS),
+            // Macronutrients (adjusted for serving size)
+            protein: adjustNutrient(findNutrient(data.foodNutrients, NUTRIENT_IDS.PROTEIN)),
+            carbohydrates: adjustNutrient(findNutrient(data.foodNutrients, NUTRIENT_IDS.CARBOHYDRATES)),
+            totalFat: adjustNutrient(findNutrient(data.foodNutrients, NUTRIENT_IDS.TOTAL_FAT)),
+            fiber: adjustNutrient(findNutrient(data.foodNutrients, NUTRIENT_IDS.FIBER)),
+            sugars: adjustNutrient(findNutrient(data.foodNutrients, NUTRIENT_IDS.SUGARS)),
 
-            // Micronutrients
-            sodium: findNutrient(data.foodNutrients, NUTRIENT_IDS.SODIUM),
-            potassium: findNutrient(data.foodNutrients, NUTRIENT_IDS.POTASSIUM),
-            calcium: findNutrient(data.foodNutrients, NUTRIENT_IDS.CALCIUM),
-            iron: findNutrient(data.foodNutrients, NUTRIENT_IDS.IRON),
-            vitaminC: findNutrient(data.foodNutrients, NUTRIENT_IDS.VITAMIN_C),
-            vitaminA: findNutrient(data.foodNutrients, NUTRIENT_IDS.VITAMIN_A),
-
-            // All nutrients
-            allNutrients,
+            // Micronutrients (adjusted for serving size)
+            sodium: adjustNutrient(findNutrient(data.foodNutrients, NUTRIENT_IDS.SODIUM)),
+            potassium: adjustNutrient(findNutrient(data.foodNutrients, NUTRIENT_IDS.POTASSIUM)),
+            calcium: adjustNutrient(findNutrient(data.foodNutrients, NUTRIENT_IDS.CALCIUM)),
+            iron: adjustNutrient(findNutrient(data.foodNutrients, NUTRIENT_IDS.IRON)),
+            vitaminC: adjustNutrient(findNutrient(data.foodNutrients, NUTRIENT_IDS.VITAMIN_C)),
+            vitaminA: adjustNutrient(findNutrient(data.foodNutrients, NUTRIENT_IDS.VITAMIN_A)),
         };
     } catch (error) {
         if (error instanceof Error) {

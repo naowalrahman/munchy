@@ -68,17 +68,59 @@ export function NutritionFactsDrawer({
         }
     };
 
+    // Helper function to normalize unit names for comparison
+    const normalizeUnit = (unit: string): string => {
+        const unitMap: Record<string, string> = {
+            'g': 'g',
+            'gram': 'g',
+            'grams': 'g',
+            'oz': 'oz',
+            'ounce': 'oz',
+            'ounces': 'oz',
+            'lb': 'lb',
+            'pound': 'lb',
+            'pounds': 'lb',
+            'ml': 'ml',
+            'milliliter': 'ml',
+            'milliliters': 'ml',
+            'cup': 'cup',
+            'cups': 'cup',
+            'tbsp': 'tbsp',
+            'tablespoon': 'tbsp',
+            'tablespoons': 'tbsp',
+            'tsp': 'tsp',
+            'teaspoon': 'tsp',
+            'teaspoons': 'tsp',
+            'piece': 'piece',
+            'pieces': 'piece',
+            'slice': 'slice',
+            'slices': 'slice',
+        };
+        
+        const normalized = unit.toLowerCase().trim();
+        return unitMap[normalized] || normalized;
+    };
+
     const calculateAdjustedValue = (value: number | null | undefined): number => {
         if (value === null || value === undefined) return 0;
         
         // Calculate multiplier based on unit
         let multiplier = servingAmount;
         
-        // If user is viewing in grams, convert to servings first
-        // Use effective serving size (default 100g if not specified)
         const servingSizeForCalc = nutritionData.servingSize || 100;
-        if (servingUnit === 'g' && servingSizeForCalc > 0) {
-            multiplier = servingAmount / servingSizeForCalc;
+        const servingSizeUnitNormalized = normalizeUnit(nutritionData.servingSizeUnit || "g");
+        const currentUnitNormalized = normalizeUnit(servingUnit);
+        
+        if (servingSizeForCalc > 0) {
+            if (currentUnitNormalized === 'serving') {
+                // User selected "serving" - multiplier is just the amount
+                multiplier = servingAmount;
+            } else if (currentUnitNormalized === servingSizeUnitNormalized) {
+                // User selected the same unit as the serving size (e.g., "cup" when serving is "cup")
+                // Convert to servings: if 1 serving = 1 cup, then 2 cups = 2 servings
+                multiplier = servingAmount / servingSizeForCalc;
+            }
+            // If units don't match and it's not "serving", we can't convert (shouldn't happen with our UI)
         }
         
         return value * multiplier;
@@ -92,13 +134,46 @@ export function NutritionFactsDrawer({
 
     if (!nutritionData) return null;
 
+    // Helper function to normalize unit names for display
+    const normalizeUnitForDisplay = (unit: string): string => {
+        const unitMap: Record<string, string> = {
+            'g': 'g',
+            'gram': 'g',
+            'grams': 'g',
+            'oz': 'oz',
+            'ounce': 'oz',
+            'ounces': 'oz',
+            'lb': 'lb',
+            'pound': 'lb',
+            'pounds': 'lb',
+            'ml': 'ml',
+            'milliliter': 'ml',
+            'milliliters': 'ml',
+            'cup': 'cup',
+            'cups': 'cup',
+            'tbsp': 'tbsp',
+            'tablespoon': 'tbsp',
+            'tablespoons': 'tbsp',
+            'tsp': 'tsp',
+            'teaspoon': 'tsp',
+            'teaspoons': 'tsp',
+            'piece': 'piece',
+            'pieces': 'piece',
+            'slice': 'slice',
+            'slices': 'slice',
+        };
+        
+        const normalized = unit.toLowerCase().trim();
+        return unitMap[normalized] || normalized;
+    };
+
     // For initial display, we start with 1 serving (unless in edit mode)
     const defaultServingAmount = isEditMode ? initialServingAmount : 1;
     const defaultServingUnit = isEditMode ? initialServingUnit : "serving";
     
     // Use provided serving size or default to 100g
     const effectiveServingSize = nutritionData.servingSize || 100;
-    const effectiveServingSizeUnit = nutritionData.servingSizeUnit || "g";
+    const effectiveServingSizeUnit = normalizeUnitForDisplay(nutritionData.servingSizeUnit || "g");
 
     const content = (
         <VStack align="stretch" gap={4} h="full">

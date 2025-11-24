@@ -88,6 +88,39 @@ export function MealSection({ mealName, entries, onFoodAdded }: MealSectionProps
         }
     };
 
+    // Helper function to normalize unit names for comparison
+    const normalizeUnit = (unit: string): string => {
+        const unitMap: Record<string, string> = {
+            'g': 'g',
+            'gram': 'g',
+            'grams': 'g',
+            'oz': 'oz',
+            'ounce': 'oz',
+            'ounces': 'oz',
+            'lb': 'lb',
+            'pound': 'lb',
+            'pounds': 'lb',
+            'ml': 'ml',
+            'milliliter': 'ml',
+            'milliliters': 'ml',
+            'cup': 'cup',
+            'cups': 'cup',
+            'tbsp': 'tbsp',
+            'tablespoon': 'tbsp',
+            'tablespoons': 'tbsp',
+            'tsp': 'tsp',
+            'teaspoon': 'tsp',
+            'teaspoons': 'tsp',
+            'piece': 'piece',
+            'pieces': 'piece',
+            'slice': 'slice',
+            'slices': 'slice',
+        };
+        
+        const normalized = unit.toLowerCase().trim();
+        return unitMap[normalized] || normalized;
+    };
+
     const handleUpdateEntry = async (servingAmount: number, servingUnit: string, nutritionData: NutritionalData) => {
         if (!editingEntry) return;
 
@@ -95,11 +128,19 @@ export function MealSection({ mealName, entries, onFoodAdded }: MealSectionProps
             // Calculate nutrition values based on the new amount
             let multiplier = servingAmount;
             
-            // If user entered in grams, convert to servings first
-            // Use default 100g if serving size not specified
             const servingSizeForCalc = nutritionData.servingSize || 100;
-            if (servingUnit === 'g' && servingSizeForCalc > 0) {
-                multiplier = servingAmount / servingSizeForCalc;
+            const servingSizeUnitNormalized = normalizeUnit(nutritionData.servingSizeUnit || "g");
+            const currentUnitNormalized = normalizeUnit(servingUnit);
+            
+            if (servingSizeForCalc > 0) {
+                if (currentUnitNormalized === 'serving') {
+                    // User selected "serving" - multiplier is just the amount
+                    multiplier = servingAmount;
+                } else if (currentUnitNormalized === servingSizeUnitNormalized) {
+                    // User selected the same unit as the serving size (e.g., "cup" when serving is "cup")
+                    // Convert to servings: if 1 serving = 1 cup, then 2 cups = 2 servings
+                    multiplier = servingAmount / servingSizeForCalc;
+                }
             }
 
             const response = await updateFoodEntry(editingEntry.id, {

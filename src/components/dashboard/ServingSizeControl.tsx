@@ -6,9 +6,42 @@ import { useState, useEffect } from "react";
 interface ServingSizeControlProps {
     defaultAmount: number;
     defaultUnit: string;
-    servingSize?: number; // Size of one serving in grams
-    servingSizeUnit?: string; // Unit of serving size (usually "g")
+    servingSize?: number; // Size of one serving
+    servingSizeUnit?: string; // Unit of serving size (e.g., "g", "cup", "tbsp", etc.)
     onChange: (amount: number, unit: string) => void;
+}
+
+// Helper function to normalize unit names for display
+function normalizeUnitForDisplay(unit: string): string {
+    const unitMap: Record<string, string> = {
+        'g': 'g',
+        'gram': 'g',
+        'grams': 'g',
+        'oz': 'oz',
+        'ounce': 'oz',
+        'ounces': 'oz',
+        'lb': 'lb',
+        'pound': 'lb',
+        'pounds': 'lb',
+        'ml': 'ml',
+        'milliliter': 'ml',
+        'milliliters': 'ml',
+        'cup': 'cup',
+        'cups': 'cup',
+        'tbsp': 'tbsp',
+        'tablespoon': 'tbsp',
+        'tablespoons': 'tbsp',
+        'tsp': 'tsp',
+        'teaspoon': 'tsp',
+        'teaspoons': 'tsp',
+        'piece': 'piece',
+        'pieces': 'piece',
+        'slice': 'slice',
+        'slices': 'slice',
+    };
+    
+    const normalized = unit.toLowerCase().trim();
+    return unitMap[normalized] || normalized;
 }
 
 export function ServingSizeControl({
@@ -18,8 +51,21 @@ export function ServingSizeControl({
     servingSizeUnit,
     onChange,
 }: ServingSizeControlProps) {
+    // Determine available units first
+    const effectiveServingSize = servingSize || 100;
+    const effectiveServingSizeUnit = normalizeUnitForDisplay(servingSizeUnit || "g");
+    const availableUnits = effectiveServingSizeUnit === 'serving' 
+        ? ['serving'] 
+        : ['serving', effectiveServingSizeUnit];
+    
+    // Normalize the default unit and ensure it's in availableUnits
+    const normalizedDefaultUnit = normalizeUnitForDisplay(defaultUnit);
+    const validDefaultUnit = availableUnits.includes(normalizedDefaultUnit) 
+        ? normalizedDefaultUnit 
+        : 'serving';
+    
     const [amount, setAmount] = useState(defaultAmount.toString());
-    const [unit, setUnit] = useState(defaultUnit);
+    const [unit, setUnit] = useState(validDefaultUnit);
 
     // Notify parent of changes
     useEffect(() => {
@@ -28,6 +74,16 @@ export function ServingSizeControl({
             onChange(numericAmount, unit);
         }
     }, [amount, unit, onChange]);
+
+    // Reset when defaults change
+    useEffect(() => {
+        setAmount(defaultAmount.toString());
+        const normalizedDefaultUnit = normalizeUnitForDisplay(defaultUnit);
+        const validDefaultUnit = availableUnits.includes(normalizedDefaultUnit) 
+            ? normalizedDefaultUnit 
+            : 'serving';
+        setUnit(validDefaultUnit);
+    }, [defaultAmount, defaultUnit, availableUnits]);
 
     const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const value = e.target.value;
@@ -44,27 +100,26 @@ export function ServingSizeControl({
             return;
         }
 
-        // Convert between units using serving size (default 100g if not specified)
+        // Convert between units using serving size
         const effectiveServingSize = servingSize || 100;
+        const effectiveServingSizeUnit = normalizeUnitForDisplay(servingSizeUnit || "g");
+        
         if (effectiveServingSize > 0) {
-            if (unit === 'serving' && newUnit === 'g') {
-                // Convert servings to grams
-                const grams = currentAmount * effectiveServingSize;
-                setAmount(grams.toFixed(1));
-            } else if (unit === 'g' && newUnit === 'serving') {
-                // Convert grams to servings
+            if (unit === 'serving' && newUnit === effectiveServingSizeUnit) {
+                // Convert servings to the unit (e.g., 2 servings -> 2 cups if 1 serving = 1 cup)
+                const convertedAmount = currentAmount * effectiveServingSize;
+                setAmount(convertedAmount.toFixed(2));
+            } else if (unit === effectiveServingSizeUnit && newUnit === 'serving') {
+                // Convert unit to servings (e.g., 2 cups -> 2 servings if 1 serving = 1 cup)
                 const servings = currentAmount / effectiveServingSize;
                 setAmount(servings.toFixed(2));
             }
+            // If switching between non-serving units, we don't convert (user should use serving as intermediary)
         }
         
         setUnit(newUnit);
     };
 
-    // Units are always available (we default to 100g if no serving size specified)
-    const effectiveServingSize = servingSize || 100;
-    const effectiveServingSizeUnit = servingSizeUnit || "g";
-    const availableUnits = ['serving', 'g'];
 
     return (
         <VStack align="stretch" gap={2}>
@@ -73,7 +128,7 @@ export function ServingSizeControl({
                     Quantity
                 </Text>
                 <Text fontSize="xs" color="text.muted">
-                    1 serving = {effectiveServingSize.toFixed(0)}{effectiveServingSizeUnit}
+                    1 serving = {effectiveServingSize.toFixed(effectiveServingSize % 1 === 0 ? 0 : 2)}{effectiveServingSizeUnit}
                 </Text>
             </HStack>
             <HStack>
