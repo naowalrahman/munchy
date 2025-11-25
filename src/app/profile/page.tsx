@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { Box, Button, Input, VStack, Heading, Text, Stack, Container, HStack } from '@chakra-ui/react'
 import { createClient } from '@/utils/supabase/client'
 import { useRouter } from 'next/navigation'
@@ -19,7 +19,7 @@ export default function ProfilePage() {
     const [password, setPassword] = useState('')
     const [loading, setLoading] = useState(false)
     const router = useRouter()
-    const supabase = createClient()
+    const supabase = useMemo(() => createClient(), [])
 
     useEffect(() => {
         const getUser = async () => {
@@ -32,14 +32,14 @@ export default function ProfilePage() {
             setName(user.user_metadata.full_name || '')
         }
         getUser()
-    }, [router])
+    }, [router, supabase])
 
     const handleUpdateProfile = async (e: React.FormEvent) => {
         e.preventDefault()
         setLoading(true)
 
         try {
-            const updates: any = {
+            const updates: { data: { full_name: string }; password?: string } = {
                 data: { full_name: name }
             }
 
@@ -62,10 +62,10 @@ export default function ProfilePage() {
 
             // Refresh user data to update navbar
             router.refresh()
-        } catch (err: any) {
+        } catch (err: unknown) {
             toaster.create({
                 title: 'Error',
-                description: err.message || 'Failed to update profile',
+                description: err instanceof Error ? err.message : 'Failed to update profile',
                 type: 'error',
                 duration: 5000,
             })

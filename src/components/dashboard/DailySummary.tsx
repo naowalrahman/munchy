@@ -10,7 +10,7 @@ import {
     Progress,
     Button,
 } from "@chakra-ui/react";
-import { motion, useSpring, useTransform } from "framer-motion";
+import { useSpring, useTransform } from "framer-motion";
 import { useEffect, useState } from "react";
 import { FoodLogEntry } from "@/app/actions/foodLog";
 import { getUserGoals, UserGoals } from "@/app/actions/userGoals";
@@ -19,9 +19,8 @@ import Link from "next/link";
 
 interface DailySummaryProps {
     entries: FoodLogEntry[];
+    initialGoals?: UserGoals | null;
 }
-
-const MotionText = motion.create(Text);
 
 function AnimatedNumber({ value, suffix = "" }: { value: number; suffix?: string }) {
     const [displayValue, setDisplayValue] = useState(0);
@@ -43,22 +42,28 @@ function AnimatedNumber({ value, suffix = "" }: { value: number; suffix?: string
     );
 }
 
-export function DailySummary({ entries }: DailySummaryProps) {
-    const [goals, setGoals] = useState<UserGoals | null>(null);
-    const [loadingGoals, setLoadingGoals] = useState(true);
+export function DailySummary({ entries, initialGoals = null }: DailySummaryProps) {
+    const [goals, setGoals] = useState<UserGoals | null>(initialGoals);
 
     useEffect(() => {
-        loadUserGoals();
-    }, []);
-
-    const loadUserGoals = async () => {
-        setLoadingGoals(true);
-        const response = await getUserGoals();
-        if (response.success && response.data) {
-            setGoals(response.data);
+        if (initialGoals) {
+            return;
         }
-        setLoadingGoals(false);
-    };
+
+        let isMounted = true;
+        const loadUserGoals = async () => {
+            const response = await getUserGoals();
+            if (isMounted && response.success && response.data) {
+                setGoals(response.data);
+            }
+        };
+
+        loadUserGoals();
+
+        return () => {
+            isMounted = false;
+        };
+    }, [initialGoals]);
 
     const totalCalories = entries.reduce((sum, entry) => sum + (entry.calories || 0), 0);
     const totalProtein = entries.reduce((sum, entry) => sum + (entry.protein || 0), 0);
@@ -95,7 +100,7 @@ export function DailySummary({ entries }: DailySummaryProps) {
                 {/* Header */}
                 <HStack justify="space-between" align="center">
                     <Heading size="lg" color="text.default">
-                        Today's Summary
+                        Today&rsquo;s Summary
                     </Heading>
                     <Link href="/profile">
                         <Button 

@@ -2,6 +2,7 @@
 
 import { Box, Container, Heading, Text, Button, VStack, SimpleGrid, Icon, Stack } from '@chakra-ui/react'
 import { FaCamera, FaRobot, FaChartLine } from 'react-icons/fa'
+import type { IconType } from 'react-icons'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
 import GeometricBackground from './GeometricBackground'
@@ -44,7 +45,7 @@ export default function LandingPage() {
                             animate={{ opacity: 1 }}
                             transition={{ delay: 0.4, duration: 0.8 }}
                         >
-                            Simply describe your meal or snap a photo. Munchy's AI agent logs your food, calculates calories, and tracks your nutrition instantly.
+                            Simply describe your meal or snap a photo. Munchy&apos;s AI agent logs your food, calculates calories, and tracks your nutrition instantly.
                         </MotionText>
                         <MotionStack
                             direction={{ base: 'column', sm: 'row' }}
@@ -83,7 +84,7 @@ export default function LandingPage() {
                             <FeatureCard
                                 icon={FaRobot}
                                 title="AI Food Logging"
-                                description="Just say 'I had a chicken sandwich and fries' and let our AI agent handle the rest."
+                                description="Just say &lsquo;I had a chicken sandwich and fries&rsquo; and let our AI agent handle the rest."
                                 delay={0}
                             />
                             <FeatureCard
@@ -106,7 +107,14 @@ export default function LandingPage() {
     )
 }
 
-function FeatureCard({ icon, title, description, delay }: { icon: any, title: string, description: string, delay: number }) {
+type FeatureCardProps = {
+    icon: IconType
+    title: string
+    description: string
+    delay: number
+}
+
+function FeatureCard({ icon, title, description, delay }: FeatureCardProps) {
     return (
         <MotionBox
             p={8}

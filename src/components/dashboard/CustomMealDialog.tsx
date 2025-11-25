@@ -105,7 +105,7 @@ export function CustomMealDialog({
                                 </HStack>
 
                                 <Text color="text.muted" fontSize="sm">
-                                    Create a custom meal section (e.g., "Post-workout", "Midnight snack")
+                                    Create a custom meal section (e.g., &ldquo;Post-workout&rdquo;, &ldquo;Midnight snack&rdquo;)
                                 </Text>
 
                                 {/* Input */}

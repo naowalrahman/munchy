@@ -11,15 +11,16 @@ import {
     Spinner,
     InputGroup,
 } from "@chakra-ui/react";
-import { useState, useCallback, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { searchFoods, getFoodNutrition, FoodSearchResult, NutritionalData } from "@/app/actions/food";
-import { NutritionFactsDrawer } from "./NutritionFactsDrawer";
 import { motion, AnimatePresence } from "framer-motion";
 import { IoClose, IoSearch } from "react-icons/io5";
 import { logFoodEntry } from "@/app/actions/foodLog";
 import { toaster } from "@/components/ui/toaster";
+import dynamic from "next/dynamic";
+import type { NutritionFactsDrawerProps } from "./NutritionFactsDrawer";
 
-interface FoodSearchDialogProps {
+export interface FoodSearchDialogProps {
     isOpen: boolean;
     onClose: () => void;
     mealName: string;
@@ -28,6 +29,11 @@ interface FoodSearchDialogProps {
 
 const MotionBox = motion.create(Box);
 const MotionVStack = motion.create(VStack);
+
+const NutritionFactsDrawer = dynamic<NutritionFactsDrawerProps>(
+    () => import("./NutritionFactsDrawer").then((mod) => mod.NutritionFactsDrawer),
+    { ssr: false }
+);
 
 export function FoodSearchDialog({
     isOpen,
@@ -372,13 +378,17 @@ export function FoodSearchDialog({
                     <Spinner size="xl" colorPalette="brand" />
                 </Box>
             ) : (
-                <NutritionFactsDrawer
-                    nutritionData={selectedFood}
-                    mealName={mealName}
-                    isOpen={isNutritionDrawerOpen}
-                    onClose={() => setIsNutritionDrawerOpen(false)}
-                    onAddToMeal={handleAddToMeal}
-                />
+                isNutritionDrawerOpen &&
+                selectedFood && (
+                    <NutritionFactsDrawer
+                        key={selectedFood.fdcId}
+                        nutritionData={selectedFood}
+                        mealName={mealName}
+                        isOpen={isNutritionDrawerOpen}
+                        onClose={() => setIsNutritionDrawerOpen(false)}
+                        onAddToMeal={handleAddToMeal}
+                    />
+                )
             )}
         </>
     );

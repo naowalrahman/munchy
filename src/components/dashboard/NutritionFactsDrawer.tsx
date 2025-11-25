@@ -11,13 +11,13 @@ import {
     Grid,
     useBreakpointValue,
 } from "@chakra-ui/react";
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback } from "react";
 import { NutritionalData } from "@/app/actions/food";
 import { ServingSizeControl } from "./ServingSizeControl";
 import { motion, AnimatePresence } from "framer-motion";
 import { IoClose } from "react-icons/io5";
 
-interface NutritionFactsDrawerProps {
+export interface NutritionFactsDrawerProps {
     nutritionData: NutritionalData | null;
     mealName: string;
     isOpen: boolean;
@@ -42,31 +42,20 @@ export function NutritionFactsDrawer({
     initialServingAmount = 1,
     initialServingUnit = "serving",
 }: NutritionFactsDrawerProps) {
-    const [servingAmount, setServingAmount] = useState(initialServingAmount);
-    const [servingUnit, setServingUnit] = useState(initialServingUnit);
+    const [servingAmount, setServingAmount] = useState(
+        isEditMode ? initialServingAmount : 1
+    );
+    const [servingUnit, setServingUnit] = useState(
+        isEditMode ? initialServingUnit : "serving"
+    );
 
     // Determine if we should show drawer or modal based on screen size
     const isWideScreen = useBreakpointValue({ base: false, md: true });
-
-    // Reset state when nutritionData changes or when opening in edit mode
-    useEffect(() => {
-        if (isOpen) {
-            setServingAmount(isEditMode ? initialServingAmount : 1);
-            setServingUnit(isEditMode ? initialServingUnit : "serving");
-        }
-    }, [isOpen, isEditMode, initialServingAmount, initialServingUnit]);
 
     const handleServingChange = useCallback((amount: number, unit: string) => {
         setServingAmount(amount);
         setServingUnit(unit);
     }, []);
-
-    const handleAddToMeal = () => {
-        if (nutritionData) {
-            onAddToMeal(servingAmount, servingUnit, nutritionData);
-            onClose();
-        }
-    };
 
     // Helper function to normalize unit names for comparison
     const normalizeUnit = (unit: string): string => {
@@ -101,6 +90,13 @@ export function NutritionFactsDrawer({
         return unitMap[normalized] || normalized;
     };
 
+    if (!isOpen || !nutritionData) return null;
+
+    const handleAddToMeal = () => {
+        onAddToMeal(servingAmount, servingUnit, nutritionData);
+        onClose();
+    };
+
     const calculateAdjustedValue = (value: number | null | undefined): number => {
         if (value === null || value === undefined) return 0;
         
@@ -131,8 +127,6 @@ export function NutritionFactsDrawer({
         const adjusted = calculateAdjustedValue(value);
         return adjusted < 1 ? adjusted.toFixed(2) : adjusted.toFixed(1);
     };
-
-    if (!nutritionData) return null;
 
     // Helper function to normalize unit names for display
     const normalizeUnitForDisplay = (unit: string): string => {
@@ -208,6 +202,7 @@ export function NutritionFactsDrawer({
 
             {/* Serving Size Control */}
             <ServingSizeControl
+                key={`${nutritionData.fdcId}-${defaultServingAmount}-${defaultServingUnit}`}
                 defaultAmount={defaultServingAmount}
                 defaultUnit={defaultServingUnit}
                 servingSize={effectiveServingSize}

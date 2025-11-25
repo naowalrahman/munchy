@@ -1,32 +1,53 @@
 'use client'
 
-import { Box, Circle } from '@chakra-ui/react'
+import { Box } from '@chakra-ui/react'
 import { motion } from 'framer-motion'
-import { useEffect, useState } from 'react'
+import { useMemo } from 'react'
 
 const MotionBox = motion.create(Box)
-const MotionCircle = motion.create(Circle)
+
+type Shape = {
+    id: number
+    size: number
+    x: number
+    y: number
+    duration: number
+    delay: number
+    type: 'circle' | 'square'
+    color: string
+    driftX: number
+    driftY: number
+}
+
+const pseudoRandom = (seed: number) => {
+    const x = Math.sin(seed) * 10000
+    return x - Math.floor(x)
+}
+
+const createShapes = (count: number): Shape[] => {
+    return Array.from({ length: count }).map((_, i) => {
+        const rand = (offset: number, min = 0, max = 1) => {
+            const value = pseudoRandom(i * 13 + offset)
+            return min + value * (max - min)
+        }
+
+        return {
+            id: i,
+            size: rand(1, 20, 120),
+            x: rand(2, 0, 100),
+            y: rand(3, 0, 100),
+            duration: rand(4, 10, 30),
+            delay: rand(5, 0, 5),
+            type: rand(6) > 0.5 ? 'circle' : 'square',
+            color: rand(7) > 0.5 ? 'brand.500' : 'purple.500',
+            driftX: rand(8, -200, 200),
+            driftY: rand(9, -200, 200),
+        }
+    })
+}
 
 export default function GeometricBackground() {
-    const [mounted, setMounted] = useState(false)
-
-    useEffect(() => {
-        setMounted(true)
-    }, [])
-
-    if (!mounted) return null
-
-    // Generate random shapes
-    const shapes = Array.from({ length: 15 }).map((_, i) => ({
-        id: i,
-        size: Math.random() * 100 + 20, // 20px to 120px
-        x: Math.random() * 100, // 0% to 100%
-        y: Math.random() * 100, // 0% to 100%
-        duration: Math.random() * 20 + 10, // 10s to 30s
-        delay: Math.random() * 5,
-        type: Math.random() > 0.5 ? 'circle' : 'square',
-        color: Math.random() > 0.5 ? 'brand.500' : 'purple.500',
-    }))
+    const shapes = useMemo(() => createShapes(15), [])
 
     return (
         <Box
@@ -54,8 +75,8 @@ export default function GeometricBackground() {
                     animate={{
                         opacity: [0.7, 0.9, 0.7],
                         scale: [1, 1.2, 1],
-                        x: [0, Math.random() * 400 - 200, 0],
-                        y: [0, Math.random() * 400 - 200, 0],
+                        x: [0, shape.driftX, 0],
+                        y: [0, shape.driftY, 0],
                         rotate: [0, 180, 360],
                     }}
                     transition={{

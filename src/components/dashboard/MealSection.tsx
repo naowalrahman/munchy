@@ -14,11 +14,12 @@ import {
 import { useState } from "react";
 import { FoodLogEntry, deleteFoodEntry, updateFoodEntry } from "@/app/actions/foodLog";
 import { getFoodNutrition, NutritionalData } from "@/app/actions/food";
-import { FoodSearchDialog } from "./FoodSearchDialog";
-import { NutritionFactsDrawer } from "./NutritionFactsDrawer";
 import { motion, AnimatePresence } from "framer-motion";
 import { IoAdd, IoTrash, IoPencil } from "react-icons/io5";
 import { toaster } from "@/components/ui/toaster";
+import dynamic from "next/dynamic";
+import type { FoodSearchDialogProps } from "./FoodSearchDialog";
+import type { NutritionFactsDrawerProps } from "./NutritionFactsDrawer";
 
 interface MealSectionProps {
     mealName: string;
@@ -27,6 +28,16 @@ interface MealSectionProps {
 }
 
 const MotionBox = motion.create(Box);
+
+const FoodSearchDialog = dynamic<FoodSearchDialogProps>(
+    () => import("./FoodSearchDialog").then((mod) => mod.FoodSearchDialog),
+    { ssr: false, loading: () => null }
+);
+
+const NutritionFactsDrawer = dynamic<NutritionFactsDrawerProps>(
+    () => import("./NutritionFactsDrawer").then((mod) => mod.NutritionFactsDrawer),
+    { ssr: false }
+);
 
 export function MealSection({ mealName, entries, onFoodAdded }: MealSectionProps) {
     const [isSearchOpen, setIsSearchOpen] = useState(false);
@@ -325,7 +336,7 @@ export function MealSection({ mealName, entries, onFoodAdded }: MealSectionProps
                             borderStyle="dashed"
                         >
                             <Text color="text.muted" fontSize="sm">
-                                No foods logged yet. Click "Add Food" to get started.
+                                No foods logged yet. Click &ldquo;Add Food&rdquo; to get started.
                             </Text>
                         </Box>
                     )}
@@ -333,12 +344,14 @@ export function MealSection({ mealName, entries, onFoodAdded }: MealSectionProps
             </Box>
 
             {/* Food Search Dialog */}
-            <FoodSearchDialog
-                isOpen={isSearchOpen}
-                onClose={() => setIsSearchOpen(false)}
-                mealName={mealName}
-                onFoodAdded={onFoodAdded}
-            />
+            {isSearchOpen && (
+                <FoodSearchDialog
+                    isOpen={isSearchOpen}
+                    onClose={() => setIsSearchOpen(false)}
+                    mealName={mealName}
+                    onFoodAdded={onFoodAdded}
+                />
+            )}
 
             {/* Edit Nutrition Facts Drawer */}
             {isLoadingEditData ? (
@@ -363,19 +376,23 @@ export function MealSection({ mealName, entries, onFoodAdded }: MealSectionProps
                     </Box>
                 </>
             ) : (
-                <NutritionFactsDrawer
-                    nutritionData={editNutritionData}
-                    mealName={mealName}
-                    isOpen={editingEntry !== null && editNutritionData !== null}
-                    onClose={() => {
-                        setEditingEntry(null);
-                        setEditNutritionData(null);
-                    }}
-                    onAddToMeal={handleUpdateEntry}
-                    isEditMode={true}
-                    initialServingAmount={editingEntry?.serving_amount}
-                    initialServingUnit={editingEntry?.serving_unit}
-                />
+                editingEntry &&
+                editNutritionData && (
+                    <NutritionFactsDrawer
+                        key={editingEntry.id}
+                        nutritionData={editNutritionData}
+                        mealName={mealName}
+                        isOpen
+                        onClose={() => {
+                            setEditingEntry(null);
+                            setEditNutritionData(null);
+                        }}
+                        onAddToMeal={handleUpdateEntry}
+                        isEditMode={true}
+                        initialServingAmount={editingEntry.serving_amount}
+                        initialServingUnit={editingEntry.serving_unit}
+                    />
+                )
             )}
         </>
     );
