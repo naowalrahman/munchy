@@ -11,7 +11,7 @@ import {
     Grid,
     useBreakpointValue,
 } from "@chakra-ui/react";
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback } from "react";
 import { NutritionalData } from "@/app/actions/food";
 import { ServingSizeControl } from "./ServingSizeControl";
 import { motion, AnimatePresence } from "framer-motion";
@@ -42,19 +42,15 @@ export function NutritionFactsDrawer({
     initialServingAmount = 1,
     initialServingUnit = "serving",
 }: NutritionFactsDrawerProps) {
-    const [servingAmount, setServingAmount] = useState(initialServingAmount);
-    const [servingUnit, setServingUnit] = useState(initialServingUnit);
+    const [servingAmount, setServingAmount] = useState(
+        isEditMode ? initialServingAmount : 1
+    );
+    const [servingUnit, setServingUnit] = useState(
+        isEditMode ? initialServingUnit : "serving"
+    );
 
     // Determine if we should show drawer or modal based on screen size
     const isWideScreen = useBreakpointValue({ base: false, md: true });
-
-    // Reset state when nutritionData changes or when opening in edit mode
-    useEffect(() => {
-        if (isOpen) {
-            setServingAmount(isEditMode ? initialServingAmount : 1);
-            setServingUnit(isEditMode ? initialServingUnit : "serving");
-        }
-    }, [isOpen, isEditMode, initialServingAmount, initialServingUnit]);
 
     const handleServingChange = useCallback((amount: number, unit: string) => {
         setServingAmount(amount);
@@ -94,7 +90,7 @@ export function NutritionFactsDrawer({
         return unitMap[normalized] || normalized;
     };
 
-    if (!nutritionData) return null;
+    if (!isOpen || !nutritionData) return null;
 
     const handleAddToMeal = () => {
         onAddToMeal(servingAmount, servingUnit, nutritionData);
@@ -206,6 +202,7 @@ export function NutritionFactsDrawer({
 
             {/* Serving Size Control */}
             <ServingSizeControl
+                key={`${nutritionData.fdcId}-${defaultServingAmount}-${defaultServingUnit}`}
                 defaultAmount={defaultServingAmount}
                 defaultUnit={defaultServingUnit}
                 servingSize={effectiveServingSize}

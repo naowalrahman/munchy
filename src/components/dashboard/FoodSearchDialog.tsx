@@ -11,7 +11,7 @@ import {
     Spinner,
     InputGroup,
 } from "@chakra-ui/react";
-import { useState, useCallback, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { searchFoods, getFoodNutrition, FoodSearchResult, NutritionalData } from "@/app/actions/food";
 import { motion, AnimatePresence } from "framer-motion";
 import { IoClose, IoSearch } from "react-icons/io5";
@@ -378,13 +378,17 @@ export function FoodSearchDialog({
                     <Spinner size="xl" colorPalette="brand" />
                 </Box>
             ) : (
-                <NutritionFactsDrawer
-                    nutritionData={selectedFood}
-                    mealName={mealName}
-                    isOpen={isNutritionDrawerOpen}
-                    onClose={() => setIsNutritionDrawerOpen(false)}
-                    onAddToMeal={handleAddToMeal}
-                />
+                isNutritionDrawerOpen &&
+                selectedFood && (
+                    <NutritionFactsDrawer
+                        key={selectedFood.fdcId}
+                        nutritionData={selectedFood}
+                        mealName={mealName}
+                        isOpen={isNutritionDrawerOpen}
+                        onClose={() => setIsNutritionDrawerOpen(false)}
+                        onAddToMeal={handleAddToMeal}
+                    />
+                )
             )}
         </>
     );

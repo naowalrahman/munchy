@@ -1,11 +1,12 @@
 import { createClient } from "@/utils/supabase/server";
 import NavbarClient, { NavbarUser } from "./NavbarClient";
+import type { User } from "@supabase/supabase-js";
 
-const toNavbarUser = (user: any): NavbarUser | null => {
+const toNavbarUser = (user: User | null): NavbarUser | null => {
     if (!user) return null;
     return {
         id: user.id,
-        email: user.email,
+        email: user.email ?? null,
         fullName: user.user_metadata?.full_name ?? null,
         avatarUrl: user.user_metadata?.avatar_url ?? null,
     };

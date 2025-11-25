@@ -1,7 +1,7 @@
 'use client';
 
-import { Box, Input, HStack, Text, VStack, Button } from "@chakra-ui/react";
-import { useState, useEffect } from "react";
+import { Input, HStack, Text, VStack, Button } from "@chakra-ui/react";
+import { useMemo, useState, useEffect } from "react";
 
 interface ServingSizeControlProps {
     defaultAmount: number;
@@ -54,9 +54,11 @@ export function ServingSizeControl({
     // Determine available units first
     const effectiveServingSize = servingSize || 100;
     const effectiveServingSizeUnit = normalizeUnitForDisplay(servingSizeUnit || "g");
-    const availableUnits = effectiveServingSizeUnit === 'serving' 
-        ? ['serving'] 
-        : ['serving', effectiveServingSizeUnit];
+    const availableUnits = useMemo(() => {
+        return effectiveServingSizeUnit === 'serving'
+            ? ['serving']
+            : ['serving', effectiveServingSizeUnit];
+    }, [effectiveServingSizeUnit]);
     
     // Normalize the default unit and ensure it's in availableUnits
     const normalizedDefaultUnit = normalizeUnitForDisplay(defaultUnit);
@@ -74,16 +76,6 @@ export function ServingSizeControl({
             onChange(numericAmount, unit);
         }
     }, [amount, unit, onChange]);
-
-    // Reset when defaults change
-    useEffect(() => {
-        setAmount(defaultAmount.toString());
-        const normalizedDefaultUnit = normalizeUnitForDisplay(defaultUnit);
-        const validDefaultUnit = availableUnits.includes(normalizedDefaultUnit) 
-            ? normalizedDefaultUnit 
-            : 'serving';
-        setUnit(validDefaultUnit);
-    }, [defaultAmount, defaultUnit, availableUnits]);
 
     const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const value = e.target.value;

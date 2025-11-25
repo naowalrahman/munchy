@@ -11,7 +11,6 @@ import {
     Grid,
     Tabs,
     Separator,
-    Float,
     Select,
     Portal,
     createListCollection,
@@ -23,7 +22,6 @@ import { IoCalculator, IoCreate } from "react-icons/io5";
 import {
     getUserGoals,
     updateUserGoals,
-    UserGoals,
 } from "@/app/actions/userGoals";
 import { Toaster, toaster } from "@/components/ui/toaster";
 
@@ -235,10 +233,10 @@ export function GoalSettings({ onGoalsUpdated }: GoalSettingsProps) {
             } else {
                 throw new Error(response.error || 'Failed to update goals');
             }
-        } catch (error: any) {
+        } catch (error: unknown) {
             toaster.create({
                 title: 'Error',
-                description: error.message || 'Failed to update goals',
+                description: error instanceof Error ? error.message : 'Failed to update goals',
                 type: 'error',
                 duration: 5000,
             });
@@ -290,10 +288,10 @@ export function GoalSettings({ onGoalsUpdated }: GoalSettingsProps) {
             } else {
                 throw new Error(response.error || 'Failed to update goals');
             }
-        } catch (error: any) {
+        } catch (error: unknown) {
             toaster.create({
                 title: 'Error',
-                description: error.message || 'Failed to update goals',
+                description: error instanceof Error ? error.message : 'Failed to update goals',
                 type: 'error',
                 duration: 5000,
             });

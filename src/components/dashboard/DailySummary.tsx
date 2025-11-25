@@ -10,7 +10,7 @@ import {
     Progress,
     Button,
 } from "@chakra-ui/react";
-import { motion, useSpring, useTransform } from "framer-motion";
+import { useSpring, useTransform } from "framer-motion";
 import { useEffect, useState } from "react";
 import { FoodLogEntry } from "@/app/actions/foodLog";
 import { getUserGoals, UserGoals } from "@/app/actions/userGoals";
@@ -21,8 +21,6 @@ interface DailySummaryProps {
     entries: FoodLogEntry[];
     initialGoals?: UserGoals | null;
 }
-
-const MotionText = motion.create(Text);
 
 function AnimatedNumber({ value, suffix = "" }: { value: number; suffix?: string }) {
     const [displayValue, setDisplayValue] = useState(0);
@@ -46,25 +44,25 @@ function AnimatedNumber({ value, suffix = "" }: { value: number; suffix?: string
 
 export function DailySummary({ entries, initialGoals = null }: DailySummaryProps) {
     const [goals, setGoals] = useState<UserGoals | null>(initialGoals);
-    const [loadingGoals, setLoadingGoals] = useState(!initialGoals);
 
     useEffect(() => {
         if (initialGoals) {
-            setGoals(initialGoals);
-            setLoadingGoals(false);
             return;
         }
 
+        let isMounted = true;
         const loadUserGoals = async () => {
-            setLoadingGoals(true);
             const response = await getUserGoals();
-            if (response.success && response.data) {
+            if (isMounted && response.success && response.data) {
                 setGoals(response.data);
             }
-            setLoadingGoals(false);
         };
 
         loadUserGoals();
+
+        return () => {
+            isMounted = false;
+        };
     }, [initialGoals]);
 
     const totalCalories = entries.reduce((sum, entry) => sum + (entry.calories || 0), 0);
@@ -102,7 +100,7 @@ export function DailySummary({ entries, initialGoals = null }: DailySummaryProps
                 {/* Header */}
                 <HStack justify="space-between" align="center">
                     <Heading size="lg" color="text.default">
-                        Today's Summary
+                        Today&rsquo;s Summary
                     </Heading>
                     <Link href="/profile">
                         <Button 
