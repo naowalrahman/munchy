@@ -218,7 +218,10 @@ export async function getMealSummary(date: string): Promise<{
         const response = await getFoodLogsForDate(date);
         
         if (!response.success || !response.data) {
-            return response;
+            return {
+                success: false,
+                error: response.error ?? 'Failed to fetch food logs',
+            };
         }
 
         // Group logs by meal_name
