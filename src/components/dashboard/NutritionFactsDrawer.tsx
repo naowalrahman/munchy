@@ -61,13 +61,6 @@ export function NutritionFactsDrawer({
         setServingUnit(unit);
     }, []);
 
-    const handleAddToMeal = () => {
-        if (nutritionData) {
-            onAddToMeal(servingAmount, servingUnit, nutritionData);
-            onClose();
-        }
-    };
-
     // Helper function to normalize unit names for comparison
     const normalizeUnit = (unit: string): string => {
         const unitMap: Record<string, string> = {
@@ -101,6 +94,13 @@ export function NutritionFactsDrawer({
         return unitMap[normalized] || normalized;
     };
 
+    if (!nutritionData) return null;
+
+    const handleAddToMeal = () => {
+        onAddToMeal(servingAmount, servingUnit, nutritionData);
+        onClose();
+    };
+
     const calculateAdjustedValue = (value: number | null | undefined): number => {
         if (value === null || value === undefined) return 0;
         
@@ -131,8 +131,6 @@ export function NutritionFactsDrawer({
         const adjusted = calculateAdjustedValue(value);
         return adjusted < 1 ? adjusted.toFixed(2) : adjusted.toFixed(1);
     };
-
-    if (!nutritionData) return null;
 
     // Helper function to normalize unit names for display
     const normalizeUnitForDisplay = (unit: string): string => {
