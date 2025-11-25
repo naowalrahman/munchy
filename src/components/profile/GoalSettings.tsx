@@ -537,7 +537,11 @@ export function GoalSettings({ onGoalsUpdated }: GoalSettingsProps) {
                                         <Select.Root
                                             collection={activityLevelCollection}
                                             value={[activityLevel]}
-                                            onValueChange={(e) => setActivityLevel(e.value[0] as any)}
+                                            onValueChange={(e) =>
+                                                setActivityLevel(
+                                                    e.value[0] as 'sedentary' | 'lightly_active' | 'moderately_active' | 'very_active' | 'extra_active'
+                                                )
+                                            }
                                             mt={2}
                                         >
                                             <Select.HiddenSelect />
