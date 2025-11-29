@@ -1,8 +1,10 @@
 'use client';
 
 import { HStack, IconButton, Text, Box } from "@chakra-ui/react";
-import { IoChevronBack, IoChevronForward } from "react-icons/io5";
+import { IoChevronBack, IoChevronForward, IoCalendar } from "react-icons/io5";
 import { motion } from "framer-motion";
+import { useState } from "react";
+import { DateCalendarDialog } from "./DateCalendarDialog";
 
 interface DateSelectorProps {
     currentDate: string;
@@ -26,6 +28,8 @@ const formatLocalDate = (date: Date): string => {
 };
 
 export function DateSelector({ currentDate, onDateChange }: DateSelectorProps) {
+    const [isCalendarOpen, setIsCalendarOpen] = useState(false);
+    
     // Parse the current date in local timezone
     const date = parseLocalDate(currentDate);
     
@@ -73,24 +77,35 @@ export function DateSelector({ currentDate, onDateChange }: DateSelectorProps) {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.2 }}
             >
-                <Box textAlign="center" minW="200px">
-                    {isToday ? (
-                        <Text fontSize="lg" fontWeight="bold" color="brand.500">
-                            Today
+                <HStack gap={2} align="center">
+                    <Box textAlign="center" minW="200px">
+                        {isToday ? (
+                            <Text fontSize="lg" fontWeight="bold" color="brand.500">
+                                Today
+                            </Text>
+                        ) : (
+                            <Text fontSize="lg" fontWeight="semibold" color="text.default">
+                                {date.toLocaleDateString('en-US', { 
+                                    month: 'short', 
+                                    day: 'numeric',
+                                    year: 'numeric'
+                                })}
+                            </Text>
+                        )}
+                        <Text fontSize="xs" color="text.muted">
+                            {date.toLocaleDateString('en-US', { weekday: 'long' })}
                         </Text>
-                    ) : (
-                        <Text fontSize="lg" fontWeight="semibold" color="text.default">
-                            {date.toLocaleDateString('en-US', { 
-                                month: 'short', 
-                                day: 'numeric',
-                                year: 'numeric'
-                            })}
-                        </Text>
-                    )}
-                    <Text fontSize="xs" color="text.muted">
-                        {date.toLocaleDateString('en-US', { weekday: 'long' })}
-                    </Text>
-                </Box>
+                    </Box>
+                    <IconButton
+                        aria-label="Open calendar"
+                        onClick={() => setIsCalendarOpen(true)}
+                        variant="ghost"
+                        colorPalette="brand"
+                        size="sm"
+                    >
+                        <IoCalendar />
+                    </IconButton>
+                </HStack>
             </MotionBox>
 
             <IconButton
@@ -123,6 +138,13 @@ export function DateSelector({ currentDate, onDateChange }: DateSelectorProps) {
                     </Text>
                 </MotionBox>
             )}
+
+            <DateCalendarDialog
+                isOpen={isCalendarOpen}
+                onClose={() => setIsCalendarOpen(false)}
+                currentDate={currentDate}
+                onDateChange={onDateChange}
+            />
         </HStack>
     );
 }
