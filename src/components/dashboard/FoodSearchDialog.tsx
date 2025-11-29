@@ -57,6 +57,7 @@ export function FoodSearchDialog({
     const [isScannerReady, setIsScannerReady] = useState(false);
     const [scannerError, setScannerError] = useState<string | null>(null);
     const [isStartingScanner, setIsStartingScanner] = useState(false);
+    const [scannedBarcode, setScannedBarcode] = useState<string | null>(null); // Track barcode for scanned foods
     const scannerRef = useRef<Html5Qrcode | null>(null);
     const hasProcessedBarcode = useRef(false);
     const isInitializingRef = useRef(false);
@@ -95,6 +96,7 @@ export function FoodSearchDialog({
         try {
             const nutritionData = await lookupBarcode(decodedText);
             setSelectedFood(nutritionData);
+            setScannedBarcode(decodedText); // Store the barcode for later use when logging
             setIsNutritionDrawerOpen(true);
         } catch (error) {
             console.error("Barcode lookup error:", error);
@@ -258,6 +260,7 @@ export function FoodSearchDialog({
         try {
             const nutritionData = await getFoodNutrition(food.fdcId);
             setSelectedFood(nutritionData);
+            setScannedBarcode(null); // Clear barcode since this is from search, not scan
             setIsNutritionDrawerOpen(true);
         } catch (error) {
             console.error("Error loading nutrition:", error);
@@ -335,6 +338,7 @@ export function FoodSearchDialog({
                 protein: nutritionData.protein ? nutritionData.protein.amount * multiplier : null,
                 carbohydrates: nutritionData.carbohydrates ? nutritionData.carbohydrates.amount * multiplier : null,
                 total_fat: nutritionData.totalFat ? nutritionData.totalFat.amount * multiplier : null,
+                barcode: scannedBarcode || null, // Include barcode if this was a scanned food
             });
 
             if (response.success) {
@@ -343,6 +347,7 @@ export function FoodSearchDialog({
                     description: `Added to ${mealName}`,
                     type: "success",
                 });
+                setScannedBarcode(null); // Clear barcode after successful log
                 onFoodAdded();
                 onClose();
             } else {
@@ -367,6 +372,7 @@ export function FoodSearchDialog({
         setSearchQuery("");
         setSearchResults([]);
         setSelectedFood(null);
+        setScannedBarcode(null); // Clear barcode when closing
         setIsNutritionDrawerOpen(false);
         setInputMode('search');
         setScannerError(null);

@@ -13,7 +13,7 @@ import {
 } from "@chakra-ui/react";
 import { useState } from "react";
 import { FoodLogEntry, deleteFoodEntry, updateFoodEntry } from "@/app/actions/foodLog";
-import { getFoodNutrition, NutritionalData } from "@/app/actions/food";
+import { getFoodNutrition, lookupBarcode, NutritionalData } from "@/app/actions/food";
 import { motion, AnimatePresence } from "framer-motion";
 import { IoAdd, IoTrash, IoPencil } from "react-icons/io5";
 import { toaster } from "@/components/ui/toaster";
@@ -84,7 +84,16 @@ export function MealSection({ mealName, entries, onFoodAdded }: MealSectionProps
     const handleEdit = async (entry: FoodLogEntry) => {
         setIsLoadingEditData(true);
         try {
-            const nutritionData = await getFoodNutrition(entry.food_fdc_id);
+            let nutritionData: NutritionalData;
+            
+            // If barcode exists, this is a barcode-scanned food - use Open Food Facts API
+            if (entry.barcode) {
+                nutritionData = await lookupBarcode(entry.barcode);
+            } else {
+                // Otherwise, use USDA API with the fdcId
+                nutritionData = await getFoodNutrition(entry.food_fdc_id);
+            }
+            
             setEditNutritionData(nutritionData);
             setEditingEntry(entry);
         } catch (error) {

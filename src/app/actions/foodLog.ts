@@ -22,6 +22,7 @@ export interface FoodLogEntry {
     date: string;
     created_at: string;
     updated_at: string;
+    barcode?: string | null; // Original barcode for foods added via barcode scanning
 }
 
 /**
@@ -38,6 +39,7 @@ export interface LogFoodEntryInput {
     carbohydrates: number | null;
     total_fat: number | null;
     date?: string; // Optional, defaults to today
+    barcode?: string | null; // Optional barcode for foods added via barcode scanning
 }
 
 /**
@@ -77,6 +79,7 @@ export async function logFoodEntry(input: LogFoodEntryInput): Promise<FoodLogRes
                 carbohydrates: input.carbohydrates,
                 total_fat: input.total_fat,
                 date: input.date || new Date().toISOString().split('T')[0],
+                barcode: input.barcode || null,
             })
             .select()
             .single();
