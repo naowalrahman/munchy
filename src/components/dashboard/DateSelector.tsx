@@ -5,6 +5,7 @@ import { IoChevronBack, IoChevronForward, IoCalendar } from "react-icons/io5";
 import { motion } from "framer-motion";
 import { useState } from "react";
 import { DateCalendarDialog } from "./DateCalendarDialog";
+import { parseLocalDate, formatLocalDate } from "@/utils/dateHelpers";
 
 interface DateSelectorProps {
     currentDate: string;
@@ -12,20 +13,6 @@ interface DateSelectorProps {
 }
 
 const MotionBox = motion.create(Box);
-
-// Helper function to parse YYYY-MM-DD string as local date
-const parseLocalDate = (dateString: string): Date => {
-    const [year, month, day] = dateString.split('-').map(Number);
-    return new Date(year, month - 1, day);
-};
-
-// Helper function to format date as YYYY-MM-DD in local timezone
-const formatLocalDate = (date: Date): string => {
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-    return `${year}-${month}-${day}`;
-};
 
 export function DateSelector({ currentDate, onDateChange }: DateSelectorProps) {
     const [isCalendarOpen, setIsCalendarOpen] = useState(false);

@@ -12,6 +12,13 @@ import {
 import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { IoClose, IoChevronBack, IoChevronForward } from "react-icons/io5";
+import {
+    parseLocalDate,
+    formatLocalDate,
+    getFirstDayOfMonth,
+    getDaysInMonth,
+    getDaysInPreviousMonth,
+} from "@/utils/dateHelpers";
 
 interface DateCalendarDialogProps {
     isOpen: boolean;
@@ -21,36 +28,6 @@ interface DateCalendarDialogProps {
 }
 
 const MotionBox = motion.create(Box);
-
-// Helper function to parse YYYY-MM-DD string as local date
-const parseLocalDate = (dateString: string): Date => {
-    const [year, month, day] = dateString.split('-').map(Number);
-    return new Date(year, month - 1, day);
-};
-
-// Helper function to format date as YYYY-MM-DD in local timezone
-const formatLocalDate = (date: Date): string => {
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-    return `${year}-${month}-${day}`;
-};
-
-// Get first day of month (0 = Sunday, 1 = Monday, etc.)
-const getFirstDayOfMonth = (date: Date): number => {
-    const firstDay = new Date(date.getFullYear(), date.getMonth(), 1);
-    return firstDay.getDay();
-};
-
-// Get number of days in month
-const getDaysInMonth = (date: Date): number => {
-    return new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
-};
-
-// Get days in previous month
-const getDaysInPreviousMonth = (date: Date): number => {
-    return new Date(date.getFullYear(), date.getMonth(), 0).getDate();
-};
 
 export function DateCalendarDialog({
     isOpen,
