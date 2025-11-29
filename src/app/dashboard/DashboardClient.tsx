@@ -40,7 +40,7 @@ export default function DashboardClient({
     const [customMeals, setCustomMeals] = useState<string[]>(() => deriveCustomMeals(initialMealData));
     const [isLoadingData, setIsLoadingData] = useState(false);
     const [selectedDate, setSelectedDate] = useState(initialDate);
-    const initialDateRef = useRef(initialDate);
+    const isInitialMount = useRef(true);
 
     const standardMeals = useMemo(() => [...STANDARD_MEALS], []);
 
@@ -73,7 +73,9 @@ export default function DashboardClient({
     }, [selectedDate]);
 
     useEffect(() => {
-        if (selectedDate === initialDateRef.current) {
+        // Skip loading on initial mount since we already have initial data
+        if (isInitialMount.current) {
+            isInitialMount.current = false;
             return;
         }
         loadFoodLogs();

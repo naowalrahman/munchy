@@ -49,7 +49,9 @@ export function DateSelector({ currentDate, onDateChange }: DateSelectorProps) {
     };
 
     const handleToday = () => {
-        onDateChange(formatLocalDate(today));
+        const newDate = new Date(today);
+        newDate.setHours(0, 0, 0, 0);
+        onDateChange(formatLocalDate(newDate));
     };
 
 
