@@ -344,3 +344,200 @@ export async function getFoodNutrition(fdcId: number): Promise<NutritionalData> 
         throw new Error('Failed to get food nutrition: Unknown error');
     }
 }
+
+// ============================================================================
+// Open Food Facts API Types
+// ============================================================================
+
+interface OpenFoodFactsProduct {
+    code: string;
+    product_name?: string;
+    brands?: string;
+    serving_size?: string;
+    serving_quantity?: number;
+    nutriments?: {
+        'energy-kcal_100g'?: number;
+        'energy-kcal'?: number;
+        'energy-kcal_serving'?: number;
+        proteins_100g?: number;
+        proteins?: number;
+        carbohydrates_100g?: number;
+        carbohydrates?: number;
+        fat_100g?: number;
+        fat?: number;
+        fiber_100g?: number;
+        fiber?: number;
+        sugars_100g?: number;
+        sugars?: number;
+        sodium_100g?: number;
+        sodium?: number;
+        potassium_100g?: number;
+        potassium?: number;
+        calcium_100g?: number;
+        calcium?: number;
+        iron_100g?: number;
+        iron?: number;
+        'vitamin-c_100g'?: number;
+        'vitamin-c'?: number;
+        'vitamin-a_100g'?: number;
+        'vitamin-a'?: number;
+    };
+}
+
+interface OpenFoodFactsResponse {
+    code: string;
+    status: number;
+    status_verbose: string;
+    product?: OpenFoodFactsProduct;
+}
+
+// ============================================================================
+// Barcode Lookup Server Action
+// ============================================================================
+
+/**
+ * Generate a stable numeric ID from a barcode string
+ * Uses a negative number to distinguish from USDA fdcIds
+ */
+function barcodeToId(barcode: string): number {
+    let hash = 0;
+    for (let i = 0; i < barcode.length; i++) {
+        const char = barcode.charCodeAt(i);
+        hash = ((hash << 5) - hash) + char;
+        hash = hash & hash; // Convert to 32bit integer
+    }
+    // Return negative to distinguish from USDA IDs
+    return -Math.abs(hash);
+}
+
+/**
+ * Look up a food product by barcode using the Open Food Facts API
+ * 
+ * @param barcode - UPC/EAN barcode string (e.g., "0049000006346")
+ * @returns Nutritional data in the same format as USDA API
+ */
+export async function lookupBarcode(barcode: string): Promise<NutritionalData> {
+    if (!barcode || barcode.trim().length === 0) {
+        throw new Error('Barcode cannot be empty');
+    }
+
+    // Clean the barcode (remove any spaces or dashes)
+    const cleanBarcode = barcode.replace(/[\s-]/g, '');
+
+    const url = `https://world.openfoodfacts.org/api/v2/product/${cleanBarcode}.json`;
+
+    try {
+        const response = await fetch(url, {
+            method: 'GET',
+            headers: {
+                'User-Agent': 'Munchy - Food Tracking App',
+            },
+            cache: 'no-store',
+        });
+
+        if (!response.ok) {
+            throw new Error(`Open Food Facts API error: ${response.status} ${response.statusText}`);
+        }
+
+        const data: OpenFoodFactsResponse = await response.json();
+
+        if (data.status === 0 || !data.product) {
+            throw new Error('Product not found. Try searching by name instead.');
+        }
+
+        const product = data.product;
+        const nutriments = product.nutriments || {};
+
+        // Helper to create a nutrient object
+        const createNutrient = (
+            name: string,
+            value: number | undefined,
+            unit: string
+        ): Nutrient | null => {
+            if (value === undefined || value === null) return null;
+            return { name, amount: value, unit };
+        };
+
+        // Parse serving size from string (e.g., "30g" or "1 cup (240ml)")
+        let servingSize: number | undefined;
+        let servingSizeUnit: string | undefined;
+        
+        if (product.serving_quantity) {
+            servingSize = product.serving_quantity;
+            servingSizeUnit = 'g';
+        } else if (product.serving_size) {
+            // Try to extract number and unit from serving size string
+            const match = product.serving_size.match(/^([\d.]+)\s*(\w+)?/);
+            if (match) {
+                servingSize = parseFloat(match[1]);
+                servingSizeUnit = match[2] || 'g';
+            }
+        }
+
+        // Determine the serving size to use (default to 100g if not found)
+        const effectiveServingSize = servingSize ?? 100;
+        const effectiveServingSizeUnit = servingSizeUnit ?? 'g';
+
+        // Calculate adjustment factor for serving size
+        // Open Food Facts returns values per 100g, so we need to adjust based on serving size
+        // This matches the behavior of getFoodNutrition for USDA foods
+        const servingSizeMultiplier = effectiveServingSize / 100;
+
+        // Helper function to adjust nutrient values for serving size
+        const adjustNutrientValue = (value: number | undefined): number | undefined => {
+            if (value === undefined || value === null) return undefined;
+            return value * servingSizeMultiplier;
+        };
+
+        // Get calories - prefer per-serving value if available, otherwise use per-100g and adjust
+        let calories: number;
+        if (nutriments['energy-kcal_serving'] !== undefined) {
+            // Use per-serving value directly if available
+            calories = nutriments['energy-kcal_serving'];
+        } else {
+            // Use per-100g value and adjust for serving size
+            const caloriesPer100g = nutriments['energy-kcal_100g'] ?? nutriments['energy-kcal'] ?? 0;
+            calories = caloriesPer100g * servingSizeMultiplier;
+        }
+
+        // Build nutritional data matching the NutritionalData interface
+        // Values are adjusted to per-serving size to match USDA API behavior
+        return {
+            fdcId: barcodeToId(cleanBarcode),
+            description: product.product_name || `Product (${cleanBarcode})`,
+            brandName: product.brands,
+            servingSize: effectiveServingSize,
+            servingSizeUnit: effectiveServingSizeUnit,
+
+            // Energy (adjusted for serving size)
+            calories,
+
+            // Macronutrients (adjusted for serving size)
+            protein: createNutrient('Protein', adjustNutrientValue(nutriments.proteins_100g ?? nutriments.proteins), 'g'),
+            carbohydrates: createNutrient('Carbohydrates', adjustNutrientValue(nutriments.carbohydrates_100g ?? nutriments.carbohydrates), 'g'),
+            totalFat: createNutrient('Total Fat', adjustNutrientValue(nutriments.fat_100g ?? nutriments.fat), 'g'),
+            fiber: createNutrient('Fiber', adjustNutrientValue(nutriments.fiber_100g ?? nutriments.fiber), 'g'),
+            sugars: createNutrient('Sugars', adjustNutrientValue(nutriments.sugars_100g ?? nutriments.sugars), 'g'),
+
+            // Micronutrients (adjusted for serving size)
+            // Sodium: Open Food Facts stores in g, convert to mg for consistency
+            sodium: createNutrient(
+                'Sodium',
+                nutriments.sodium_100g !== undefined 
+                    ? adjustNutrientValue(nutriments.sodium_100g * 1000)
+                    : adjustNutrientValue(nutriments.sodium ? nutriments.sodium * 1000 : undefined),
+                'mg'
+            ),
+            potassium: createNutrient('Potassium', adjustNutrientValue(nutriments.potassium_100g ?? nutriments.potassium), 'mg'),
+            calcium: createNutrient('Calcium', adjustNutrientValue(nutriments.calcium_100g ?? nutriments.calcium), 'mg'),
+            iron: createNutrient('Iron', adjustNutrientValue(nutriments.iron_100g ?? nutriments.iron), 'mg'),
+            vitaminC: createNutrient('Vitamin C', adjustNutrientValue(nutriments['vitamin-c_100g'] ?? nutriments['vitamin-c']), 'mg'),
+            vitaminA: createNutrient('Vitamin A', adjustNutrientValue(nutriments['vitamin-a_100g'] ?? nutriments['vitamin-a']), 'µg'),
+        };
+    } catch (error) {
+        if (error instanceof Error) {
+            throw error;
+        }
+        throw new Error('Failed to look up barcode: Unknown error');
+    }
+}
