@@ -12,6 +12,7 @@
     "@chakra-ui/react": "^3.30.0",
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.1",
+    "@openfoodfacts/openfoodfacts-nodejs": "^2.0.0-alpha.19",
     "@supabase/ssr": "^0.7.0",
     "@supabase/supabase-js": "^2.84.0",
     "framer-motion": "^12.23.24",
@@ -26,6 +27,7 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "babel-plugin-react-compiler": "1.0.0",
+    "baseline-browser-mapping": "^2.8.32",
     "eslint": "^9",
     "eslint-config-next": "16.0.3",
     "typescript": "^5"

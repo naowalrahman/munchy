@@ -1,5 +1,7 @@
 'use server';
 
+import { OpenFoodFacts } from '@openfoodfacts/openfoodfacts-nodejs';
+
 /**
  * USDA FoodData Central API Server Actions
  * 
@@ -349,6 +351,8 @@ export async function getFoodNutrition(fdcId: number): Promise<NutritionalData> 
 // Open Food Facts API Types
 // ============================================================================
 
+// Open Food Facts product structure (for reference)
+// The SDK handles the API response structure, but we access product fields directly
 interface OpenFoodFactsProduct {
     code: string;
     product_name?: string;
@@ -384,13 +388,6 @@ interface OpenFoodFactsProduct {
     };
 }
 
-interface OpenFoodFactsResponse {
-    code: string;
-    status: number;
-    status_verbose: string;
-    product?: OpenFoodFactsProduct;
-}
-
 // ============================================================================
 // Barcode Lookup Server Action
 // ============================================================================
@@ -411,7 +408,10 @@ function barcodeToId(barcode: string): number {
 }
 
 /**
- * Look up a food product by barcode using the Open Food Facts API
+ * Look up a food product by barcode using the Open Food Facts API v2
+ * 
+ * Uses the @openfoodfacts/openfoodfacts-nodejs SDK which implements the official API v2.
+ * API documentation: https://openfoodfacts.github.io/openfoodfacts-server/api/ref-v2/#get-/api/v2/product/-code-
  * 
  * @param barcode - UPC/EAN barcode string (e.g., "0049000006346")
  * @returns Nutritional data in the same format as USDA API
@@ -424,29 +424,30 @@ export async function lookupBarcode(barcode: string): Promise<NutritionalData> {
     // Clean the barcode (remove any spaces or dashes)
     const cleanBarcode = barcode.replace(/[\s-]/g, '');
 
-    const url = `https://world.openfoodfacts.org/api/v2/product/${cleanBarcode}.json`;
-
     try {
-        const response = await fetch(url, {
-            method: 'GET',
-            headers: {
-                'User-Agent': 'Munchy - Food Tracking App',
-            },
-            cache: 'no-store',
-        });
+        // Initialize Open Food Facts client
+        const client = new OpenFoodFacts(fetch);
+        
+        // Fetch product data using the SDK (v2 API for nutriments compatibility)
+        // According to API v2 docs: https://openfoodfacts.github.io/openfoodfacts-server/api/ref-v2/#get-/api/v2/product/-code-
+        const response = await client.getProductV2(cleanBarcode);
 
-        if (!response.ok) {
-            throw new Error(`Open Food Facts API error: ${response.status} ${response.statusText}`);
+        if (response.error) {
+            throw new Error(`Open Food Facts API error: ${response.error}`);
         }
 
-        const data: OpenFoodFactsResponse = await response.json();
-
-        if (data.status === 0 || !data.product) {
+        // Check response status (status: 0 = not found, status: 1 = found)
+        if (!response.data || response.data.status === 0 || !response.data.product) {
             throw new Error('Product not found. Try searching by name instead.');
         }
 
-        const product = data.product;
-        const nutriments = product.nutriments || {};
+        // Access product fields according to API v2 structure
+        // The product object contains: product_name, brands, serving_size, serving_quantity, nutriments, etc.
+        // Type assertion needed because SDK types use complex unions that don't expose all fields
+        // but the actual API response includes all these fields according to the API v2 documentation
+        const product = response.data.product;
+        const productData = product as any;
+        const nutriments = productData.nutriments || {};
 
         // Helper to create a nutrient object
         const createNutrient = (
@@ -459,15 +460,31 @@ export async function lookupBarcode(barcode: string): Promise<NutritionalData> {
         };
 
         // Parse serving size from string (e.g., "30g" or "1 cup (240ml)")
+        // According to API v2: serving_quantity is a string (normalized, e.g., "15"), 
+        // serving_size is a string (free text, e.g., "15g"), serving_quantity_unit may exist
         let servingSize: number | undefined;
         let servingSizeUnit: string | undefined;
         
-        if (product.serving_quantity) {
-            servingSize = product.serving_quantity;
-            servingSizeUnit = 'g';
-        } else if (product.serving_size) {
-            // Try to extract number and unit from serving size string
-            const match = product.serving_size.match(/^([\d.]+)\s*(\w+)?/);
+        const servingQuantity = productData.serving_quantity;
+        const servingSizeText = productData.serving_size;
+        const servingQuantityUnit = productData.serving_quantity_unit;
+        
+        if (servingQuantity) {
+            // serving_quantity is normalized (e.g., "15"), unit may be in serving_quantity_unit
+            servingSize = parseFloat(servingQuantity);
+            // Try serving_quantity_unit first, then extract from serving_size if available
+            if (servingQuantityUnit) {
+                servingSizeUnit = servingQuantityUnit;
+            } else if (servingSizeText) {
+                // Extract unit from serving_size string (e.g., "15g" -> "g")
+                const match = servingSizeText.match(/^[\d.]+\s*(\w+)/);
+                servingSizeUnit = match ? match[1] : 'g';
+            } else {
+                servingSizeUnit = 'g'; // Default to grams
+            }
+        } else if (servingSizeText) {
+            // Try to extract number and unit from serving size string (e.g., "30g" or "1 cup (240ml)")
+            const match = servingSizeText.match(/^([\d.]+)\s*(\w+)?/);
             if (match) {
                 servingSize = parseFloat(match[1]);
                 servingSizeUnit = match[2] || 'g';
@@ -483,56 +500,64 @@ export async function lookupBarcode(barcode: string): Promise<NutritionalData> {
         // This matches the behavior of getFoodNutrition for USDA foods
         const servingSizeMultiplier = effectiveServingSize / 100;
 
-        // Helper function to adjust nutrient values for serving size
-        const adjustNutrientValue = (value: number | undefined): number | undefined => {
-            if (value === undefined || value === null) return undefined;
-            return value * servingSizeMultiplier;
+        // Helper function to get nutrient value, preferring _serving if available, otherwise _100g adjusted
+        const getNutrientValue = (
+            baseName: string,
+            adjustForServing: boolean = true
+        ): number | undefined => {
+            // Prefer per-serving value if available (already calculated for serving size)
+            const servingValue = nutriments[`${baseName}_serving`];
+            if (servingValue !== undefined && servingValue !== null) {
+                return servingValue;
+            }
+            
+            // Fallback to per-100g value and adjust for serving size
+            const per100gValue = nutriments[`${baseName}_100g`] ?? nutriments[baseName];
+            if (per100gValue === undefined || per100gValue === null) {
+                return undefined;
+            }
+            
+            return adjustForServing ? per100gValue * servingSizeMultiplier : per100gValue;
         };
 
         // Get calories - prefer per-serving value if available, otherwise use per-100g and adjust
-        let calories: number;
-        if (nutriments['energy-kcal_serving'] !== undefined) {
-            // Use per-serving value directly if available
-            calories = nutriments['energy-kcal_serving'];
-        } else {
-            // Use per-100g value and adjust for serving size
-            const caloriesPer100g = nutriments['energy-kcal_100g'] ?? nutriments['energy-kcal'] ?? 0;
-            calories = caloriesPer100g * servingSizeMultiplier;
-        }
+        const calories = getNutrientValue('energy-kcal') ?? 0;
 
         // Build nutritional data matching the NutritionalData interface
         // Values are adjusted to per-serving size to match USDA API behavior
+        // According to API v2 structure: product_name and brands are in product_base/product_tags
         return {
             fdcId: barcodeToId(cleanBarcode),
-            description: product.product_name || `Product (${cleanBarcode})`,
-            brandName: product.brands,
+            description: productData.product_name || `Product (${cleanBarcode})`,
+            brandName: productData.brands,
             servingSize: effectiveServingSize,
             servingSizeUnit: effectiveServingSizeUnit,
 
             // Energy (adjusted for serving size)
             calories,
 
-            // Macronutrients (adjusted for serving size)
-            protein: createNutrient('Protein', adjustNutrientValue(nutriments.proteins_100g ?? nutriments.proteins), 'g'),
-            carbohydrates: createNutrient('Carbohydrates', adjustNutrientValue(nutriments.carbohydrates_100g ?? nutriments.carbohydrates), 'g'),
-            totalFat: createNutrient('Total Fat', adjustNutrientValue(nutriments.fat_100g ?? nutriments.fat), 'g'),
-            fiber: createNutrient('Fiber', adjustNutrientValue(nutriments.fiber_100g ?? nutriments.fiber), 'g'),
-            sugars: createNutrient('Sugars', adjustNutrientValue(nutriments.sugars_100g ?? nutriments.sugars), 'g'),
+            // Macronutrients (prefer _serving values when available, otherwise _100g adjusted)
+            protein: createNutrient('Protein', getNutrientValue('proteins'), 'g'),
+            carbohydrates: createNutrient('Carbohydrates', getNutrientValue('carbohydrates'), 'g'),
+            totalFat: createNutrient('Total Fat', getNutrientValue('fat'), 'g'),
+            fiber: createNutrient('Fiber', getNutrientValue('fiber'), 'g'),
+            sugars: createNutrient('Sugars', getNutrientValue('sugars'), 'g'),
 
-            // Micronutrients (adjusted for serving size)
+            // Micronutrients (prefer _serving values when available, otherwise _100g adjusted)
             // Sodium: Open Food Facts stores in g, convert to mg for consistency
             sodium: createNutrient(
                 'Sodium',
-                nutriments.sodium_100g !== undefined 
-                    ? adjustNutrientValue(nutriments.sodium_100g * 1000)
-                    : adjustNutrientValue(nutriments.sodium ? nutriments.sodium * 1000 : undefined),
+                (() => {
+                    const sodiumValue = getNutrientValue('sodium');
+                    return sodiumValue !== undefined ? sodiumValue * 1000 : undefined;
+                })(),
                 'mg'
             ),
-            potassium: createNutrient('Potassium', adjustNutrientValue(nutriments.potassium_100g ?? nutriments.potassium), 'mg'),
-            calcium: createNutrient('Calcium', adjustNutrientValue(nutriments.calcium_100g ?? nutriments.calcium), 'mg'),
-            iron: createNutrient('Iron', adjustNutrientValue(nutriments.iron_100g ?? nutriments.iron), 'mg'),
-            vitaminC: createNutrient('Vitamin C', adjustNutrientValue(nutriments['vitamin-c_100g'] ?? nutriments['vitamin-c']), 'mg'),
-            vitaminA: createNutrient('Vitamin A', adjustNutrientValue(nutriments['vitamin-a_100g'] ?? nutriments['vitamin-a']), 'µg'),
+            potassium: createNutrient('Potassium', getNutrientValue('potassium'), 'mg'),
+            calcium: createNutrient('Calcium', getNutrientValue('calcium'), 'mg'),
+            iron: createNutrient('Iron', getNutrientValue('iron'), 'mg'),
+            vitaminC: createNutrient('Vitamin C', getNutrientValue('vitamin-c'), 'mg'),
+            vitaminA: createNutrient('Vitamin A', getNutrientValue('vitamin-a'), 'µg'),
         };
     } catch (error) {
         if (error instanceof Error) {
