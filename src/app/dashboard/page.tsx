@@ -3,6 +3,7 @@ import { createClient } from "@/utils/supabase/server";
 import { redirect } from "next/navigation";
 import { getMealSummary } from "@/app/actions/foodLog";
 import { getUserGoals } from "@/app/actions/userGoals";
+import { formatLocalDate } from "@/utils/dateHelpers";
 
 export default async function DashboardPage() {
     const supabase = await createClient();
@@ -14,7 +15,7 @@ export default async function DashboardPage() {
         redirect("/login");
     }
 
-    const today = new Date().toISOString().split("T")[0];
+    const today = formatLocalDate(new Date());
     const [mealSummary, goalsResponse] = await Promise.all([getMealSummary(today), getUserGoals()]);
 
     const mealData = mealSummary.success && mealSummary.data ? mealSummary.data : {};
