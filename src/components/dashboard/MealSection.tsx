@@ -8,7 +8,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { IoAdd, IoTrash, IoPencil } from "react-icons/io5";
 import { toaster } from "@/components/ui/toaster";
 import dynamic from "next/dynamic";
-import type { FoodSearchDialogProps } from "./FoodSearchDialog";
+import type { FoodSearchDialogProps } from "@/components/food-search/types";
 import type { NutritionFactsDrawerProps } from "./NutritionFactsDrawer";
 
 interface MealSectionProps {
@@ -20,7 +20,7 @@ interface MealSectionProps {
 const MotionBox = motion.create(Box);
 
 const FoodSearchDialog = dynamic<FoodSearchDialogProps>(
-  () => import("./FoodSearchDialog").then((mod) => mod.FoodSearchDialog),
+  () => import("@/components/food-search/FoodSearchDialog").then((mod) => mod.FoodSearchDialog),
   { ssr: false, loading: () => null }
 );
 
