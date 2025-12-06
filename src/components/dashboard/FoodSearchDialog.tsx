@@ -1,6 +1,6 @@
 "use client";
 
-import { Box, VStack, HStack, Text, Input, Button, Heading, Spinner } from "@chakra-ui/react";
+import { Box, VStack, HStack, Text, Input, Button, Heading, Spinner, IconButton } from "@chakra-ui/react";
 import { useState, useEffect, useRef, useCallback } from "react";
 import { searchFoods, getFoodNutrition, lookupBarcode, FoodSearchResult, NutritionalData } from "@/app/actions/food";
 import { motion, AnimatePresence } from "framer-motion";
@@ -10,6 +10,7 @@ import { toaster } from "@/components/ui/toaster";
 import dynamic from "next/dynamic";
 import type { NutritionFactsDrawerProps } from "./NutritionFactsDrawer";
 import { Html5Qrcode, Html5QrcodeScannerState } from "html5-qrcode";
+import { IoTrash } from "react-icons/io5";
 
 export interface FoodSearchDialogProps {
   isOpen: boolean;
@@ -19,6 +20,13 @@ export interface FoodSearchDialogProps {
 }
 
 type InputMode = "search" | "scan";
+type StagedFood = {
+  id: string;
+  nutritionData: NutritionalData;
+  servingAmount: number;
+  servingUnit: string;
+  barcode: string | null;
+};
 
 const MotionBox = motion.create(Box);
 const MotionVStack = motion.create(VStack);
@@ -37,6 +45,8 @@ export function FoodSearchDialog({ isOpen, onClose, mealName, onFoodAdded }: Foo
   const [selectedFood, setSelectedFood] = useState<NutritionalData | null>(null);
   const [isNutritionDrawerOpen, setIsNutritionDrawerOpen] = useState(false);
   const [isLoadingNutrition, setIsLoadingNutrition] = useState(false);
+  const [stagedItems, setStagedItems] = useState<StagedFood[]>([]);
+  const [isSaving, setIsSaving] = useState(false);
 
   // Barcode scanning state
   const [inputMode, setInputMode] = useState<InputMode>("search");
@@ -137,23 +147,33 @@ export function FoodSearchDialog({ isOpen, onClose, mealName, onFoodAdded }: Foo
         }
       }
 
-      // Create scanner and get cameras
-      scannerRef.current = new Html5Qrcode(SCANNER_ELEMENT_ID);
+      // Create scanner and get cameras (reuse instance for faster init)
+      if (!scannerRef.current) {
+        scannerRef.current = new Html5Qrcode(SCANNER_ELEMENT_ID);
+      }
+
       const cameras = await Html5Qrcode.getCameras();
 
       if (!cameras || cameras.length === 0) {
         throw new Error("No camera found.");
       }
 
-      // Select camera: prefer back camera on mobile, use first available otherwise
-      const backCamera = cameras.find((c) => /back|rear|environment/i.test(c.label));
-      const selectedCamera = backCamera || cameras[0];
+      // Prefer non‑ultrawide back camera on mobile, otherwise default/front
+      const preferredCamera = (() => {
+        const withoutUltra = cameras.filter((c) => !/ultra|wide/i.test(c.label));
+        const backEnv = withoutUltra.find((c) => /back|rear|environment/i.test(c.label));
+        if (backEnv) return backEnv;
+        const anyBack = cameras.find((c) => /back|rear|environment/i.test(c.label));
+        if (anyBack) return anyBack;
+        const defaultCam = withoutUltra[0];
+        return defaultCam || cameras[0];
+      })();
 
       // Start scanning
       // disableFlip: false ensures scanner tries both orientations (helps with mirrored webcams)
       // Wider scan box for easier barcode capture
       await scannerRef.current.start(
-        selectedCamera.id,
+        preferredCamera.id,
         {
           fps: 15,
           qrbox: { width: 300, height: 150 },
@@ -188,7 +208,7 @@ export function FoodSearchDialog({ isOpen, onClose, mealName, onFoodAdded }: Foo
       // Small delay to ensure DOM element is ready
       const timer = setTimeout(() => {
         startScanner();
-      }, 150);
+      }, 50);
 
       return () => {
         clearTimeout(timer);
@@ -300,73 +320,106 @@ export function FoodSearchDialog({ isOpen, onClose, mealName, onFoodAdded }: Foo
     return unitMap[normalized] || normalized;
   };
 
-  const handleAddToMeal = async (servingAmount: number, servingUnit: string, nutritionData: NutritionalData) => {
+  const stageFood = (servingAmount: number, servingUnit: string, nutritionData: NutritionalData) => {
+    const id = crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+    setStagedItems((prev) => [
+      ...prev,
+      { id, nutritionData, servingAmount, servingUnit, barcode: scannedBarcode || null },
+    ]);
+
+    toaster.create({
+      title: "Staged item",
+      description: `${nutritionData.description} added to pending list`,
+      type: "success",
+    });
+
+    // Reset selection; drawer onClose will restart scanner when needed
+    setScannedBarcode(null);
+    setSelectedFood(null);
+    setIsNutritionDrawerOpen(false);
+  };
+
+  const handleRemoveStaged = (id: string) => {
+    setStagedItems((prev) => prev.filter((item) => item.id !== id));
+  };
+
+  const handleSaveAll = async () => {
+    if (stagedItems.length === 0) return;
+    setIsSaving(true);
     try {
-      // Calculate nutrition values based on the serving amount and unit
-      // Nutrition data from API is per serving
-      let multiplier = servingAmount;
+      for (const item of stagedItems) {
+        let multiplier = item.servingAmount;
+        const servingSizeForCalc = item.nutritionData.servingSize || 100;
+        const servingSizeUnitNormalized = normalizeUnit(item.nutritionData.servingSizeUnit || "g");
+        const currentUnitNormalized = normalizeUnit(item.servingUnit);
 
-      const servingSizeForCalc = nutritionData.servingSize || 100;
-      const servingSizeUnitNormalized = normalizeUnit(nutritionData.servingSizeUnit || "g");
-      const currentUnitNormalized = normalizeUnit(servingUnit);
+        if (servingSizeForCalc > 0) {
+          if (currentUnitNormalized === "serving") {
+            multiplier = item.servingAmount;
+          } else if (currentUnitNormalized === servingSizeUnitNormalized) {
+            multiplier = item.servingAmount / servingSizeForCalc;
+          }
+        }
 
-      if (servingSizeForCalc > 0) {
-        if (currentUnitNormalized === "serving") {
-          // User selected "serving" - multiplier is just the amount
-          multiplier = servingAmount;
-        } else if (currentUnitNormalized === servingSizeUnitNormalized) {
-          // User selected the same unit as the serving size (e.g., "cup" when serving is "cup")
-          // Convert to servings: if 1 serving = 1 cup, then 2 cups = 2 servings
-          multiplier = servingAmount / servingSizeForCalc;
+        const response = await logFoodEntry({
+          meal_name: mealName,
+          food_fdc_id: item.nutritionData.fdcId,
+          food_description: item.nutritionData.description,
+          serving_amount: item.servingAmount,
+          serving_unit: item.servingUnit,
+          calories: item.nutritionData.calories * multiplier,
+          protein: item.nutritionData.protein ? item.nutritionData.protein.amount * multiplier : null,
+          carbohydrates: item.nutritionData.carbohydrates ? item.nutritionData.carbohydrates.amount * multiplier : null,
+          total_fat: item.nutritionData.totalFat ? item.nutritionData.totalFat.amount * multiplier : null,
+          barcode: item.barcode,
+        });
+
+        if (!response.success) {
+          throw new Error(response.error || "Failed to save an item");
         }
       }
 
-      const response = await logFoodEntry({
-        meal_name: mealName,
-        food_fdc_id: nutritionData.fdcId,
-        food_description: nutritionData.description,
-        serving_amount: servingAmount,
-        serving_unit: servingUnit,
-        calories: nutritionData.calories * multiplier,
-        protein: nutritionData.protein ? nutritionData.protein.amount * multiplier : null,
-        carbohydrates: nutritionData.carbohydrates ? nutritionData.carbohydrates.amount * multiplier : null,
-        total_fat: nutritionData.totalFat ? nutritionData.totalFat.amount * multiplier : null,
-        barcode: scannedBarcode || null, // Include barcode if this was a scanned food
-      });
-
-      if (response.success) {
-        toaster.create({
-          title: "Food added",
-          description: `Added to ${mealName}`,
-          type: "success",
-        });
-        setScannedBarcode(null); // Clear barcode after successful log
-        onFoodAdded();
-        onClose();
-      } else {
-        toaster.create({
-          title: "Failed to add food",
-          description: response.error || "Something went wrong",
-          type: "error",
-        });
-      }
-    } catch (error) {
-      console.error("Error adding food:", error);
       toaster.create({
-        title: "Error",
-        description: "Failed to add food to meal",
+        title: "Foods added",
+        description: `${stagedItems.length} item(s) added to ${mealName}`,
+        type: "success",
+      });
+      setStagedItems([]);
+      setScannedBarcode(null);
+      onFoodAdded();
+      onClose();
+    } catch (error) {
+      console.error("Error saving staged items:", error);
+      toaster.create({
+        title: "Save failed",
+        description: error instanceof Error ? error.message : "Could not save all items",
         type: "error",
       });
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleDrawerClose = () => {
+    setIsNutritionDrawerOpen(false);
+    setSelectedFood(null);
+    setScannedBarcode(null);
+    hasProcessedBarcode.current = false;
+    isInitializingRef.current = false;
+    if (inputMode === "scan" && isOpen) {
+      startScanner();
     }
   };
 
   const handleClose = () => {
+    if (isSaving) return;
     // Scanner cleanup is handled by the effect
     setSearchQuery("");
     setSearchResults([]);
     setSelectedFood(null);
     setScannedBarcode(null); // Clear barcode when closing
     setIsNutritionDrawerOpen(false);
+    setStagedItems([]);
     setInputMode("search");
     setScannerError(null);
     hasProcessedBarcode.current = false;
@@ -375,7 +428,7 @@ export function FoodSearchDialog({ isOpen, onClose, mealName, onFoodAdded }: Foo
   };
 
   const handleModeToggle = (newMode: InputMode) => {
-    if (newMode === inputMode) return;
+    if (newMode === inputMode || isSaving) return;
 
     // Scanner start/stop is handled by the effect when inputMode changes
     setInputMode(newMode);
@@ -599,7 +652,7 @@ export function FoodSearchDialog({ isOpen, onClose, mealName, onFoodAdded }: Foo
                     <Box
                       id={SCANNER_ELEMENT_ID}
                       w="full"
-                      h="280px"
+                      h="full"
                       css={{
                         "& video": {
                           borderRadius: "0.5rem",
@@ -624,7 +677,6 @@ export function FoodSearchDialog({ isOpen, onClose, mealName, onFoodAdded }: Foo
                         borderColor="brand.500"
                         borderRadius="md"
                         pointerEvents="none"
-                        boxShadow="0 0 0 9999px rgba(0,0,0,0.5)"
                       />
                     )}
 
@@ -684,6 +736,84 @@ export function FoodSearchDialog({ isOpen, onClose, mealName, onFoodAdded }: Foo
                   </Text>
                 </VStack>
               )}
+
+              {/* Staged Items */}
+              <VStack align="stretch" gap={2} borderWidth="1px" borderColor="border.default" borderRadius="md" p={3}>
+                <HStack justify="space-between">
+                  <Heading size="sm" color="text.default">
+                    Staged items
+                  </Heading>
+                  <Text fontSize="xs" color="text.muted">
+                    Saved when you press Save
+                  </Text>
+                </HStack>
+                {stagedItems.length === 0 ? (
+                  <Text fontSize="sm" color="text.muted">
+                    Nothing staged yet. Search or scan to add items.
+                  </Text>
+                ) : (
+                  <VStack align="stretch" gap={2} maxH="180px" overflowY="auto">
+                    {stagedItems.map((item) => (
+                      <HStack
+                        key={item.id}
+                        justify="space-between"
+                        align="start"
+                        borderWidth="1px"
+                        borderColor="border.default"
+                        borderRadius="md"
+                        p={2}
+                        bg="background.subtle"
+                      >
+                        <Box>
+                          <Text fontWeight="semibold" color="text.default">
+                            {item.nutritionData.description}
+                          </Text>
+                          {item.nutritionData.brandName && (
+                            <Text fontSize="xs" color="text.muted">
+                              {item.nutritionData.brandName}
+                            </Text>
+                          )}
+                          <Text fontSize="sm" color="text.default">
+                            {item.servingAmount} {item.servingUnit}
+                            {item.barcode ? " · scanned" : ""}
+                          </Text>
+                        </Box>
+                        <IconButton
+                          aria-label="Remove staged item"
+                          size="xs"
+                          variant="ghost"
+                          colorPalette="red"
+                          onClick={() => handleRemoveStaged(item.id)}
+                        >
+                          <IoTrash />
+                        </IconButton>
+                      </HStack>
+                    ))}
+                  </VStack>
+                )}
+              </VStack>
+
+              {/* Actions */}
+              <HStack gap={3} pt={1}>
+                <Button
+                  variant="outline"
+                  colorPalette="gray"
+                  onClick={handleClose}
+                  flex={1}
+                  disabled={isSaving}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  colorPalette="brand"
+                  flex={1}
+                  onClick={handleSaveAll}
+                  loading={isSaving}
+                  disabled={stagedItems.length === 0}
+                >
+                  Save {stagedItems.length > 0 ? `(${stagedItems.length})` : ""}
+                </Button>
+              </HStack>
             </VStack>
           </MotionBox>
         )}
@@ -702,8 +832,8 @@ export function FoodSearchDialog({ isOpen, onClose, mealName, onFoodAdded }: Foo
             nutritionData={selectedFood}
             mealName={mealName}
             isOpen={isNutritionDrawerOpen}
-            onClose={() => setIsNutritionDrawerOpen(false)}
-            onAddToMeal={handleAddToMeal}
+            onClose={handleDrawerClose}
+            onAddToMeal={stageFood}
           />
         )
       )}
