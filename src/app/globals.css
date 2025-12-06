@@ -1,29 +1,29 @@
 /* Chakra UI handles global styles */
 
 :root {
-    color-scheme: dark;
+  color-scheme: dark;
 }
 
 body {
-    background-color: #09090b;
-    /* bg.default */
-    color: #f4f4f5;
-    /* text.default */
+  background-color: #09090b;
+  /* bg.default */
+  color: #f4f4f5;
+  /* text.default */
 }
 
 ::-webkit-scrollbar {
-    width: 8px;
+  width: 8px;
 }
 
 ::-webkit-scrollbar-track {
-    background: #18181b;
+  background: #18181b;
 }
 
 ::-webkit-scrollbar-thumb {
-    background: #27272a;
-    border-radius: 4px;
+  background: #27272a;
+  border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-    background: #3f3f46;
+  background: #3f3f46;
 }
