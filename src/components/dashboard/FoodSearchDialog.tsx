@@ -346,6 +346,9 @@ export function FoodSearchDialog({ isOpen, onClose, mealName, onFoodAdded }: Foo
   const handleSaveAll = async () => {
     if (stagedItems.length === 0) return;
     setIsSaving(true);
+
+    const savedIds = new Set<string>();
+
     try {
       for (const item of stagedItems) {
         let multiplier = item.servingAmount;
@@ -377,6 +380,8 @@ export function FoodSearchDialog({ isOpen, onClose, mealName, onFoodAdded }: Foo
         if (!response.success) {
           throw new Error(response.error || "Failed to save an item");
         }
+
+        savedIds.add(item.id);
       }
 
       toaster.create({
@@ -390,9 +395,20 @@ export function FoodSearchDialog({ isOpen, onClose, mealName, onFoodAdded }: Foo
       onClose();
     } catch (error) {
       console.error("Error saving staged items:", error);
+
+      // Keep only items that were not saved to avoid duplicate re-saves
+      if (savedIds.size > 0) {
+        setStagedItems((prev) => prev.filter((item) => !savedIds.has(item.id)));
+      }
+
       toaster.create({
-        title: "Save failed",
-        description: error instanceof Error ? error.message : "Could not save all items",
+        title: savedIds.size > 0 ? "Partially saved" : "Save failed",
+        description:
+          error instanceof Error
+            ? error.message
+            : savedIds.size > 0
+              ? "Some items were saved before an error occurred."
+              : "Could not save items",
         type: "error",
       });
     } finally {
@@ -809,7 +825,7 @@ export function FoodSearchDialog({ isOpen, onClose, mealName, onFoodAdded }: Foo
                   flex={1}
                   onClick={handleSaveAll}
                   loading={isSaving}
-                  disabled={stagedItems.length === 0}
+                  disabled={stagedItems.length === 0 || isSaving}
                 >
                   Save {stagedItems.length > 0 ? `(${stagedItems.length})` : ""}
                 </Button>
