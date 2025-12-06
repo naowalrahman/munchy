@@ -34,9 +34,9 @@ export default function RootLayout({
           <Navbar />
           {children}
           <Toaster />
-          <SpeedInsights />
-          <Analytics />
         </Provider>
+        <SpeedInsights />
+        <Analytics />
       </body>
     </html>
   );
