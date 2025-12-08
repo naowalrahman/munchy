@@ -137,6 +137,20 @@ const weightGoalCollection = createListCollection({
   ],
 });
 
+const weightUnitCollection = createListCollection({
+  items: [
+    { label: "Kilograms (kg)", value: "kg" },
+    { label: "Pounds (lbs)", value: "lbs" },
+  ],
+});
+
+const heightUnitCollection = createListCollection({
+  items: [
+    { label: "Centimeters (cm)", value: "cm" },
+    { label: "Feet / Inches", value: "ft_in" },
+  ],
+});
+
 interface GoalSettingsProps {
   onGoalsUpdated?: () => void;
 }
@@ -155,6 +169,11 @@ export function GoalSettings({ onGoalsUpdated }: GoalSettingsProps) {
   // Calculator input state
   const [weight, setWeight] = useState("");
   const [height, setHeight] = useState("");
+  const [weightUnit, setWeightUnit] = useState<"kg" | "lbs">("kg");
+  const [weightLbs, setWeightLbs] = useState("");
+  const [heightUnit, setHeightUnit] = useState<"cm" | "ft_in">("cm");
+  const [heightFeet, setHeightFeet] = useState("");
+  const [heightInches, setHeightInches] = useState("");
   const [age, setAge] = useState("");
   const [sex, setSex] = useState<"male" | "female">("male");
   const [activityLevel, setActivityLevel] = useState<
@@ -172,14 +191,48 @@ export function GoalSettings({ onGoalsUpdated }: GoalSettingsProps) {
     fat: number;
   } | null>(null);
 
+  const getMetricInputs = () => {
+    const ageNumber = parseInt(age);
+    const weightKg =
+      weightUnit === "kg" ? parseFloat(weight) : parseFloat(weightLbs) / 2.20462;
+
+    let heightCmValue = NaN;
+    if (heightUnit === "cm") {
+      heightCmValue = parseFloat(height);
+    } else {
+      const feetVal = heightFeet === "" ? NaN : parseFloat(heightFeet);
+      const inchesVal = heightInches === "" ? 0 : parseFloat(heightInches);
+      if (Number.isFinite(feetVal) && Number.isFinite(inchesVal)) {
+        heightCmValue = (feetVal * 12 + inchesVal) * 2.54;
+      }
+    }
+
+    if (!Number.isFinite(weightKg) || !Number.isFinite(heightCmValue) || !Number.isFinite(ageNumber)) {
+      return null;
+    }
+
+    if (weightKg <= 0 || heightCmValue <= 0 || ageNumber <= 0) {
+      return null;
+    }
+
+    return {
+      weightKg,
+      heightCm: heightCmValue,
+      age: ageNumber,
+    };
+  };
+
   useEffect(() => {
     loadGoals();
   }, []);
 
   // Recalculate when calculator inputs change
   useEffect(() => {
-    if (weight && height && age && sex && activityLevel && weightGoal) {
-      const bmr = calculateBMR(parseFloat(weight), parseFloat(height), parseInt(age), sex);
+    const metricInputs = getMetricInputs();
+
+    if (metricInputs && sex && activityLevel && weightGoal) {
+      const { weightKg, heightCm, age: ageNumber } = metricInputs;
+      const bmr = calculateBMR(weightKg, heightCm, ageNumber, sex);
       const tdee = calculateTDEE(bmr, activityLevel);
       const calorieGoal = calculateCalorieGoal(tdee, weightGoal);
       const macros = calculateMacros(calorieGoal);
@@ -194,7 +247,19 @@ export function GoalSettings({ onGoalsUpdated }: GoalSettingsProps) {
       setCalculatedCalories(null);
       setCalculatedMacros(null);
     }
-  }, [weight, height, age, sex, activityLevel, weightGoal]);
+  }, [
+    weight,
+    weightLbs,
+    weightUnit,
+    height,
+    heightFeet,
+    heightInches,
+    heightUnit,
+    age,
+    sex,
+    activityLevel,
+    weightGoal,
+  ]);
 
   const loadGoals = async () => {
     setLoading(true);
@@ -208,7 +273,22 @@ export function GoalSettings({ onGoalsUpdated }: GoalSettingsProps) {
 
       // Load calculator values if they exist
       if (goals.weight_kg) setWeight(goals.weight_kg.toString());
-      if (goals.height_cm) setHeight(goals.height_cm.toString());
+      if (goals.weight_kg) setWeightLbs((goals.weight_kg * 2.20462).toFixed(1));
+      if (goals.height_cm) {
+        setHeight(goals.height_cm.toString());
+        const totalInches = goals.height_cm / 2.54;
+        const feet = Math.floor(totalInches / 12);
+        let inches = Math.round(totalInches - feet * 12);
+        let finalFeet = feet;
+
+        if (inches === 12) {
+          finalFeet += 1;
+          inches = 0;
+        }
+
+        setHeightFeet(finalFeet.toString());
+        setHeightInches(inches.toString());
+      }
       if (goals.age) setAge(goals.age.toString());
       if (goals.sex) setSex(goals.sex);
       if (goals.activity_level) setActivityLevel(goals.activity_level);
@@ -261,6 +341,19 @@ export function GoalSettings({ onGoalsUpdated }: GoalSettingsProps) {
       return;
     }
 
+    const metricInputs = getMetricInputs();
+    if (!metricInputs) {
+      toaster.create({
+        title: "Incomplete information",
+        description: "Please provide a valid weight, height, and age.",
+        type: "warning",
+        duration: 3000,
+      });
+      return;
+    }
+
+    const { weightKg, heightCm, age: ageNumber } = metricInputs;
+
     setSaving(true);
     try {
       const response = await updateUserGoals({
@@ -268,9 +361,9 @@ export function GoalSettings({ onGoalsUpdated }: GoalSettingsProps) {
         protein_goal: calculatedMacros.protein,
         carb_goal: calculatedMacros.carbs,
         fat_goal: calculatedMacros.fat,
-        weight_kg: parseFloat(weight),
-        height_cm: parseFloat(height),
-        age: parseInt(age),
+        weight_kg: weightKg,
+        height_cm: heightCm,
+        age: ageNumber,
         sex,
         activity_level: activityLevel,
         weight_goal: weightGoal,
@@ -439,30 +532,113 @@ export function GoalSettings({ onGoalsUpdated }: GoalSettingsProps) {
                   <Box bg="background.subtle" borderRadius="lg" p={4}>
                     <Field.Root>
                       <Field.Label fontSize="sm" fontWeight="medium" color="text.default">
-                        Weight (kg)
+                        Weight
                       </Field.Label>
-                      <Input
-                        type="number"
-                        value={weight}
-                        onChange={(e) => setWeight(e.target.value)}
-                        placeholder="70"
-                        mt={2}
-                      />
+                      <HStack gap={3} align="flex-start" mt={2}>
+                        <Input
+                          type="number"
+                          value={weightUnit === "kg" ? weight : weightLbs}
+                          onChange={(e) => (weightUnit === "kg" ? setWeight(e.target.value) : setWeightLbs(e.target.value))}
+                          placeholder={weightUnit === "kg" ? "70" : "154"}
+                        />
+                        <Box minW="36">
+                          <Select.Root
+                            collection={weightUnitCollection}
+                            value={[weightUnit]}
+                            onValueChange={(e) => setWeightUnit(e.value[0] as "kg" | "lbs")}
+                          >
+                            <Select.HiddenSelect />
+                            <Select.Control>
+                              <Select.Trigger>
+                                <Select.ValueText placeholder="Unit" />
+                              </Select.Trigger>
+                              <Select.IndicatorGroup>
+                                <Select.Indicator />
+                              </Select.IndicatorGroup>
+                            </Select.Control>
+                            <Portal>
+                              <Select.Positioner>
+                                <Select.Content>
+                                  {weightUnitCollection.items.map((item) => (
+                                    <Select.Item item={item} key={item.value}>
+                                      {item.label}
+                                      <Select.ItemIndicator />
+                                    </Select.Item>
+                                  ))}
+                                </Select.Content>
+                              </Select.Positioner>
+                            </Portal>
+                          </Select.Root>
+                        </Box>
+                      </HStack>
+                      <Field.HelperText fontSize="xs" color="text.muted">
+                        Enter in kg or lbs; we'll convert to metric for calculations.
+                      </Field.HelperText>
                     </Field.Root>
                   </Box>
 
                   <Box bg="background.subtle" borderRadius="lg" p={4}>
                     <Field.Root>
                       <Field.Label fontSize="sm" fontWeight="medium" color="text.default">
-                        Height (cm)
+                        Height
                       </Field.Label>
-                      <Input
-                        type="number"
-                        value={height}
-                        onChange={(e) => setHeight(e.target.value)}
-                        placeholder="175"
-                        mt={2}
-                      />
+                      <HStack gap={3} align="flex-start" mt={2}>
+                        {heightUnit === "cm" ? (
+                          <Input
+                            type="number"
+                            value={height}
+                            onChange={(e) => setHeight(e.target.value)}
+                            placeholder="175"
+                          />
+                        ) : (
+                          <HStack gap={2} w="full">
+                            <Input
+                              type="number"
+                              value={heightFeet}
+                              onChange={(e) => setHeightFeet(e.target.value)}
+                              placeholder="5"
+                            />
+                            <Input
+                              type="number"
+                              value={heightInches}
+                              onChange={(e) => setHeightInches(e.target.value)}
+                              placeholder="9"
+                            />
+                          </HStack>
+                        )}
+                        <Box minW="36">
+                          <Select.Root
+                            collection={heightUnitCollection}
+                            value={[heightUnit]}
+                            onValueChange={(e) => setHeightUnit(e.value[0] as "cm" | "ft_in")}
+                          >
+                            <Select.HiddenSelect />
+                            <Select.Control>
+                              <Select.Trigger>
+                                <Select.ValueText placeholder="Unit" />
+                              </Select.Trigger>
+                              <Select.IndicatorGroup>
+                                <Select.Indicator />
+                              </Select.IndicatorGroup>
+                            </Select.Control>
+                            <Portal>
+                              <Select.Positioner>
+                                <Select.Content>
+                                  {heightUnitCollection.items.map((item) => (
+                                    <Select.Item item={item} key={item.value}>
+                                      {item.label}
+                                      <Select.ItemIndicator />
+                                    </Select.Item>
+                                  ))}
+                                </Select.Content>
+                              </Select.Positioner>
+                            </Portal>
+                          </Select.Root>
+                        </Box>
+                      </HStack>
+                      <Field.HelperText fontSize="xs" color="text.muted">
+                        Use cm or ft/in; we'll convert to metric for calculations.
+                      </Field.HelperText>
                     </Field.Root>
                   </Box>
 
