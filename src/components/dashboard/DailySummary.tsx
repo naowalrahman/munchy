@@ -73,13 +73,19 @@ export function DailySummary({ entries, initialGoals = null }: DailySummaryProps
   const carbProgress = Math.min((totalCarbs / carbGoal) * 100, 100);
   const fatProgress = Math.min((totalFat / fatGoal) * 100, 100);
 
+  const macroStats = [
+    { label: "Protein", value: totalProtein, goal: proteinGoal, progress: proteinProgress, color: "blue" },
+    { label: "Carbs", value: totalCarbs, goal: carbGoal, progress: carbProgress, color: "green" },
+    { label: "Fat", value: totalFat, goal: fatGoal, progress: fatProgress, color: "orange" },
+  ];
+
   return (
     <Box
       bg="background.panel"
       borderRadius="xl"
       borderWidth="1px"
       borderColor="border.default"
-      p={{ base: 4, md: 6 }}
+      p={{ base: 3, md: 4 }}
       backdropFilter="blur(12px)"
       boxShadow="0 4px 30px rgba(0, 0, 0, 0.1)"
       transition="all 0.2s"
@@ -88,157 +94,88 @@ export function DailySummary({ entries, initialGoals = null }: DailySummaryProps
         boxShadow: "0 8px 40px rgba(0, 0, 0, 0.15)",
       }}
     >
-      <VStack align="stretch" gap={6}>
-        {/* Header */}
-        <HStack justify="space-between" align="center">
-          <Heading size={{ base: "md", md: "lg" }} color="text.default">
-            Summary
-          </Heading>
-          <Link href="/profile">
-            <Button size="sm" variant="ghost" colorPalette="brand">
-              <IoSettings />
-              Settings
-            </Button>
-          </Link>
-        </HStack>
+      <VStack align="stretch" gap={{ base: 4, md: 5 }}>
+        {/* Header + Calories Row */}
+        <Box bg="background.subtle" borderRadius="lg" p={{ base: 3, md: 4 }} borderWidth="1px" borderColor="border.default">
+          <HStack
+            justify="space-between"
+            align="center"
+            gap={{ base: 3, md: 4 }}
+            flexWrap="wrap"
+          >
+          <VStack align="flex-start" gap={1} minW="200px">
+              <HStack align="center" gap={2}>
+                <Heading size={{ base: "sm", md: "md" }} color="text.default">
+                  Summary
+                </Heading>
+                <Link href="/profile">
+                  <Button size="xs" variant="ghost" colorPalette="brand" gap={1}>
+                    <IoSettings />
+                    Settings
+                  </Button>
+                </Link>
+              </HStack>
+              <Text fontSize="xs" color="text.muted">
+                {entries.length} food{entries.length !== 1 ? "s" : ""} logged today
+              </Text>
+            </VStack>
 
-        {/* Total Calories - Featured */}
-        <Box
-          bg="background.subtle"
-          borderRadius="lg"
-          p={{ base: 5, md: 6 }}
-          textAlign="center"
-          borderWidth="2px"
-          borderColor="brand.500"
-        >
-          <Text fontSize="sm" color="text.muted" textTransform="uppercase" fontWeight="medium" mb={2}>
-            Total Calories
-          </Text>
-          <HStack justify="center" align="baseline" gap={2}>
-            <Text fontSize={{ base: "4xl", md: "5xl" }} fontWeight="bold" color="brand.500">
-              <AnimatedNumber value={Math.round(totalCalories)} />
-            </Text>
-            <Text fontSize={{ base: "xl", md: "2xl" }} color="text.muted" fontWeight="medium">
-              / {calorieGoal}
-            </Text>
+            <VStack align={{ base: "flex-start", md: "flex-end" }} gap={2} minW={{ md: "260px" }}>
+              <HStack align="baseline" gap={2}>
+                <Text fontSize={{ base: "3xl", md: "4xl" }} fontWeight="bold" color="brand.500">
+                  <AnimatedNumber value={Math.round(totalCalories)} />
+                </Text>
+                <Text fontSize={{ base: "md", md: "lg" }} color="text.muted" fontWeight="medium">
+                  / {calorieGoal}
+                </Text>
+              </HStack>
+              <Progress.Root value={calorieProgress} colorPalette="brand" size="sm" borderRadius="full" w="full">
+                <Progress.Track>
+                  <Progress.Range />
+                </Progress.Track>
+              </Progress.Root>
+              <Text fontSize="xs" color="text.muted">
+                {Math.round(calorieProgress)}% of daily goal
+              </Text>
+            </VStack>
           </HStack>
-          <Box mt={4}>
-            <Progress.Root value={calorieProgress} colorPalette="brand" size="lg" borderRadius="full">
-              <Progress.Track>
-                <Progress.Range />
-              </Progress.Track>
-            </Progress.Root>
-          </Box>
         </Box>
 
         {/* Macronutrients Grid */}
-        <Grid templateColumns={{ base: "1fr", md: "repeat(3, 1fr)" }} gap={{ base: 3, md: 4 }}>
-          {/* Protein */}
-          <Box bg="background.subtle" borderRadius="lg" p={4}>
-            <VStack align="stretch" gap={3}>
-              <Text fontSize="xs" color="text.muted" textTransform="uppercase" fontWeight="medium">
-                Protein
-              </Text>
-              <HStack align="baseline" gap={1}>
-                <Text fontSize={{ base: "2xl", md: "3xl" }} fontWeight="bold" color="text.default">
-                  <AnimatedNumber value={Math.round(totalProtein)} />
-                </Text>
-                <Text fontSize={{ base: "md", md: "lg" }} color="text.muted">
-                  g
-                </Text>
-              </HStack>
-              <Box>
-                <HStack justify="space-between" mb={1}>
-                  <Text fontSize="xs" color="text.muted">
-                    Goal: {proteinGoal}g
+        <Grid templateColumns={{ base: "repeat(auto-fit, minmax(100px, 1fr))" }} gap={{ base: 3, md: 4 }}>
+          {macroStats.map(({ label, value, goal, progress, color }) => (
+            <Box key={label} bg="background.subtle" borderRadius="md" p={{ base: 3, md: 3.5 }} borderWidth="1px" borderColor="border.default">
+              <VStack align="stretch" gap={2}>
+                <HStack justify="space-between">
+                  <Text fontSize="xs" color="text.muted" textTransform="uppercase" fontWeight="medium">
+                    {label}
                   </Text>
                   <Text fontSize="xs" color="text.muted">
-                    {Math.round(proteinProgress)}%
+                    {Math.round(progress)}%
                   </Text>
                 </HStack>
-                <Progress.Root value={proteinProgress} colorPalette="blue" size="sm" borderRadius="full">
+                <HStack align="baseline" justify="space-between" gap={2}>
+                  <HStack align="baseline" gap={1}>
+                    <Text fontSize={{ base: "xl", md: "2xl" }} fontWeight="bold" color="text.default">
+                      <AnimatedNumber value={Math.round(value)} />
+                    </Text>
+                    <Text fontSize="xs" color="text.muted">
+                      g
+                    </Text>
+                  </HStack>
+                  <Text fontSize="sm" color="text.muted">
+                    / {goal}g
+                  </Text>
+                </HStack>
+                <Progress.Root value={progress} colorPalette={color} size="xs" borderRadius="full">
                   <Progress.Track>
                     <Progress.Range />
                   </Progress.Track>
                 </Progress.Root>
-              </Box>
-            </VStack>
-          </Box>
-
-          {/* Carbohydrates */}
-          <Box bg="background.subtle" borderRadius="lg" p={4}>
-            <VStack align="stretch" gap={3}>
-              <Text fontSize="xs" color="text.muted" textTransform="uppercase" fontWeight="medium">
-                Carbs
-              </Text>
-              <HStack align="baseline" gap={1}>
-                <Text fontSize={{ base: "2xl", md: "3xl" }} fontWeight="bold" color="text.default">
-                  <AnimatedNumber value={Math.round(totalCarbs)} />
-                </Text>
-                <Text fontSize={{ base: "md", md: "lg" }} color="text.muted">
-                  g
-                </Text>
-              </HStack>
-              <Box>
-                <HStack justify="space-between" mb={1}>
-                  <Text fontSize="xs" color="text.muted">
-                    Goal: {carbGoal}g
-                  </Text>
-                  <Text fontSize="xs" color="text.muted">
-                    {Math.round(carbProgress)}%
-                  </Text>
-                </HStack>
-                <Progress.Root value={carbProgress} colorPalette="green" size="sm" borderRadius="full">
-                  <Progress.Track>
-                    <Progress.Range />
-                  </Progress.Track>
-                </Progress.Root>
-              </Box>
-            </VStack>
-          </Box>
-
-          {/* Fat */}
-          <Box bg="background.subtle" borderRadius="lg" p={4}>
-            <VStack align="stretch" gap={3}>
-              <Text fontSize="xs" color="text.muted" textTransform="uppercase" fontWeight="medium">
-                Fat
-              </Text>
-              <HStack align="baseline" gap={1}>
-                <Text fontSize={{ base: "2xl", md: "3xl" }} fontWeight="bold" color="text.default">
-                  <AnimatedNumber value={Math.round(totalFat)} />
-                </Text>
-                <Text fontSize={{ base: "md", md: "lg" }} color="text.muted">
-                  g
-                </Text>
-              </HStack>
-              <Box>
-                <HStack justify="space-between" mb={1}>
-                  <Text fontSize="xs" color="text.muted">
-                    Goal: {fatGoal}g
-                  </Text>
-                  <Text fontSize="xs" color="text.muted">
-                    {Math.round(fatProgress)}%
-                  </Text>
-                </HStack>
-                <Progress.Root value={fatProgress} colorPalette="orange" size="sm" borderRadius="full">
-                  <Progress.Track>
-                    <Progress.Range />
-                  </Progress.Track>
-                </Progress.Root>
-              </Box>
-            </VStack>
-          </Box>
+              </VStack>
+            </Box>
+          ))}
         </Grid>
-
-        {/* Foods Logged Count */}
-        <Box textAlign="center" pt={2}>
-          <Text fontSize="sm" color="text.muted">
-            <Text as="span" fontWeight="bold" color="brand.500">
-              {entries.length}
-            </Text>{" "}
-            food{entries.length !== 1 ? "s" : ""} logged today
-          </Text>
-        </Box>
       </VStack>
     </Box>
   );
