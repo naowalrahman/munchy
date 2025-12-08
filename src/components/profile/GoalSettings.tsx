@@ -139,14 +139,14 @@ const weightGoalCollection = createListCollection({
 
 const weightUnitCollection = createListCollection({
   items: [
-    { label: "Kilograms (kg)", value: "kg" },
-    { label: "Pounds (lbs)", value: "lbs" },
+    { label: "Kilograms", value: "kg" },
+    { label: "Pounds", value: "lbs" },
   ],
 });
 
 const heightUnitCollection = createListCollection({
   items: [
-    { label: "Centimeters (cm)", value: "cm" },
+    { label: "Centimeters", value: "cm" },
     { label: "Feet / Inches", value: "ft_in" },
   ],
 });
@@ -546,6 +546,7 @@ export function GoalSettings({ onGoalsUpdated }: GoalSettingsProps) {
                             collection={weightUnitCollection}
                             value={[weightUnit]}
                             onValueChange={(e) => setWeightUnit(e.value[0] as "kg" | "lbs")}
+                            ids={{ hiddenSelect: undefined }} // avoid sharing Field control id with the numeric input
                           >
                             <Select.HiddenSelect />
                             <Select.Control>
@@ -571,9 +572,6 @@ export function GoalSettings({ onGoalsUpdated }: GoalSettingsProps) {
                           </Select.Root>
                         </Box>
                       </HStack>
-                      <Field.HelperText fontSize="xs" color="text.muted">
-                        Enter in kg or lbs; we'll convert to metric for calculations.
-                      </Field.HelperText>
                     </Field.Root>
                   </Box>
 
@@ -611,6 +609,7 @@ export function GoalSettings({ onGoalsUpdated }: GoalSettingsProps) {
                             collection={heightUnitCollection}
                             value={[heightUnit]}
                             onValueChange={(e) => setHeightUnit(e.value[0] as "cm" | "ft_in")}
+                            ids={{ hiddenSelect: undefined }} // avoid sharing Field control id with the numeric inputs
                           >
                             <Select.HiddenSelect />
                             <Select.Control>
@@ -636,9 +635,6 @@ export function GoalSettings({ onGoalsUpdated }: GoalSettingsProps) {
                           </Select.Root>
                         </Box>
                       </HStack>
-                      <Field.HelperText fontSize="xs" color="text.muted">
-                        Use cm or ft/in; we'll convert to metric for calculations.
-                      </Field.HelperText>
                     </Field.Root>
                   </Box>
 

@@ -374,7 +374,7 @@ export function NutritionFactsDrawer({
             h={isWideScreen ? "100%" : "100dvh"}
             maxH={isWideScreen ? "100%" : "100dvh"}
             bg="background.canvas"
-            borderRadius={isWideScreen ? "0" : "0"}
+            borderRadius={isWideScreen ? "0" : "xl"}
             borderLeftWidth={isWideScreen ? "1px" : "0"}
             borderColor="border.default"
             boxShadow="2xl"
