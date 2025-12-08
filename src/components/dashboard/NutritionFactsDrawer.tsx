@@ -36,7 +36,7 @@ export function NutritionFactsDrawer({
   const [servingUnit, setServingUnit] = useState(isEditMode ? initialServingUnit : "serving");
 
   // Determine if we should show drawer or modal based on screen size
-  const isWideScreen = useBreakpointValue({ base: false, md: true });
+  const isWideScreen = useBreakpointValue({ base: false, md: true }) ?? false;
   const isMobile = !isWideScreen;
 
   const handleServingChange = useCallback((amount: number, unit: string) => {
