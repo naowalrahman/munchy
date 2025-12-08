@@ -1,159 +1,22 @@
 "use client";
 
-import {
-  Box,
-  VStack,
-  HStack,
-  Heading,
-  Text,
-  Button,
-  Input,
-  Grid,
-  Tabs,
-  Separator,
-  Select,
-  Portal,
-  createListCollection,
-} from "@chakra-ui/react";
-import { Field } from "@chakra-ui/react";
+import { Box, HStack, Heading, Tabs, Text, VStack } from "@chakra-ui/react";
 import { motion } from "framer-motion";
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { IoCalculator, IoCreate } from "react-icons/io5";
+
 import { getUserGoals, updateUserGoals } from "@/app/actions/userGoals";
 import { Toaster, toaster } from "@/components/ui/toaster";
-
-/**
- * Activity multipliers based on Mifflin-St Jeor Equation
- */
-const ACTIVITY_MULTIPLIERS = {
-  sedentary: 1.2,
-  lightly_active: 1.375,
-  moderately_active: 1.55,
-  very_active: 1.725,
-  extra_active: 1.9,
-};
-
-/**
- * Calculate BMR using Mifflin-St Jeor Equation
- */
-export function calculateBMR(weight_kg: number, height_cm: number, age: number, sex: "male" | "female"): number {
-  // BMR = 10W + 6.25H - 5A + S
-  // where S = 5 for men, -161 for women
-  const sexOffset = sex === "male" ? 5 : -161;
-  return 10 * weight_kg + 6.25 * height_cm - 5 * age + sexOffset;
-}
-
-/**
- * Calculate TDEE (Total Daily Energy Expenditure)
- */
-export function calculateTDEE(
-  bmr: number,
-  activity_level: "sedentary" | "lightly_active" | "moderately_active" | "very_active" | "extra_active"
-): number {
-  return bmr * ACTIVITY_MULTIPLIERS[activity_level];
-}
-
-/**
- * Calculate calorie goal based on weight goal
- */
-export function calculateCalorieGoal(tdee: number, weight_goal: "lose" | "maintain" | "gain"): number {
-  switch (weight_goal) {
-    case "lose":
-      // 500 calorie deficit for ~1 lb/week weight loss
-      return Math.round(tdee - 500);
-    case "gain":
-      // 300-500 calorie surplus for weight gain
-      return Math.round(tdee + 400);
-    case "maintain":
-    default:
-      return Math.round(tdee);
-  }
-}
-
-/**
- * Calculate macronutrient goals based on calorie goal
- * Standard macro split: 30% protein, 40% carbs, 30% fat
- */
-export function calculateMacros(calorieGoal: number): {
-  protein: number;
-  carbs: number;
-  fat: number;
-} {
-  // Protein: 30% of calories, 4 calories per gram
-  const proteinCalories = calorieGoal * 0.3;
-  const protein = Math.round(proteinCalories / 4);
-
-  // Carbs: 40% of calories, 4 calories per gram
-  const carbCalories = calorieGoal * 0.4;
-  const carbs = Math.round(carbCalories / 4);
-
-  // Fat: 30% of calories, 9 calories per gram
-  const fatCalories = calorieGoal * 0.3;
-  const fat = Math.round(fatCalories / 9);
-
-  return { protein, carbs, fat };
-}
-
-const MotionBox = motion.create(Box);
-
-// Collections for Select components
-const sexCollection = createListCollection({
-  items: [
-    { label: "Male", value: "male" },
-    { label: "Female", value: "female" },
-  ],
-});
-
-const activityLevelCollection = createListCollection({
-  items: [
-    {
-      label: "Sedentary - Desk job, little to no exercise",
-      value: "sedentary",
-    },
-    {
-      label: "Lightly Active - Light exercise 1-3 days/week",
-      value: "lightly_active",
-    },
-    {
-      label: "Moderately Active - Moderate exercise 3-5 days/week",
-      value: "moderately_active",
-    },
-    {
-      label: "Very Active - Hard exercise 6-7 days/week",
-      value: "very_active",
-    },
-    {
-      label: "Extra Active - Very hard exercise/physical job",
-      value: "extra_active",
-    },
-  ],
-});
-
-const weightGoalCollection = createListCollection({
-  items: [
-    { label: "Lose Weight (~0.5 kg/week)", value: "lose" },
-    { label: "Maintain Weight", value: "maintain" },
-    { label: "Gain Weight (~0.25-0.5 kg/week)", value: "gain" },
-  ],
-});
-
-const weightUnitCollection = createListCollection({
-  items: [
-    { label: "Kilograms", value: "kg" },
-    { label: "Pounds", value: "lbs" },
-  ],
-});
-
-const heightUnitCollection = createListCollection({
-  items: [
-    { label: "Centimeters", value: "cm" },
-    { label: "Feet / Inches", value: "ft_in" },
-  ],
-});
+import { CalculatorTab } from "./goal-settings/CalculatorTab";
+import { ManualTab } from "./goal-settings/ManualTab";
+import { calculateBMR, calculateCalorieGoal, calculateMacros, calculateTDEE } from "./goal-settings/calculations";
+import { ActivityLevel, CalculatorTabProps, HeightUnit, MacroBreakdown, MetricInputs, ManualTabProps, Sex, WeightGoal, WeightUnit } from "./goal-settings/types";
 
 interface GoalSettingsProps {
   onGoalsUpdated?: () => void;
 }
+
+const MotionBox = motion.create(Box);
 
 export function GoalSettings({ onGoalsUpdated }: GoalSettingsProps) {
   const [loading, setLoading] = useState(true);
@@ -169,32 +32,25 @@ export function GoalSettings({ onGoalsUpdated }: GoalSettingsProps) {
   // Calculator input state
   const [weight, setWeight] = useState("");
   const [height, setHeight] = useState("");
-  const [weightUnit, setWeightUnit] = useState<"kg" | "lbs">("kg");
+  const [weightUnit, setWeightUnit] = useState<WeightUnit>("kg");
   const [weightLbs, setWeightLbs] = useState("");
-  const [heightUnit, setHeightUnit] = useState<"cm" | "ft_in">("cm");
+  const [heightUnit, setHeightUnit] = useState<HeightUnit>("cm");
   const [heightFeet, setHeightFeet] = useState("");
   const [heightInches, setHeightInches] = useState("");
   const [age, setAge] = useState("");
-  const [sex, setSex] = useState<"male" | "female">("male");
-  const [activityLevel, setActivityLevel] = useState<
-    "sedentary" | "lightly_active" | "moderately_active" | "very_active" | "extra_active"
-  >("moderately_active");
-  const [weightGoal, setWeightGoal] = useState<"lose" | "maintain" | "gain">("maintain");
+  const [sex, setSex] = useState<Sex>("male");
+  const [activityLevel, setActivityLevel] = useState<ActivityLevel>("moderately_active");
+  const [weightGoal, setWeightGoal] = useState<WeightGoal>("maintain");
 
   // Calculated values
   const [calculatedBMR, setCalculatedBMR] = useState<number | null>(null);
   const [calculatedTDEE, setCalculatedTDEE] = useState<number | null>(null);
   const [calculatedCalories, setCalculatedCalories] = useState<number | null>(null);
-  const [calculatedMacros, setCalculatedMacros] = useState<{
-    protein: number;
-    carbs: number;
-    fat: number;
-  } | null>(null);
+  const [calculatedMacros, setCalculatedMacros] = useState<MacroBreakdown | null>(null);
 
-  const getMetricInputs = () => {
+  const getMetricInputs = (): MetricInputs | null => {
     const ageNumber = parseInt(age);
-    const weightKg =
-      weightUnit === "kg" ? parseFloat(weight) : parseFloat(weightLbs) / 2.20462;
+    const weightKg = weightUnit === "kg" ? parseFloat(weight) : parseFloat(weightLbs) / 2.20462;
 
     let heightCmValue = NaN;
     if (heightUnit === "cm") {
@@ -224,6 +80,7 @@ export function GoalSettings({ onGoalsUpdated }: GoalSettingsProps) {
 
   useEffect(() => {
     loadGoals();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Recalculate when calculator inputs change
@@ -247,19 +104,7 @@ export function GoalSettings({ onGoalsUpdated }: GoalSettingsProps) {
       setCalculatedCalories(null);
       setCalculatedMacros(null);
     }
-  }, [
-    weight,
-    weightLbs,
-    weightUnit,
-    height,
-    heightFeet,
-    heightInches,
-    heightUnit,
-    age,
-    sex,
-    activityLevel,
-    weightGoal,
-  ]);
+  }, [weight, weightLbs, weightUnit, height, heightFeet, heightInches, heightUnit, age, sex, activityLevel, weightGoal]);
 
   const loadGoals = async () => {
     setLoading(true);
@@ -290,9 +135,9 @@ export function GoalSettings({ onGoalsUpdated }: GoalSettingsProps) {
         setHeightInches(inches.toString());
       }
       if (goals.age) setAge(goals.age.toString());
-      if (goals.sex) setSex(goals.sex);
-      if (goals.activity_level) setActivityLevel(goals.activity_level);
-      if (goals.weight_goal) setWeightGoal(goals.weight_goal);
+      if (goals.sex) setSex(goals.sex as Sex);
+      if (goals.activity_level) setActivityLevel(goals.activity_level as ActivityLevel);
+      if (goals.weight_goal) setWeightGoal(goals.weight_goal as WeightGoal);
     }
     setLoading(false);
   };
@@ -414,6 +259,50 @@ export function GoalSettings({ onGoalsUpdated }: GoalSettingsProps) {
     );
   }
 
+  const manualTabProps: ManualTabProps = {
+    calories: manualCalories,
+    protein: manualProtein,
+    carbs: manualCarbs,
+    fat: manualFat,
+    saving: saving,
+    onCaloriesChange: setManualCalories,
+    onProteinChange: setManualProtein,
+    onCarbsChange: setManualCarbs,
+    onFatChange: setManualFat,
+    onSave: handleSaveManual,
+  };
+
+  const calculatorTabProps: CalculatorTabProps = {
+    weight: weight,
+    weightLbs: weightLbs,
+    weightUnit: weightUnit,
+    height: height,
+    heightFeet: heightFeet,
+    heightInches: heightInches,
+    heightUnit: heightUnit,
+    age: age,
+    sex: sex,
+    activityLevel: activityLevel,
+    weightGoal: weightGoal,
+    calculatedBMR: calculatedBMR,
+    calculatedTDEE: calculatedTDEE,
+    calculatedCalories: calculatedCalories,
+    calculatedMacros: calculatedMacros,
+    saving: saving,
+    onWeightChange: setWeight,
+    onWeightLbsChange: setWeightLbs,
+    onWeightUnitChange: setWeightUnit,
+    onHeightChange: setHeight,
+    onHeightFeetChange: setHeightFeet,
+    onHeightInchesChange: setHeightInches,
+    onHeightUnitChange: setHeightUnit,
+    onAgeChange: setAge,
+    onSexChange: setSex,
+    onActivityLevelChange: setActivityLevel,
+    onWeightGoalChange: setWeightGoal,
+    onSave: handleSaveCalculated,
+  };
+
   return (
     <>
       <MotionBox
@@ -433,12 +322,7 @@ export function GoalSettings({ onGoalsUpdated }: GoalSettingsProps) {
             Daily Goals
           </Heading>
 
-          <Tabs.Root
-            value={activeTab}
-            onValueChange={(e) => setActiveTab(e.value as "manual" | "calculator")}
-            variant="enclosed"
-            colorPalette="brand"
-          >
+          <Tabs.Root value={activeTab} onValueChange={(e) => setActiveTab(e.value as "manual" | "calculator")} variant="enclosed" colorPalette="brand">
             <Tabs.List>
               <Tabs.Trigger value="manual">
                 <HStack gap={2}>
@@ -454,418 +338,16 @@ export function GoalSettings({ onGoalsUpdated }: GoalSettingsProps) {
               </Tabs.Trigger>
             </Tabs.List>
 
-            {/* Manual Input Tab */}
             <Tabs.Content value="manual">
-              <VStack align="stretch" gap={6} pt={6}>
-                <Box bg="background.subtle" borderRadius="lg" p={6} borderWidth="2px" borderColor="brand.500/30">
-                  <Field.Root>
-                    <Field.Label fontSize="sm" fontWeight="medium" color="text.default">
-                      Daily Calorie Goal
-                    </Field.Label>
-                    <Input
-                      type="number"
-                      value={manualCalories}
-                      onChange={(e) => setManualCalories(e.target.value)}
-                      size="lg"
-                      mt={2}
-                    />
-                    <Field.HelperText fontSize="xs" color="text.muted">
-                      Your target daily calorie intake
-                    </Field.HelperText>
-                  </Field.Root>
-                </Box>
-
-                <Grid templateColumns={{ base: "1fr", md: "repeat(3, 1fr)" }} gap={4}>
-                  <Box bg="background.subtle" borderRadius="lg" p={4}>
-                    <Field.Root>
-                      <Field.Label fontSize="sm" fontWeight="medium" color="text.default">
-                        Protein (g)
-                      </Field.Label>
-                      <Input
-                        type="number"
-                        value={manualProtein}
-                        onChange={(e) => setManualProtein(e.target.value)}
-                        mt={2}
-                      />
-                    </Field.Root>
-                  </Box>
-
-                  <Box bg="background.subtle" borderRadius="lg" p={4}>
-                    <Field.Root>
-                      <Field.Label fontSize="sm" fontWeight="medium" color="text.default">
-                        Carbs (g)
-                      </Field.Label>
-                      <Input
-                        type="number"
-                        value={manualCarbs}
-                        onChange={(e) => setManualCarbs(e.target.value)}
-                        mt={2}
-                      />
-                    </Field.Root>
-                  </Box>
-
-                  <Box bg="background.subtle" borderRadius="lg" p={4}>
-                    <Field.Root>
-                      <Field.Label fontSize="sm" fontWeight="medium" color="text.default">
-                        Fat (g)
-                      </Field.Label>
-                      <Input type="number" value={manualFat} onChange={(e) => setManualFat(e.target.value)} mt={2} />
-                    </Field.Root>
-                  </Box>
-                </Grid>
-
-                <Button colorPalette="brand" size="lg" w="full" onClick={handleSaveManual} loading={saving}>
-                  Save Goals
-                </Button>
-              </VStack>
+              <ManualTab
+                {...manualTabProps}
+              />
             </Tabs.Content>
 
-            {/* Calculator Tab */}
             <Tabs.Content value="calculator">
-              <VStack align="stretch" gap={6} pt={6}>
-                <Text fontSize="sm" color="text.muted">
-                  Enter your information to calculate your personalized daily calorie and macronutrient goals using the
-                  Mifflin-St Jeor Equation.
-                </Text>
-
-                <Grid templateColumns={{ base: "1fr", md: "repeat(2, 1fr)" }} gap={4}>
-                  <Box bg="background.subtle" borderRadius="lg" p={4}>
-                    <Field.Root>
-                      <Field.Label fontSize="sm" fontWeight="medium" color="text.default">
-                        Weight
-                      </Field.Label>
-                      <HStack gap={3} align="flex-start" mt={2}>
-                        <Input
-                          type="number"
-                          value={weightUnit === "kg" ? weight : weightLbs}
-                          onChange={(e) => (weightUnit === "kg" ? setWeight(e.target.value) : setWeightLbs(e.target.value))}
-                          placeholder={weightUnit === "kg" ? "70" : "154"}
-                        />
-                        <Box minW="36">
-                          <Select.Root
-                            collection={weightUnitCollection}
-                            value={[weightUnit]}
-                            onValueChange={(e) => setWeightUnit(e.value[0] as "kg" | "lbs")}
-                            ids={{ hiddenSelect: undefined }} // avoid sharing Field control id with the numeric input
-                          >
-                            <Select.HiddenSelect />
-                            <Select.Control>
-                              <Select.Trigger>
-                                <Select.ValueText placeholder="Unit" />
-                              </Select.Trigger>
-                              <Select.IndicatorGroup>
-                                <Select.Indicator />
-                              </Select.IndicatorGroup>
-                            </Select.Control>
-                            <Portal>
-                              <Select.Positioner>
-                                <Select.Content>
-                                  {weightUnitCollection.items.map((item) => (
-                                    <Select.Item item={item} key={item.value}>
-                                      {item.label}
-                                      <Select.ItemIndicator />
-                                    </Select.Item>
-                                  ))}
-                                </Select.Content>
-                              </Select.Positioner>
-                            </Portal>
-                          </Select.Root>
-                        </Box>
-                      </HStack>
-                    </Field.Root>
-                  </Box>
-
-                  <Box bg="background.subtle" borderRadius="lg" p={4}>
-                    <Field.Root>
-                      <Field.Label fontSize="sm" fontWeight="medium" color="text.default">
-                        Height
-                      </Field.Label>
-                      <HStack gap={3} align="flex-start" mt={2}>
-                        {heightUnit === "cm" ? (
-                          <Input
-                            type="number"
-                            value={height}
-                            onChange={(e) => setHeight(e.target.value)}
-                            placeholder="175"
-                          />
-                        ) : (
-                          <HStack gap={2} w="full">
-                            <Input
-                              type="number"
-                              value={heightFeet}
-                              onChange={(e) => setHeightFeet(e.target.value)}
-                              placeholder="5"
-                            />
-                            <Input
-                              type="number"
-                              value={heightInches}
-                              onChange={(e) => setHeightInches(e.target.value)}
-                              placeholder="9"
-                            />
-                          </HStack>
-                        )}
-                        <Box minW="36">
-                          <Select.Root
-                            collection={heightUnitCollection}
-                            value={[heightUnit]}
-                            onValueChange={(e) => setHeightUnit(e.value[0] as "cm" | "ft_in")}
-                            ids={{ hiddenSelect: undefined }} // avoid sharing Field control id with the numeric inputs
-                          >
-                            <Select.HiddenSelect />
-                            <Select.Control>
-                              <Select.Trigger>
-                                <Select.ValueText placeholder="Unit" />
-                              </Select.Trigger>
-                              <Select.IndicatorGroup>
-                                <Select.Indicator />
-                              </Select.IndicatorGroup>
-                            </Select.Control>
-                            <Portal>
-                              <Select.Positioner>
-                                <Select.Content>
-                                  {heightUnitCollection.items.map((item) => (
-                                    <Select.Item item={item} key={item.value}>
-                                      {item.label}
-                                      <Select.ItemIndicator />
-                                    </Select.Item>
-                                  ))}
-                                </Select.Content>
-                              </Select.Positioner>
-                            </Portal>
-                          </Select.Root>
-                        </Box>
-                      </HStack>
-                    </Field.Root>
-                  </Box>
-
-                  <Box bg="background.subtle" borderRadius="lg" p={4}>
-                    <Field.Root>
-                      <Field.Label fontSize="sm" fontWeight="medium" color="text.default">
-                        Age
-                      </Field.Label>
-                      <Input
-                        type="number"
-                        value={age}
-                        onChange={(e) => setAge(e.target.value)}
-                        placeholder="30"
-                        mt={2}
-                      />
-                    </Field.Root>
-                  </Box>
-
-                  <Box bg="background.subtle" borderRadius="lg" p={4}>
-                    <Field.Root>
-                      <Field.Label fontSize="sm" fontWeight="medium" color="text.default">
-                        Sex
-                      </Field.Label>
-                      <Select.Root
-                        collection={sexCollection}
-                        value={[sex]}
-                        onValueChange={(e) => setSex(e.value[0] as "male" | "female")}
-                        mt={2}
-                      >
-                        <Select.HiddenSelect />
-                        <Select.Control>
-                          <Select.Trigger>
-                            <Select.ValueText placeholder="Select sex" />
-                          </Select.Trigger>
-                          <Select.IndicatorGroup>
-                            <Select.Indicator />
-                          </Select.IndicatorGroup>
-                        </Select.Control>
-                        <Portal>
-                          <Select.Positioner>
-                            <Select.Content>
-                              {sexCollection.items.map((item) => (
-                                <Select.Item item={item} key={item.value}>
-                                  {item.label}
-                                  <Select.ItemIndicator />
-                                </Select.Item>
-                              ))}
-                            </Select.Content>
-                          </Select.Positioner>
-                        </Portal>
-                      </Select.Root>
-                    </Field.Root>
-                  </Box>
-                </Grid>
-
-                <Box bg="background.subtle" borderRadius="lg" p={4}>
-                  <Field.Root>
-                    <Field.Label fontSize="sm" fontWeight="medium" color="text.default">
-                      Activity Level
-                    </Field.Label>
-                    <Select.Root
-                      collection={activityLevelCollection}
-                      value={[activityLevel]}
-                      onValueChange={(e) =>
-                        setActivityLevel(
-                          e.value[0] as
-                            | "sedentary"
-                            | "lightly_active"
-                            | "moderately_active"
-                            | "very_active"
-                            | "extra_active"
-                        )
-                      }
-                      mt={2}
-                    >
-                      <Select.HiddenSelect />
-                      <Select.Control>
-                        <Select.Trigger>
-                          <Select.ValueText placeholder="Select activity level" />
-                        </Select.Trigger>
-                        <Select.IndicatorGroup>
-                          <Select.Indicator />
-                        </Select.IndicatorGroup>
-                      </Select.Control>
-                      <Portal>
-                        <Select.Positioner>
-                          <Select.Content>
-                            {activityLevelCollection.items.map((item) => (
-                              <Select.Item item={item} key={item.value}>
-                                {item.label}
-                                <Select.ItemIndicator />
-                              </Select.Item>
-                            ))}
-                          </Select.Content>
-                        </Select.Positioner>
-                      </Portal>
-                    </Select.Root>
-                  </Field.Root>
-                </Box>
-
-                <Box bg="background.subtle" borderRadius="lg" p={4}>
-                  <Field.Root>
-                    <Field.Label fontSize="sm" fontWeight="medium" color="text.default">
-                      Goal
-                    </Field.Label>
-                    <Select.Root
-                      collection={weightGoalCollection}
-                      value={[weightGoal]}
-                      onValueChange={(e) => setWeightGoal(e.value[0] as "lose" | "maintain" | "gain")}
-                      mt={2}
-                    >
-                      <Select.HiddenSelect />
-                      <Select.Control>
-                        <Select.Trigger>
-                          <Select.ValueText placeholder="Select goal" />
-                        </Select.Trigger>
-                        <Select.IndicatorGroup>
-                          <Select.Indicator />
-                        </Select.IndicatorGroup>
-                      </Select.Control>
-                      <Portal>
-                        <Select.Positioner>
-                          <Select.Content>
-                            {weightGoalCollection.items.map((item) => (
-                              <Select.Item item={item} key={item.value}>
-                                {item.label}
-                                <Select.ItemIndicator />
-                              </Select.Item>
-                            ))}
-                          </Select.Content>
-                        </Select.Positioner>
-                      </Portal>
-                    </Select.Root>
-                  </Field.Root>
-                </Box>
-
-                {calculatedCalories && calculatedMacros && (
-                  <MotionBox
-                    initial={{ opacity: 0, scale: 0.95 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ duration: 0.3 }}
-                    bg="brand.500/10"
-                    borderRadius="lg"
-                    p={6}
-                    borderWidth="2px"
-                    borderColor="brand.500"
-                  >
-                    <VStack align="stretch" gap={4}>
-                      <Heading size="md" color="brand.500">
-                        Your Calculated Goals
-                      </Heading>
-
-                      <Grid templateColumns={{ base: "1fr", sm: "repeat(2, 1fr)" }} gap={3}>
-                        <Box>
-                          <Text fontSize="xs" color="text.muted" textTransform="uppercase">
-                            BMR (Basal Metabolic Rate)
-                          </Text>
-                          <Text fontSize="2xl" fontWeight="bold" color="text.default">
-                            {Math.round(calculatedBMR!)} cal
-                          </Text>
-                        </Box>
-
-                        <Box>
-                          <Text fontSize="xs" color="text.muted" textTransform="uppercase">
-                            TDEE (Maintenance)
-                          </Text>
-                          <Text fontSize="2xl" fontWeight="bold" color="text.default">
-                            {Math.round(calculatedTDEE!)} cal
-                          </Text>
-                        </Box>
-                      </Grid>
-
-                      <Separator />
-
-                      <Box textAlign="center">
-                        <Text fontSize="xs" color="text.muted" textTransform="uppercase" mb={2}>
-                          Daily Calorie Goal
-                        </Text>
-                        <Text fontSize="4xl" fontWeight="bold" color="brand.500">
-                          {calculatedCalories}
-                        </Text>
-                        <Text fontSize="sm" color="text.muted">
-                          calories per day
-                        </Text>
-                      </Box>
-
-                      <Separator />
-
-                      <Grid templateColumns="repeat(3, 1fr)" gap={3}>
-                        <Box textAlign="center">
-                          <Text fontSize="xs" color="text.muted" textTransform="uppercase">
-                            Protein
-                          </Text>
-                          <Text fontSize="2xl" fontWeight="bold" color="blue.500">
-                            {calculatedMacros.protein}g
-                          </Text>
-                        </Box>
-
-                        <Box textAlign="center">
-                          <Text fontSize="xs" color="text.muted" textTransform="uppercase">
-                            Carbs
-                          </Text>
-                          <Text fontSize="2xl" fontWeight="bold" color="green.500">
-                            {calculatedMacros.carbs}g
-                          </Text>
-                        </Box>
-
-                        <Box textAlign="center">
-                          <Text fontSize="xs" color="text.muted" textTransform="uppercase">
-                            Fat
-                          </Text>
-                          <Text fontSize="2xl" fontWeight="bold" color="orange.500">
-                            {calculatedMacros.fat}g
-                          </Text>
-                        </Box>
-                      </Grid>
-                    </VStack>
-                  </MotionBox>
-                )}
-
-                <Button
-                  colorPalette="brand"
-                  size="lg"
-                  w="full"
-                  onClick={handleSaveCalculated}
-                  loading={saving}
-                  disabled={!calculatedCalories}
-                >
-                  Save Calculated Goals
-                </Button>
-              </VStack>
+              <CalculatorTab
+                {...calculatorTabProps}
+              />
             </Tabs.Content>
           </Tabs.Root>
         </VStack>
@@ -874,3 +356,6 @@ export function GoalSettings({ onGoalsUpdated }: GoalSettingsProps) {
     </>
   );
 }
+
+export { calculateBMR, calculateCalorieGoal, calculateMacros, calculateTDEE } from "./goal-settings/calculations";
+export type { ActivityLevel, HeightUnit, MacroBreakdown, MetricInputs, Sex, WeightGoal, WeightUnit } from "./goal-settings/types";
