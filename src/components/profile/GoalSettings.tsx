@@ -247,10 +247,8 @@ export function GoalSettings({ onGoalsUpdated }: GoalSettingsProps) {
     return (
       <Box
         bg="background.panel"
-        borderRadius="xl"
-        borderWidth="1px"
-        borderColor="border.default"
-        p={6}
+        borderRadius="none"
+        p={0}
         backdropFilter="blur(12px)"
         boxShadow="0 4px 30px rgba(0, 0, 0, 0.1)"
       >
@@ -310,10 +308,8 @@ export function GoalSettings({ onGoalsUpdated }: GoalSettingsProps) {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4 }}
         bg="background.panel"
-        borderRadius="xl"
-        borderWidth="1px"
-        borderColor="border.default"
-        p={6}
+        borderRadius="none"
+        p={0}
         backdropFilter="blur(12px)"
         boxShadow="0 4px 30px rgba(0, 0, 0, 0.1)"
       >

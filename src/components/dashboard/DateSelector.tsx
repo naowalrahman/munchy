@@ -100,24 +100,23 @@ export function DateSelector({ currentDate, onDateChange }: DateSelectorProps) {
         <IoChevronForward />
       </IconButton>
 
-      {!isToday && (
-        <MotionBox
-          initial={{ opacity: 0, scale: 0.8 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.2 }}
+      <MotionBox
+        initial={{ opacity: 0, scale: 0.8 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.2 }}
+      >
+        <Text
+          fontSize="sm"
+          color="brand.500"
+          cursor="pointer"
+          onClick={handleToday}
+          _hover={{ textDecoration: "underline" }}
+          opacity={isToday ? 0.3 : 1}
+          ml={2}
         >
-          <Text
-            fontSize="sm"
-            color="brand.500"
-            cursor="pointer"
-            onClick={handleToday}
-            _hover={{ textDecoration: "underline" }}
-            ml={2}
-          >
-            Jump to today
-          </Text>
-        </MotionBox>
-      )}
+          Jump to today
+        </Text>
+      </MotionBox>
 
       <DateCalendarDialog
         isOpen={isCalendarOpen}

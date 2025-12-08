@@ -82,10 +82,8 @@ export function DailySummary({ entries, initialGoals = null }: DailySummaryProps
   return (
     <Box
       bg="background.panel"
-      borderRadius="xl"
-      borderWidth="1px"
-      borderColor="border.default"
-      p={{ base: 3, md: 4 }}
+      borderRadius="none"
+      p={0}
       backdropFilter="blur(12px)"
       boxShadow="0 4px 30px rgba(0, 0, 0, 0.1)"
       transition="all 0.2s"

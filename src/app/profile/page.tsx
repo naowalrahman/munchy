@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
-import { Box, Button, Input, VStack, Heading, Text, Stack, Container, HStack } from "@chakra-ui/react";
+import { Box, Button, Input, VStack, Heading, Text, Stack, Container, HStack, Separator } from "@chakra-ui/react";
 import { createClient } from "@/utils/supabase/client";
 import { useRouter } from "next/navigation";
 import { User } from "@supabase/supabase-js";
@@ -104,11 +104,9 @@ export default function ProfilePage() {
             transition={{ duration: 0.4, delay: 0.1 }}
           >
             <Box
-              p={8}
-              borderRadius="xl"
+              p={0}
+              borderRadius="none"
               bg="background.panel"
-              borderWidth="1px"
-              borderColor="border.default"
               backdropFilter="blur(12px)"
               boxShadow="0 4px 30px rgba(0, 0, 0, 0.1)"
             >
@@ -151,6 +149,8 @@ export default function ProfilePage() {
               </VStack>
             </Box>
           </MotionBox>
+
+          <Separator />
 
           {/* Goal Settings */}
           <GoalSettings />

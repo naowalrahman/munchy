@@ -192,10 +192,8 @@ export function MealSection({ mealName, entries, onFoodAdded }: MealSectionProps
     <>
       <Box
         bg="background.panel"
-        borderRadius="xl"
-        borderWidth="1px"
-        borderColor="border.default"
-        p={{ base: 4, md: 6 }}
+        borderRadius="none"
+        p={0}
         backdropFilter="blur(12px)"
         boxShadow="0 4px 30px rgba(0, 0, 0, 0.1)"
         transition="all 0.2s"
@@ -207,7 +205,7 @@ export function MealSection({ mealName, entries, onFoodAdded }: MealSectionProps
         <VStack align="stretch" gap={4}>
           {/* Header */}
           <HStack justify="space-between" align="center">
-            <Heading size={{ base: "sm", md: "md" }} color="text.default">
+            <Heading size={{ base: "md", md: "lg" }} color="text.default">
               {mealName}
             </Heading>
             <Button colorPalette="brand" size={{ base: "sm", md: "sm" }} onClick={() => setIsSearchOpen(true)}>
