@@ -54,4 +54,3 @@ export function calculateMacros(calorieGoal: number): MacroBreakdown {
 
   return { protein, carbs, fat };
 }
-

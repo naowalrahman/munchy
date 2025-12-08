@@ -10,7 +10,17 @@ import { Toaster, toaster } from "@/components/ui/toaster";
 import { CalculatorTab } from "./goal-settings/CalculatorTab";
 import { ManualTab } from "./goal-settings/ManualTab";
 import { calculateBMR, calculateCalorieGoal, calculateMacros, calculateTDEE } from "./goal-settings/calculations";
-import { ActivityLevel, CalculatorTabProps, HeightUnit, MacroBreakdown, MetricInputs, ManualTabProps, Sex, WeightGoal, WeightUnit } from "./goal-settings/types";
+import {
+  ActivityLevel,
+  CalculatorTabProps,
+  HeightUnit,
+  MacroBreakdown,
+  MetricInputs,
+  ManualTabProps,
+  Sex,
+  WeightGoal,
+  WeightUnit,
+} from "./goal-settings/types";
 
 interface GoalSettingsProps {
   onGoalsUpdated?: () => void;
@@ -104,7 +114,19 @@ export function GoalSettings({ onGoalsUpdated }: GoalSettingsProps) {
       setCalculatedCalories(null);
       setCalculatedMacros(null);
     }
-  }, [weight, weightLbs, weightUnit, height, heightFeet, heightInches, heightUnit, age, sex, activityLevel, weightGoal]);
+  }, [
+    weight,
+    weightLbs,
+    weightUnit,
+    height,
+    heightFeet,
+    heightInches,
+    heightUnit,
+    age,
+    sex,
+    activityLevel,
+    weightGoal,
+  ]);
 
   const loadGoals = async () => {
     setLoading(true);
@@ -318,7 +340,12 @@ export function GoalSettings({ onGoalsUpdated }: GoalSettingsProps) {
             Daily Goals
           </Heading>
 
-          <Tabs.Root value={activeTab} onValueChange={(e) => setActiveTab(e.value as "manual" | "calculator")} variant="enclosed" colorPalette="brand">
+          <Tabs.Root
+            value={activeTab}
+            onValueChange={(e) => setActiveTab(e.value as "manual" | "calculator")}
+            variant="enclosed"
+            colorPalette="brand"
+          >
             <Tabs.List>
               <Tabs.Trigger value="manual">
                 <HStack gap={2}>
@@ -335,15 +362,11 @@ export function GoalSettings({ onGoalsUpdated }: GoalSettingsProps) {
             </Tabs.List>
 
             <Tabs.Content value="manual">
-              <ManualTab
-                {...manualTabProps}
-              />
+              <ManualTab {...manualTabProps} />
             </Tabs.Content>
 
             <Tabs.Content value="calculator">
-              <CalculatorTab
-                {...calculatorTabProps}
-              />
+              <CalculatorTab {...calculatorTabProps} />
             </Tabs.Content>
           </Tabs.Root>
         </VStack>
@@ -354,4 +377,12 @@ export function GoalSettings({ onGoalsUpdated }: GoalSettingsProps) {
 }
 
 export { calculateBMR, calculateCalorieGoal, calculateMacros, calculateTDEE } from "./goal-settings/calculations";
-export type { ActivityLevel, HeightUnit, MacroBreakdown, MetricInputs, Sex, WeightGoal, WeightUnit } from "./goal-settings/types";
+export type {
+  ActivityLevel,
+  HeightUnit,
+  MacroBreakdown,
+  MetricInputs,
+  Sex,
+  WeightGoal,
+  WeightUnit,
+} from "./goal-settings/types";

@@ -5,8 +5,18 @@ import { Box, Button, Field, Grid, Input, VStack } from "@chakra-ui/react";
 import { ManualTabProps } from "./types";
 
 export function ManualTab(props: ManualTabProps) {
-  const { calories, protein, carbs, fat, saving, onCaloriesChange, onProteinChange, onCarbsChange, onFatChange, onSave } =
-    props;
+  const {
+    calories,
+    protein,
+    carbs,
+    fat,
+    saving,
+    onCaloriesChange,
+    onProteinChange,
+    onCarbsChange,
+    onFatChange,
+    onSave,
+  } = props;
   return (
     <VStack align="stretch" gap={6} pt={6}>
       <Box bg="background.subtle" borderRadius="lg" p={6} borderWidth="2px" borderColor="brand.500/30">
@@ -56,4 +66,3 @@ export function ManualTab(props: ManualTabProps) {
     </VStack>
   );
 }
-

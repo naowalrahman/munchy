@@ -268,15 +268,9 @@ export function FoodSearchDialog({ isOpen, onClose, mealName, onFoodAdded }: Foo
             boxShadow="2xl"
             zIndex={1000}
             p={isMobile ? 4 : 6}
-            initial={
-              isMobile ? { opacity: 0, x: -64 } : { x: "-100vw", opacity: 0 }
-            }
-            animate={
-              isMobile ? { opacity: 1, x: 0 } : { x: "-50%", opacity: 1 }
-            }
-            exit={
-              isMobile ? { opacity: 0, x: -64 } : { x: "-100vw", opacity: 0 }
-            }
+            initial={isMobile ? { opacity: 0, x: -64 } : { x: "-100vw", opacity: 0 }}
+            animate={isMobile ? { opacity: 1, x: 0 } : { x: "-50%", opacity: 1 }}
+            exit={isMobile ? { opacity: 0, x: -64 } : { x: "-100vw", opacity: 0 }}
             transition={{ type: "spring", damping: 25, stiffness: 300 }}
             overflowY="auto"
           >

@@ -94,14 +94,15 @@ export function DailySummary({ entries, initialGoals = null }: DailySummaryProps
     >
       <VStack align="stretch" gap={{ base: 4, md: 5 }}>
         {/* Header + Calories Row */}
-        <Box bg="background.subtle" borderRadius="lg" p={{ base: 3, md: 4 }} borderWidth="1px" borderColor="border.default">
-          <HStack
-            justify="space-between"
-            align="center"
-            gap={{ base: 3, md: 4 }}
-            flexWrap="wrap"
-          >
-          <VStack align="flex-start" gap={1} minW="200px">
+        <Box
+          bg="background.subtle"
+          borderRadius="lg"
+          p={{ base: 3, md: 4 }}
+          borderWidth="1px"
+          borderColor="border.default"
+        >
+          <HStack justify="space-between" align="center" gap={{ base: 3, md: 4 }} flexWrap="wrap">
+            <VStack align="flex-start" gap={1} minW="200px">
               <HStack align="center" gap={2}>
                 <Heading size={{ base: "sm", md: "md" }} color="text.default">
                   Summary
@@ -142,7 +143,14 @@ export function DailySummary({ entries, initialGoals = null }: DailySummaryProps
         {/* Macronutrients Grid */}
         <Grid templateColumns={{ base: "repeat(auto-fit, minmax(100px, 1fr))" }} gap={{ base: 3, md: 4 }}>
           {macroStats.map(({ label, value, goal, progress, color }) => (
-            <Box key={label} bg="background.subtle" borderRadius="md" p={{ base: 3, md: 3.5 }} borderWidth="1px" borderColor="border.default">
+            <Box
+              key={label}
+              bg="background.subtle"
+              borderRadius="md"
+              p={{ base: 3, md: 3.5 }}
+              borderWidth="1px"
+              borderColor="border.default"
+            >
               <VStack align="stretch" gap={2}>
                 <HStack justify="space-between">
                   <Text fontSize="xs" color="text.muted" textTransform="uppercase" fontWeight="medium">

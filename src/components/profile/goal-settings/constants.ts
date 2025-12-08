@@ -62,4 +62,3 @@ export const heightUnitCollection = createListCollection({
     { label: "Feet / Inches", value: "ft_in" satisfies HeightUnit },
   ],
 });
-

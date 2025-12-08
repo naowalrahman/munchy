@@ -63,5 +63,3 @@ export interface CalculatorTabProps {
   onWeightGoalChange: (value: WeightGoal) => void;
   onSave: () => void;
 }
-
-

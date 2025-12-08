@@ -1,17 +1,6 @@
 "use client";
 
-import {
-  Box,
-  Button,
-  Field,
-  Grid,
-  HStack,
-  Input,
-  Portal,
-  Select,
-  Text,
-  VStack,
-} from "@chakra-ui/react";
+import { Box, Button, Field, Grid, HStack, Input, Portal, Select, Text, VStack } from "@chakra-ui/react";
 
 import { CalculatedSummary } from "./CalculatedSummary";
 import { CalculatorTabProps } from "./types";
@@ -76,7 +65,9 @@ export function CalculatorTab(props: CalculatorTabProps) {
               <Input
                 type="number"
                 value={weightUnit === "kg" ? weight : weightLbs}
-                onChange={(e) => (weightUnit === "kg" ? onWeightChange(e.target.value) : onWeightLbsChange(e.target.value))}
+                onChange={(e) =>
+                  weightUnit === "kg" ? onWeightChange(e.target.value) : onWeightLbsChange(e.target.value)
+                }
                 placeholder={weightUnit === "kg" ? "70" : "154"}
               />
               <Box minW="36">
@@ -120,10 +111,20 @@ export function CalculatorTab(props: CalculatorTabProps) {
             </Field.Label>
             <HStack gap={3} align="flex-start" mt={2}>
               {heightUnit === "cm" ? (
-                <Input type="number" value={height} onChange={(e) => onHeightChange(e.target.value)} placeholder="175" />
+                <Input
+                  type="number"
+                  value={height}
+                  onChange={(e) => onHeightChange(e.target.value)}
+                  placeholder="175"
+                />
               ) : (
                 <HStack gap={2} w="full">
-                  <Input type="number" value={heightFeet} onChange={(e) => onHeightFeetChange(e.target.value)} placeholder="5" />
+                  <Input
+                    type="number"
+                    value={heightFeet}
+                    onChange={(e) => onHeightFeetChange(e.target.value)}
+                    placeholder="5"
+                  />
                   <Input
                     type="number"
                     value={heightInches}
@@ -180,7 +181,12 @@ export function CalculatorTab(props: CalculatorTabProps) {
             <Field.Label fontSize="sm" fontWeight="medium" color="text.default">
               Sex
             </Field.Label>
-            <Select.Root collection={sexCollection} value={[sex]} onValueChange={(e) => onSexChange(e.value[0] as Sex)} mt={2}>
+            <Select.Root
+              collection={sexCollection}
+              value={[sex]}
+              onValueChange={(e) => onSexChange(e.value[0] as Sex)}
+              mt={2}
+            >
               <Select.HiddenSelect />
               <Select.Control>
                 <Select.Trigger>
@@ -294,4 +300,3 @@ export function CalculatorTab(props: CalculatorTabProps) {
     </VStack>
   );
 }
-
