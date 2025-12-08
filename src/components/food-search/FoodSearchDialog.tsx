@@ -228,7 +228,7 @@ export function FoodSearchDialog({ isOpen, onClose, mealName, onFoodAdded }: Foo
   return (
     <>
       <AnimatePresence>
-        {isOpen && (
+        {isOpen && !isMobile && (
           <MotionBox
             position="fixed"
             top={0}
@@ -246,6 +246,8 @@ export function FoodSearchDialog({ isOpen, onClose, mealName, onFoodAdded }: Foo
         )}
       </AnimatePresence>
 
+      {console.log("isMobile", isMobile)}
+
       <AnimatePresence>
         {isOpen && (
           <MotionBox
@@ -258,21 +260,22 @@ export function FoodSearchDialog({ isOpen, onClose, mealName, onFoodAdded }: Foo
             maxW={isMobile ? "100vw" : "600px"}
             h={isMobile ? "100dvh" : "auto"}
             maxH={isMobile ? "100dvh" : "85vh"}
+            scale={1}
             bg="background.canvas"
-            borderRadius={isMobile ? "0" : "xl"}
-            borderWidth="1px"
+            borderRadius={isMobile ? 0 : "xl"}
+            borderWidth={isMobile ? 0 : "1px"}
             borderColor="border.default"
             boxShadow="2xl"
             zIndex={1000}
             p={isMobile ? 4 : 6}
             initial={
-              isMobile ? { opacity: 0, x: -64, y: 0 } : { x: "-100vw", y: "-50%", opacity: 0, scale: 0.95 }
+              isMobile ? { opacity: 0, x: -64 } : { x: "-100vw", opacity: 0 }
             }
             animate={
-              isMobile ? { opacity: 1, x: 0 } : { x: "-50%", y: "-50%", opacity: 1, scale: 1 }
+              isMobile ? { opacity: 1, x: 0 } : { x: "-50%", opacity: 1 }
             }
             exit={
-              isMobile ? { opacity: 0, x: -64 } : { x: "-100vw", y: "-50%", opacity: 0, scale: 0.95 }
+              isMobile ? { opacity: 0, x: -64 } : { x: "-100vw", opacity: 0 }
             }
             transition={{ type: "spring", damping: 25, stiffness: 300 }}
             overflowY="auto"

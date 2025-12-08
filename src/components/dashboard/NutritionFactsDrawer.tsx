@@ -365,7 +365,7 @@ export function NutritionFactsDrawer({
           {/* Drawer/Modal Content */}
           <MotionBox
             position="fixed"
-            top={isMobile ? "50%" : 0}
+            top={isWideScreen ? "50%" : 0}
             right={isWideScreen ? 0 : "auto"}
             bottom={isWideScreen ? 0 : undefined}
             left={isMobile ? "50%" : undefined}
@@ -383,17 +383,14 @@ export function NutritionFactsDrawer({
             overflowY="auto"
             initial={{
               x: isWideScreen ? "100%" : "-50%",
-              y: isWideScreen ? 0 : "-50%",
               opacity: isWideScreen ? 1 : 0,
             }}
             animate={{
               x: isWideScreen ? 0 : "-50%",
-              y: isWideScreen ? 0 : "-50%",
               opacity: 1,
             }}
             exit={{
               x: isWideScreen ? "100%" : "-50%",
-              y: isWideScreen ? 0 : "-50%",
               opacity: isWideScreen ? 1 : 0,
             }}
             transition={{ type: "spring", damping: 25, stiffness: 300 }}
