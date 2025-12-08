@@ -4,8 +4,8 @@ import { Suspense } from "react";
 
 export default function LoginPage() {
   return (
-    <Box minH="100vh" bg="bg.canvas">
-      <Container maxW="7xl" py={20}>
+    <Box minH="100dvh" bg="bg.canvas">
+      <Container maxW="7xl" py={{ base: 12, md: 20 }} px={{ base: 4, md: 0 }}>
         <Flex justify="center">
           <Suspense fallback={<Box>Loading...</Box>}>
             <AuthForm />

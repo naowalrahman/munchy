@@ -88,19 +88,19 @@ export default function DashboardClient({
   };
 
   return (
-    <Box minH="100vh" bg="background.canvas" py={8}>
-      <Container maxW="7xl">
-        <VStack align="stretch" gap={8}>
+    <Box minH="100dvh" bg="background.canvas" py={{ base: 4, md: 8 }}>
+      <Container maxW={{ base: "full", lg: "7xl" }} px={{ base: 4, md: 6 }}>
+        <VStack align="stretch" gap={{ base: 6, md: 8 }}>
           <MotionBox initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
-            <HStack justify="space-between" align="center" flexWrap="wrap" gap={4}>
+            <HStack justify="space-between" align="center" flexWrap="wrap" gap={{ base: 3, md: 4 }}>
               <VStack align="start" gap={2}>
-                <Heading size="2xl" color="text.default">
+                <Heading size={{ base: "xl", md: "2xl" }} color="text.default">
                   Food Diary
                 </Heading>
                 <DateSelector currentDate={selectedDate} onDateChange={setSelectedDate} />
               </VStack>
               <form action={signOut}>
-                <Button type="submit" colorPalette="red" variant="outline">
+                <Button type="submit" colorPalette="red" variant="outline" size={{ base: "sm", md: "md" }}>
                   Sign Out
                 </Button>
               </form>
@@ -160,7 +160,7 @@ export default function DashboardClient({
               <Button
                 variant="outline"
                 colorPalette="brand"
-                size="lg"
+                size={{ base: "md", md: "lg" }}
                 w="full"
                 onClick={() => setIsCustomMealDialogOpen(true)}
               >

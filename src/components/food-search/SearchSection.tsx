@@ -24,14 +24,7 @@ export function SearchSection({
   return (
     <>
       <Box position="relative" w="full">
-        <Box
-          position="absolute"
-          left={3}
-          top="50%"
-          transform="translateY(-50%)"
-          color="text.muted"
-          zIndex={1}
-        >
+        <Box position="absolute" left={3} top="50%" transform="translateY(-50%)" color="text.muted" zIndex={1}>
           <IoSearch size={20} />
         </Box>
         <Input
@@ -57,14 +50,7 @@ export function SearchSection({
       )}
 
       {!isSearching && searchResults.length > 0 && (
-        <Box
-          flex="1"
-          overflowY="auto"
-          maxH="400px"
-          borderRadius="md"
-          borderWidth="1px"
-          borderColor="border.default"
-        >
+        <Box flex="1" overflowY="auto" maxH="400px" borderRadius="md" borderWidth="1px" borderColor="border.default">
           <MotionVStack
             align="stretch"
             gap={0}
@@ -133,4 +119,3 @@ export function SearchSection({
     </>
   );
 }
-

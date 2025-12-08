@@ -19,8 +19,8 @@ export default function LandingPage() {
       <GeometricBackground />
 
       {/* Hero Section */}
-      <Box position="relative" zIndex={1} py={{ base: 20, md: 32 }} px={4}>
-        <Container maxW="4xl" textAlign="center">
+      <Box position="relative" zIndex={1} py={{ base: 14, md: 32 }} px={{ base: 4, md: 6 }}>
+        <Container maxW={{ base: "full", md: "4xl" }} textAlign="center">
           <MotionVStack
             gap={8}
             initial={{ opacity: 0, y: 20 }}
@@ -28,7 +28,7 @@ export default function LandingPage() {
             transition={{ duration: 0.8, ease: "easeOut" }}
           >
             <MotionHeading
-              size="5xl"
+              size={{ base: "3xl", md: "5xl" }}
               fontWeight="extrabold"
               lineHeight="1.1"
               initial={{ opacity: 0, y: 20 }}
@@ -53,7 +53,7 @@ export default function LandingPage() {
               </Box>
             </MotionHeading>
             <MotionText
-              fontSize="xl"
+              fontSize={{ base: "md", md: "xl" }}
               color="text.muted"
               maxW="2xl"
               initial={{ opacity: 0 }}
@@ -71,10 +71,23 @@ export default function LandingPage() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.6, duration: 0.8 }}
             >
-              <Button asChild size="xl" colorPalette="brand" px={8} fontSize="lg">
+              <Button
+                asChild
+                size={{ base: "lg", md: "xl" }}
+                colorPalette="brand"
+                px={{ base: 6, md: 8 }}
+                fontSize={{ base: "md", md: "lg" }}
+              >
                 <Link href="/login?mode=signup">Start Tracking</Link>
               </Button>
-              <Button asChild size="xl" variant="outline" colorPalette="brand" px={8} fontSize="lg">
+              <Button
+                asChild
+                size={{ base: "lg", md: "xl" }}
+                variant="outline"
+                colorPalette="brand"
+                px={{ base: 6, md: 8 }}
+                fontSize={{ base: "md", md: "lg" }}
+              >
                 <Link href="#features">Learn More</Link>
               </Button>
             </MotionStack>
@@ -83,11 +96,19 @@ export default function LandingPage() {
       </Box>
 
       {/* Features Section */}
-      <Box id="features" py={24} px={4} position="relative" zIndex={1} bg="bg.canvas/50" backdropFilter="blur(10px)">
-        <Container maxW="7xl">
-          <VStack gap={16}>
+      <Box
+        id="features"
+        py={{ base: 16, md: 24 }}
+        px={{ base: 4, md: 6 }}
+        position="relative"
+        zIndex={1}
+        bg="bg.canvas/50"
+        backdropFilter="blur(10px)"
+      >
+        <Container maxW={{ base: "full", md: "7xl" }}>
+          <VStack gap={{ base: 12, md: 16 }}>
             <MotionHeading
-              size="3xl"
+              size={{ base: "2xl", md: "3xl" }}
               textAlign="center"
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
@@ -96,7 +117,7 @@ export default function LandingPage() {
             >
               Why Munchy?
             </MotionHeading>
-            <SimpleGrid columns={{ base: 1, md: 3 }} gap={8} w="full">
+            <SimpleGrid columns={{ base: 1, md: 3 }} gap={{ base: 6, md: 8 }} w="full">
               <FeatureCard
                 icon={FaRobot}
                 title="AI Food Logging"
@@ -133,7 +154,7 @@ type FeatureCardProps = {
 function FeatureCard({ icon, title, description, delay }: FeatureCardProps) {
   return (
     <MotionBox
-      p={8}
+      p={{ base: 6, md: 8 }}
       borderRadius="2xl"
       textStyle="liquid-glass"
       initial={{ opacity: 0, y: 20 }}
@@ -144,10 +165,10 @@ function FeatureCard({ icon, title, description, delay }: FeatureCardProps) {
     >
       <VStack align="start" gap={5}>
         <Box p={3} bg="brand.900" borderRadius="xl" color="brand.300">
-          <Icon as={icon} fontSize="3xl" />
+          <Icon as={icon} fontSize={{ base: "2xl", md: "3xl" }} />
         </Box>
-        <Heading size="xl">{title}</Heading>
-        <Text color="text.muted" fontSize="lg" lineHeight="tall">
+        <Heading size={{ base: "lg", md: "xl" }}>{title}</Heading>
+        <Text color="text.muted" fontSize={{ base: "md", md: "lg" }} lineHeight="tall">
           {description}
         </Text>
       </VStack>

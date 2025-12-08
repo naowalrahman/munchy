@@ -97,4 +97,3 @@ export function ScanSection({ isScannerReady, isStartingScanner, scannerError, o
     </VStack>
   );
 }
-

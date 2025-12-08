@@ -1,6 +1,6 @@
 "use client";
 
-import { Box, VStack, HStack, Text, Button, Heading, Spinner } from "@chakra-ui/react";
+import { Box, VStack, HStack, Text, Button, Heading, Spinner, useBreakpointValue } from "@chakra-ui/react";
 import { useCallback, useState } from "react";
 import dynamic from "next/dynamic";
 import { motion, AnimatePresence } from "framer-motion";
@@ -16,6 +16,7 @@ import { StagedItemsCard } from "./StagedItemsCard";
 import { useBarcodeScanner } from "./useBarcodeScanner";
 import { useFoodSearch } from "./useFoodSearch";
 import type { FoodSearchDialogProps, InputMode, StagedFood } from "./types";
+import React from "react";
 
 const MotionBox = motion.create(Box);
 
@@ -66,6 +67,8 @@ export function FoodSearchDialog({ isOpen, onClose, mealName, onFoodAdded }: Foo
   const [scannedBarcode, setScannedBarcode] = useState<string | null>(null);
 
   const { searchQuery, setSearchQuery, searchResults, isSearching, resetSearch } = useFoodSearch(inputMode);
+
+  const isMobile = useBreakpointValue({ base: true, md: false }) ?? false;
 
   const handleBarcodeNutritionLoaded = useCallback((nutritionData: NutritionalData, barcode: string) => {
     setSelectedFood(nutritionData);
@@ -247,26 +250,30 @@ export function FoodSearchDialog({ isOpen, onClose, mealName, onFoodAdded }: Foo
         {isOpen && (
           <MotionBox
             position="fixed"
-            top="50%"
-            left="50%"
-            w={{ base: "95vw", md: "600px" }}
-            maxH="85vh"
+            top={isMobile ? 0 : "50%"}
+            left={isMobile ? 0 : "50%"}
+            right={isMobile ? 0 : "auto"}
+            bottom={isMobile ? 0 : "auto"}
+            w={isMobile ? "100vw" : { base: "95vw", md: "600px" }}
+            maxW={isMobile ? "100vw" : "600px"}
+            h={isMobile ? "100dvh" : "auto"}
+            maxH={isMobile ? "100dvh" : "85vh"}
             bg="background.canvas"
-            borderRadius="xl"
+            borderRadius={isMobile ? "0" : "xl"}
             borderWidth="1px"
             borderColor="border.default"
             boxShadow="2xl"
             zIndex={1000}
-            p={6}
-            initial={{ x: "-50%", y: "-50%", opacity: 0, scale: 0.95 }}
-            animate={{ x: "-50%", y: "-50%", opacity: 1, scale: 1 }}
-            exit={{ x: "-50%", y: "-50%", opacity: 0, scale: 0.95 }}
+            p={isMobile ? 4 : 6}
+            initial={isMobile ? { opacity: 0, x: -64 } : { x: "-100vw", opacity: 0, scale: 0.95 }}
+            animate={isMobile ? { opacity: 1, x: 0 } : { x: "0", opacity: 1, scale: 1 }}
+            exit={isMobile ? { opacity: 0, x: -64 } : { x: "-100vw", opacity: 0, scale: 0.95 }}
             transition={{ type: "spring", damping: 25, stiffness: 300 }}
             overflowY="auto"
           >
-            <VStack align="stretch" gap={4} h="full">
+            <VStack align="stretch" gap={{ base: 3, md: 4 }} h="full">
               <HStack justify="space-between" align="center">
-                <Heading size="lg" color="text.default">
+                <Heading size={{ base: "md", md: "lg" }} color="text.default">
                   {inputMode === "search" ? "Search Foods" : "Scan Barcode"}
                 </Heading>
                 <Button onClick={handleClose} variant="ghost" size="sm" colorPalette="gray">
@@ -287,7 +294,7 @@ export function FoodSearchDialog({ isOpen, onClose, mealName, onFoodAdded }: Foo
                   variant={inputMode === "search" ? "solid" : "outline"}
                   colorPalette={inputMode === "search" ? "brand" : "gray"}
                   onClick={() => handleModeToggle("search")}
-                  size="md"
+                  size={{ base: "sm", md: "md" }}
                 >
                   <IoSearch size={18} />
                   <Text ml={2}>Search</Text>
@@ -297,7 +304,7 @@ export function FoodSearchDialog({ isOpen, onClose, mealName, onFoodAdded }: Foo
                   variant={inputMode === "scan" ? "solid" : "outline"}
                   colorPalette={inputMode === "scan" ? "brand" : "gray"}
                   onClick={() => handleModeToggle("scan")}
-                  size="md"
+                  size={{ base: "sm", md: "md" }}
                 >
                   <IoBarcodeOutline size={18} />
                   <Text ml={2}>Scan</Text>
@@ -362,4 +369,3 @@ export function FoodSearchDialog({ isOpen, onClose, mealName, onFoodAdded }: Foo
     </>
   );
 }
-

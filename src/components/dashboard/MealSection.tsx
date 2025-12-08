@@ -195,7 +195,7 @@ export function MealSection({ mealName, entries, onFoodAdded }: MealSectionProps
         borderRadius="xl"
         borderWidth="1px"
         borderColor="border.default"
-        p={6}
+        p={{ base: 4, md: 6 }}
         backdropFilter="blur(12px)"
         boxShadow="0 4px 30px rgba(0, 0, 0, 0.1)"
         transition="all 0.2s"
@@ -207,10 +207,10 @@ export function MealSection({ mealName, entries, onFoodAdded }: MealSectionProps
         <VStack align="stretch" gap={4}>
           {/* Header */}
           <HStack justify="space-between" align="center">
-            <Heading size="md" color="text.default">
+            <Heading size={{ base: "sm", md: "md" }} color="text.default">
               {mealName}
             </Heading>
-            <Button colorPalette="brand" size="sm" onClick={() => setIsSearchOpen(true)}>
+            <Button colorPalette="brand" size={{ base: "sm", md: "sm" }} onClick={() => setIsSearchOpen(true)}>
               <IoAdd />
               Add Food
             </Button>
@@ -219,9 +219,9 @@ export function MealSection({ mealName, entries, onFoodAdded }: MealSectionProps
           {/* Meal Summary */}
           {entries.length > 0 && (
             <Box bg="background.subtle" borderRadius="lg" p={4}>
-              <Grid templateColumns="repeat(4, 1fr)" gap={4}>
+              <Grid templateColumns={{ base: "repeat(2, 1fr)", md: "repeat(4, 1fr)" }} gap={{ base: 3, md: 4 }}>
                 <Box textAlign="center">
-                  <Text fontSize="2xl" fontWeight="bold" color="brand.500">
+                  <Text fontSize={{ base: "xl", md: "2xl" }} fontWeight="bold" color="brand.500">
                     {totalCalories.toFixed(0)}
                   </Text>
                   <Text fontSize="xs" color="text.muted" textTransform="uppercase">
@@ -229,7 +229,7 @@ export function MealSection({ mealName, entries, onFoodAdded }: MealSectionProps
                   </Text>
                 </Box>
                 <Box textAlign="center">
-                  <Text fontSize="2xl" fontWeight="bold" color="text.default">
+                  <Text fontSize={{ base: "xl", md: "2xl" }} fontWeight="bold" color="text.default">
                     {totalProtein.toFixed(1)}g
                   </Text>
                   <Text fontSize="xs" color="text.muted" textTransform="uppercase">
@@ -237,7 +237,7 @@ export function MealSection({ mealName, entries, onFoodAdded }: MealSectionProps
                   </Text>
                 </Box>
                 <Box textAlign="center">
-                  <Text fontSize="2xl" fontWeight="bold" color="text.default">
+                  <Text fontSize={{ base: "xl", md: "2xl" }} fontWeight="bold" color="text.default">
                     {totalCarbs.toFixed(1)}g
                   </Text>
                   <Text fontSize="xs" color="text.muted" textTransform="uppercase">
@@ -245,7 +245,7 @@ export function MealSection({ mealName, entries, onFoodAdded }: MealSectionProps
                   </Text>
                 </Box>
                 <Box textAlign="center">
-                  <Text fontSize="2xl" fontWeight="bold" color="text.default">
+                  <Text fontSize={{ base: "xl", md: "2xl" }} fontWeight="bold" color="text.default">
                     {totalFat.toFixed(1)}g
                   </Text>
                   <Text fontSize="xs" color="text.muted" textTransform="uppercase">

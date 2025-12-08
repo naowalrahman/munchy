@@ -2,9 +2,24 @@
 
 :root {
   color-scheme: dark;
+  font-size: 100%;
+}
+
+@media (max-width: 640px) {
+  :root {
+    font-size: 93.75%;
+  }
+}
+
+html,
+body {
+  min-height: 100vh;
+  min-height: 100dvh;
 }
 
 body {
+  margin: 0;
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
   background-color: #09090b;
   /* bg.default */
   color: #f4f4f5;

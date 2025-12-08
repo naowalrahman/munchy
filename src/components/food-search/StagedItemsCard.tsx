@@ -65,4 +65,3 @@ export function StagedItemsCard({ stagedItems, onRemove }: StagedItemsCardProps)
     </VStack>
   );
 }
-

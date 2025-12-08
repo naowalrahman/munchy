@@ -37,6 +37,7 @@ export function NutritionFactsDrawer({
 
   // Determine if we should show drawer or modal based on screen size
   const isWideScreen = useBreakpointValue({ base: false, md: true });
+  const isMobile = !isWideScreen;
 
   const handleServingChange = useCallback((amount: number, unit: string) => {
     setServingAmount(amount);
@@ -156,10 +157,10 @@ export function NutritionFactsDrawer({
   const effectiveServingSizeUnit = normalizeUnitForDisplay(nutritionData.servingSizeUnit || "g");
 
   const content = (
-    <VStack align="stretch" gap={4} h="full">
+    <VStack align="stretch" gap={{ base: 3, md: 4 }} h="full">
       {/* Header */}
       <HStack justify="space-between" align="center">
-        <Heading size="lg" color="text.default">
+        <Heading size={{ base: "md", md: "lg" }} color="text.default">
           Nutrition Facts
         </Heading>
         <Button onClick={onClose} variant="ghost" size="sm" colorPalette="gray">
@@ -169,7 +170,7 @@ export function NutritionFactsDrawer({
 
       {/* Food Description */}
       <Box>
-        <Text fontSize="xl" fontWeight="semibold" color="text.default">
+        <Text fontSize={{ base: "lg", md: "xl" }} fontWeight="semibold" color="text.default">
           {nutritionData.description}
         </Text>
         {nutritionData.brandName && (
@@ -199,7 +200,7 @@ export function NutritionFactsDrawer({
         borderRadius="lg"
         borderWidth="2px"
         borderColor="border.default"
-        p={4}
+        p={{ base: 3, md: 4 }}
         flex="1"
         overflowY="auto"
       >
@@ -209,7 +210,7 @@ export function NutritionFactsDrawer({
             <Text fontSize="sm" color="text.muted" fontWeight="medium">
               CALORIES
             </Text>
-            <Text fontSize="4xl" fontWeight="bold" color="brand.500">
+            <Text fontSize={{ base: "3xl", md: "4xl" }} fontWeight="bold" color="brand.500">
               {formatNutrientValue(nutritionData.calories)}
             </Text>
           </Box>
@@ -324,7 +325,7 @@ export function NutritionFactsDrawer({
       {/* Add/Update Button */}
       <Button
         colorPalette="brand"
-        size="lg"
+        size={{ base: "md", md: "lg" }}
         onClick={handleAddToMeal}
         w="full"
         transition="all 0.2s"
@@ -364,34 +365,35 @@ export function NutritionFactsDrawer({
           {/* Drawer/Modal Content */}
           <MotionBox
             position="fixed"
-            top={isWideScreen ? 0 : "50%"}
-            right={isWideScreen ? 0 : "50%"}
+            top={isMobile ? 0 : 0}
+            right={isWideScreen ? 0 : "auto"}
             bottom={isWideScreen ? 0 : undefined}
-            left={isWideScreen ? undefined : "50%"}
-            w={isWideScreen ? "500px" : "90vw"}
-            maxW={isWideScreen ? undefined : "500px"}
-            maxH={isWideScreen ? undefined : "90vh"}
+            left={isWideScreen ? undefined : 0}
+            w={isWideScreen ? "500px" : "100vw"}
+            maxW={isWideScreen ? undefined : "100vw"}
+            h={isWideScreen ? "100%" : "100dvh"}
+            maxH={isWideScreen ? "100%" : "100dvh"}
             bg="background.canvas"
-            borderRadius={isWideScreen ? "0" : "xl"}
+            borderRadius={isWideScreen ? "0" : "0"}
             borderLeftWidth={isWideScreen ? "1px" : "0"}
             borderColor="border.default"
             boxShadow="2xl"
             zIndex={1001}
-            p={6}
+            p={{ base: 4, md: 6 }}
             overflowY="auto"
             initial={{
-              x: isWideScreen ? "100%" : "-50%",
-              y: isWideScreen ? 0 : "-50%",
+              x: isWideScreen ? "100%" : 0,
+              y: isWideScreen ? 0 : 32,
               opacity: isWideScreen ? 1 : 0,
             }}
             animate={{
-              x: isWideScreen ? 0 : "-50%",
-              y: isWideScreen ? 0 : "-50%",
+              x: isWideScreen ? 0 : 0,
+              y: isWideScreen ? 0 : 0,
               opacity: 1,
             }}
             exit={{
-              x: isWideScreen ? "100%" : "-50%",
-              y: isWideScreen ? 0 : "-50%",
+              x: isWideScreen ? "100%" : 0,
+              y: isWideScreen ? 0 : 24,
               opacity: isWideScreen ? 1 : 0,
             }}
             transition={{ type: "spring", damping: 25, stiffness: 300 }}

@@ -59,4 +59,3 @@ export function useFoodSearch(inputMode: InputMode): UseFoodSearchResult {
     resetSearch,
   };
 }
-

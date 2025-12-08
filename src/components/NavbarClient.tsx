@@ -67,19 +67,37 @@ export default function NavbarClient({ initialUser }: NavbarClientProps) {
   };
 
   return (
-    <Box as="nav" py={4} px={8} bg="bg.panel" shadow="sm">
-      <Flex justify="space-between" align="center" maxW="7xl" mx="auto">
+    <Box
+      as="nav"
+      py={{ base: 3, md: 4 }}
+      px={{ base: 4, md: 8 }}
+      bg="bg.panel"
+      shadow="sm"
+      position="sticky"
+      top="0"
+      zIndex="docked"
+      backdropFilter="blur(10px)"
+      borderBottomWidth="1px"
+      borderColor="border.muted"
+    >
+      <Flex
+        justify="space-between"
+        align="center"
+        maxW={{ base: "full", lg: "7xl" }}
+        mx="auto"
+        gap={{ base: 2, md: 4 }}
+      >
         <Link href="/">
-          <Heading size="lg" color="brand.500" letterSpacing="tight">
+          <Heading size={{ base: "md", md: "lg" }} color="brand.500" letterSpacing="tight">
             Munchy
           </Heading>
         </Link>
 
-        <HStack gap={4}>
+        <HStack gap={{ base: 2, md: 4 }}>
           {user ? (
             <Menu.Root positioning={{ placement: "bottom-end" }}>
               <Menu.Trigger asChild>
-                <Button variant="ghost" borderRadius="full" p={0} minW="auto">
+                <Button variant="ghost" borderRadius="full" p={0} minW="auto" size={{ base: "sm", md: "md" }}>
                   <Avatar.Root>
                     <Avatar.Fallback name={user.fullName || user.email || undefined} />
                     {user.avatarUrl && <Avatar.Image src={user.avatarUrl} />}
@@ -101,10 +119,10 @@ export default function NavbarClient({ initialUser }: NavbarClientProps) {
             </Menu.Root>
           ) : (
             <>
-              <Button asChild variant="ghost" colorPalette="brand">
+              <Button asChild variant="ghost" colorPalette="brand" size={{ base: "sm", md: "md" }}>
                 <Link href="/login">Log In</Link>
               </Button>
-              <Button asChild colorPalette="brand">
+              <Button asChild colorPalette="brand" size={{ base: "sm", md: "md" }}>
                 <Link href="/login?mode=signup">Get Started</Link>
               </Button>
             </>

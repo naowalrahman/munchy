@@ -3,7 +3,7 @@ import { Box } from "@chakra-ui/react";
 
 export default function Home() {
   return (
-    <Box minH="100vh" bg="bg.canvas">
+    <Box minH="100dvh" bg="bg.canvas">
       <LandingPage />
     </Box>
   );

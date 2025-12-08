@@ -18,4 +18,3 @@ export type StagedFood = {
 };
 
 export const SCANNER_ELEMENT_ID = "barcode-scanner";
-

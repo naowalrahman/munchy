@@ -46,7 +46,7 @@ export function DateSelector({ currentDate, onDateChange }: DateSelectorProps) {
   };
 
   return (
-    <HStack gap={3} justify="center">
+    <HStack gap={{ base: 2, md: 3 }} justify="center" flexWrap="wrap">
       <IconButton aria-label="Previous day" onClick={handlePreviousDay} variant="ghost" colorPalette="brand" size="sm">
         <IoChevronBack />
       </IconButton>
@@ -58,13 +58,13 @@ export function DateSelector({ currentDate, onDateChange }: DateSelectorProps) {
         transition={{ duration: 0.2 }}
       >
         <HStack gap={2} align="center">
-          <Box textAlign="center" minW="200px">
+          <Box textAlign="center" minW={{ base: "auto", md: "200px" }}>
             {isToday ? (
-              <Text fontSize="lg" fontWeight="bold" color="brand.500">
+              <Text fontSize={{ base: "md", md: "lg" }} fontWeight="bold" color="brand.500">
                 Today
               </Text>
             ) : (
-              <Text fontSize="lg" fontWeight="semibold" color="text.default">
+              <Text fontSize={{ base: "md", md: "lg" }} fontWeight="semibold" color="text.default">
                 {date.toLocaleDateString("en-US", {
                   month: "short",
                   day: "numeric",

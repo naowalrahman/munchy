@@ -79,7 +79,7 @@ export function DailySummary({ entries, initialGoals = null }: DailySummaryProps
       borderRadius="xl"
       borderWidth="1px"
       borderColor="border.default"
-      p={6}
+      p={{ base: 4, md: 6 }}
       backdropFilter="blur(12px)"
       boxShadow="0 4px 30px rgba(0, 0, 0, 0.1)"
       transition="all 0.2s"
@@ -91,7 +91,7 @@ export function DailySummary({ entries, initialGoals = null }: DailySummaryProps
       <VStack align="stretch" gap={6}>
         {/* Header */}
         <HStack justify="space-between" align="center">
-          <Heading size="lg" color="text.default">
+          <Heading size={{ base: "md", md: "lg" }} color="text.default">
             Today&rsquo;s Summary
           </Heading>
           <Link href="/profile">
@@ -106,7 +106,7 @@ export function DailySummary({ entries, initialGoals = null }: DailySummaryProps
         <Box
           bg="background.subtle"
           borderRadius="lg"
-          p={6}
+          p={{ base: 5, md: 6 }}
           textAlign="center"
           borderWidth="2px"
           borderColor="brand.500"
@@ -115,10 +115,10 @@ export function DailySummary({ entries, initialGoals = null }: DailySummaryProps
             Total Calories
           </Text>
           <HStack justify="center" align="baseline" gap={2}>
-            <Text fontSize="5xl" fontWeight="bold" color="brand.500">
+            <Text fontSize={{ base: "4xl", md: "5xl" }} fontWeight="bold" color="brand.500">
               <AnimatedNumber value={Math.round(totalCalories)} />
             </Text>
-            <Text fontSize="2xl" color="text.muted" fontWeight="medium">
+            <Text fontSize={{ base: "xl", md: "2xl" }} color="text.muted" fontWeight="medium">
               / {calorieGoal}
             </Text>
           </HStack>
@@ -132,7 +132,7 @@ export function DailySummary({ entries, initialGoals = null }: DailySummaryProps
         </Box>
 
         {/* Macronutrients Grid */}
-        <Grid templateColumns={{ base: "1fr", md: "repeat(3, 1fr)" }} gap={4}>
+        <Grid templateColumns={{ base: "1fr", md: "repeat(3, 1fr)" }} gap={{ base: 3, md: 4 }}>
           {/* Protein */}
           <Box bg="background.subtle" borderRadius="lg" p={4}>
             <VStack align="stretch" gap={3}>
@@ -140,10 +140,10 @@ export function DailySummary({ entries, initialGoals = null }: DailySummaryProps
                 Protein
               </Text>
               <HStack align="baseline" gap={1}>
-                <Text fontSize="3xl" fontWeight="bold" color="text.default">
+                <Text fontSize={{ base: "2xl", md: "3xl" }} fontWeight="bold" color="text.default">
                   <AnimatedNumber value={Math.round(totalProtein)} />
                 </Text>
-                <Text fontSize="lg" color="text.muted">
+                <Text fontSize={{ base: "md", md: "lg" }} color="text.muted">
                   g
                 </Text>
               </HStack>
@@ -172,10 +172,10 @@ export function DailySummary({ entries, initialGoals = null }: DailySummaryProps
                 Carbs
               </Text>
               <HStack align="baseline" gap={1}>
-                <Text fontSize="3xl" fontWeight="bold" color="text.default">
+                <Text fontSize={{ base: "2xl", md: "3xl" }} fontWeight="bold" color="text.default">
                   <AnimatedNumber value={Math.round(totalCarbs)} />
                 </Text>
-                <Text fontSize="lg" color="text.muted">
+                <Text fontSize={{ base: "md", md: "lg" }} color="text.muted">
                   g
                 </Text>
               </HStack>
@@ -204,10 +204,10 @@ export function DailySummary({ entries, initialGoals = null }: DailySummaryProps
                 Fat
               </Text>
               <HStack align="baseline" gap={1}>
-                <Text fontSize="3xl" fontWeight="bold" color="text.default">
+                <Text fontSize={{ base: "2xl", md: "3xl" }} fontWeight="bold" color="text.default">
                   <AnimatedNumber value={Math.round(totalFat)} />
                 </Text>
-                <Text fontSize="lg" color="text.muted">
+                <Text fontSize={{ base: "md", md: "lg" }} color="text.muted">
                   g
                 </Text>
               </HStack>

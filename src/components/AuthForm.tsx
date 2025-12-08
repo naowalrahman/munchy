@@ -54,22 +54,22 @@ export default function AuthForm() {
     <Box
       w="full"
       maxW="md"
-      p={8}
+      p={{ base: 6, md: 8 }}
       borderRadius="xl"
       bg="bg.panel"
       shadow="lg"
       borderWidth="1px"
       borderColor="border.muted"
     >
-      <VStack gap={6} as="form" onSubmit={handleAuth}>
-        <Heading size="xl" textAlign="center">
+      <VStack gap={{ base: 5, md: 6 }} as="form" onSubmit={handleAuth}>
+        <Heading size={{ base: "lg", md: "xl" }} textAlign="center">
           {mode === "signup" ? "Create an Account" : "Welcome Back"}
         </Heading>
 
-        <Stack gap={4} w="full">
+        <Stack gap={{ base: 3, md: 4 }} w="full">
           {mode === "signup" && (
             <Box>
-              <Text mb={2} fontWeight="medium">
+              <Text mb={2} fontWeight="medium" fontSize="sm">
                 Name
               </Text>
               <Input
@@ -83,7 +83,7 @@ export default function AuthForm() {
           )}
 
           <Box>
-            <Text mb={2} fontWeight="medium">
+            <Text mb={2} fontWeight="medium" fontSize="sm">
               Email
             </Text>
             <Input
@@ -96,7 +96,7 @@ export default function AuthForm() {
           </Box>
 
           <Box>
-            <Text mb={2} fontWeight="medium">
+            <Text mb={2} fontWeight="medium" fontSize="sm">
               Password
             </Text>
             <Input
@@ -115,11 +115,11 @@ export default function AuthForm() {
           </Text>
         )}
 
-        <Button type="submit" colorPalette="brand" w="full" loading={loading}>
+        <Button type="submit" colorPalette="brand" w="full" loading={loading} size={{ base: "md", md: "lg" }}>
           {mode === "signup" ? "Sign Up" : "Log In"}
         </Button>
 
-        <Text fontSize="sm" color="text.muted">
+        <Text fontSize="sm" color="text.muted" textAlign="center">
           {mode === "signup" ? "Already have an account?" : "Don't have an account?"}{" "}
           <Button
             variant="ghost"

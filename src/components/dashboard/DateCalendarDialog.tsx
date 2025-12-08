@@ -1,6 +1,6 @@
 "use client";
 
-import { Box, VStack, HStack, Text, Button, Heading, SimpleGrid } from "@chakra-ui/react";
+import { Box, VStack, HStack, Text, Button, Heading, SimpleGrid, useBreakpointValue } from "@chakra-ui/react";
 import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { IoClose, IoChevronBack, IoChevronForward } from "react-icons/io5";
@@ -25,6 +25,8 @@ export function DateCalendarDialog({ isOpen, onClose, currentDate, onDateChange 
   const selectedDate = parseLocalDate(currentDate);
   const today = new Date();
   today.setHours(0, 0, 0, 0);
+
+  const isMobile = useBreakpointValue({ base: true, md: false }) ?? false;
 
   // State for the month being viewed in the calendar
   const [viewMonth, setViewMonth] = useState(() => {
@@ -147,26 +149,31 @@ export function DateCalendarDialog({ isOpen, onClose, currentDate, onDateChange 
         {isOpen && (
           <MotionBox
             position="fixed"
-            top="50%"
-            left="50%"
-            w={{ base: "90vw", md: "400px" }}
+            top={isMobile ? 0 : "50%"}
+            left={isMobile ? 0 : "50%"}
+            right={isMobile ? 0 : "auto"}
+            bottom={isMobile ? 0 : "auto"}
+            w={isMobile ? "100vw" : { base: "90vw", md: "400px" }}
+            maxW={isMobile ? "100vw" : "400px"}
+            h={isMobile ? "100dvh" : "auto"}
+            maxH={isMobile ? "100dvh" : "90vh"}
             bg="background.canvas"
-            borderRadius="xl"
+            borderRadius={isMobile ? "0" : "xl"}
             borderWidth="1px"
             borderColor="border.default"
             boxShadow="2xl"
             zIndex={1000}
-            p={6}
-            initial={{ x: "-50%", y: "-50%", opacity: 0, scale: 0.95 }}
-            animate={{ x: "-50%", y: "-50%", opacity: 1, scale: 1 }}
-            exit={{ x: "-50%", y: "-50%", opacity: 0, scale: 0.95 }}
+            p={{ base: 4, md: 6 }}
+            initial={isMobile ? { y: 24, opacity: 0 } : { x: "-50%", y: "-50%", opacity: 0, scale: 0.95 }}
+            animate={isMobile ? { y: 0, opacity: 1 } : { x: "-50%", y: "-50%", opacity: 1, scale: 1 }}
+            exit={isMobile ? { y: 24, opacity: 0 } : { x: "-50%", y: "-50%", opacity: 0, scale: 0.95 }}
             transition={{ type: "spring", damping: 25, stiffness: 300 }}
             onClick={(e) => e.stopPropagation()}
           >
-            <VStack align="stretch" gap={4}>
+            <VStack align="stretch" gap={{ base: 3, md: 4 }}>
               {/* Header */}
               <HStack justify="space-between" align="center">
-                <Heading size="lg" color="text.default">
+                <Heading size={{ base: "md", md: "lg" }} color="text.default">
                   Select Date
                 </Heading>
                 <Button onClick={onClose} variant="ghost" size="sm" colorPalette="gray" type="button">
@@ -185,7 +192,13 @@ export function DateCalendarDialog({ isOpen, onClose, currentDate, onDateChange 
                 >
                   <IoChevronBack />
                 </Button>
-                <Text fontSize="lg" fontWeight="semibold" color="text.default" minW="200px" textAlign="center">
+                <Text
+                  fontSize={{ base: "md", md: "lg" }}
+                  fontWeight="semibold"
+                  color="text.default"
+                  minW="200px"
+                  textAlign="center"
+                >
                   {monthYearLabel}
                 </Text>
                 <Button
