@@ -92,18 +92,8 @@ export default function DashboardClient({
       <Container maxW={{ base: "full", lg: "7xl" }} px={{ base: 4, md: 6 }}>
         <VStack align="stretch" gap={{ base: 6, md: 8 }}>
           <MotionBox initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
-            <HStack justify="space-between" align="center" flexWrap="wrap" gap={{ base: 3, md: 4 }}>
-              <VStack align="start" gap={2}>
-                <Heading size={{ base: "xl", md: "2xl" }} color="text.default">
-                  Food Diary
-                </Heading>
-                <DateSelector currentDate={selectedDate} onDateChange={setSelectedDate} />
-              </VStack>
-              <form action={signOut}>
-                <Button type="submit" colorPalette="red" variant="outline" size={{ base: "sm", md: "md" }}>
-                  Sign Out
-                </Button>
-              </form>
+            <HStack justify="center" align="center" flexWrap="wrap" gap={{ base: 3, md: 4 }}>
+              <DateSelector currentDate={selectedDate} onDateChange={setSelectedDate} />
             </HStack>
           </MotionBox>
 

@@ -92,7 +92,7 @@ export function DailySummary({ entries, initialGoals = null }: DailySummaryProps
         {/* Header */}
         <HStack justify="space-between" align="center">
           <Heading size={{ base: "md", md: "lg" }} color="text.default">
-            Today&rsquo;s Summary
+            Summary
           </Heading>
           <Link href="/profile">
             <Button size="sm" variant="ghost" colorPalette="brand">
