@@ -11,7 +11,8 @@ import { toaster } from "@/components/ui/toaster";
 import { Box, Button, Container, Heading, HStack, VStack } from "@chakra-ui/react";
 import { motion } from "framer-motion";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { IoAdd } from "react-icons/io5";
+import { IoAdd, IoChatbubbleEllipses } from "react-icons/io5";
+import { useRouter } from "next/navigation";
 import { signOut } from "./actions";
 
 const MotionBox = motion.create(Box);
@@ -41,6 +42,7 @@ export default function DashboardClient({
   const [isLoadingData, setIsLoadingData] = useState(false);
   const [selectedDate, setSelectedDate] = useState(initialDate);
   const isInitialMount = useRef(true);
+  const router = useRouter();
 
   const standardMeals = useMemo(() => [...STANDARD_MEALS], []);
 
@@ -167,6 +169,33 @@ export default function DashboardClient({
         onClose={() => setIsCustomMealDialogOpen(false)}
         onAddMeal={handleAddCustomMeal}
       />
+
+      {/* Floating AI Agent Button */}
+      <MotionBox
+        position="fixed"
+        bottom={{ base: 6, md: 8 }}
+        right={{ base: 6, md: 8 }}
+        initial={{ opacity: 0, scale: 0 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.3, delay: 0.8 }}
+        whileHover={{ scale: 1.1 }}
+        whileTap={{ scale: 0.95 }}
+      >
+        <Button
+          colorPalette="brand"
+          size="xl"
+          borderRadius="full"
+          w={16}
+          h={16}
+          boxShadow="0 8px 32px rgba(49, 151, 149, 0.4)"
+          onClick={() => router.push("/agent")}
+          _hover={{
+            boxShadow: "0 12px 40px rgba(49, 151, 149, 0.6)",
+          }}
+        >
+          <IoChatbubbleEllipses size={28} />
+        </Button>
+      </MotionBox>
     </Box>
   );
 }
