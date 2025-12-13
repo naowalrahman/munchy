@@ -22,7 +22,6 @@ interface DateCalendarDialogProps {
 const MotionBox = motion.create(Box);
 
 export function DateCalendarDialog({ isOpen, onClose, currentDate, onDateChange }: DateCalendarDialogProps) {
-  const selectedDate = parseLocalDate(currentDate);
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 

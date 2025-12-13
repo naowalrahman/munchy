@@ -19,7 +19,7 @@ export default async function AgentPage() {
   }
 
   return (
-    <Container maxW="4xl" py={8} minH="100dvh">
+    <Container maxW="4xl" py={4} h="full" overflow="hidden">
       <AgentChat />
     </Container>
   );

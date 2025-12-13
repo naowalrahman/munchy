@@ -2,11 +2,12 @@
 
 import OpenAI from "openai";
 import { setDefaultOpenAIClient } from "@openai/agents-openai";
-import { Agent, run, tool, user } from "@openai/agents";
-import type { AgentInputItem, AgentOutputItem, RunToolCallItem, RunToolCallOutputItem } from "@openai/agents";
+import { Agent, AgentInputItem, run, tool } from "@openai/agents";
+import { OpenAIConversationsSession, RunToolCallItem, RunToolCallOutputItem } from "@openai/agents";
 import { z } from "zod";
 import { searchFoods, getFoodNutrition, NutritionalData, FoodSearchResult } from "./food";
-import { logFoodEntry, getFoodLogsForDate, FoodLogEntry } from "./foodLog";
+import { logFoodEntry, getFoodLogsForDate, FoodLogEntry, deleteFoodEntry } from "./foodLog";
+import { getToday } from "@/utils/dateHelpers";
 
 // ============================================================================
 // Groq Model Configuration
@@ -60,8 +61,8 @@ const getFoodNutritionTool = tool({
         {
           description: nutrition.description,
           brandName: nutrition.brandName,
-          servingSize: nutrition.servingSize,
-          servingSizeUnit: nutrition.servingSizeUnit,
+          servingSize: nutrition.servingSize ?? 100,
+          servingSizeUnit: nutrition.servingSizeUnit ?? "g",
           calories: Math.round(nutrition.calories),
           protein: nutrition.protein?.amount ? Math.round(nutrition.protein.amount * 10) / 10 : null,
           carbohydrates: nutrition.carbohydrates?.amount ? Math.round(nutrition.carbohydrates.amount * 10) / 10 : null,
@@ -116,6 +117,26 @@ const logFoodTool = tool({
   },
 });
 
+const removeFoodLogTool = tool({
+  name: "remove_food_log",
+  description:
+    "Remove a food log entry. Use this to correct mistakes or remove unnecessary entries or if the user tells you to remove a food.",
+  parameters: z.object({
+    id: z.string().describe("The ID of the food log entry to remove"),
+  }),
+  async execute({ id }): Promise<string> {
+    try {
+      const result = await deleteFoodEntry(id);
+      if (result.success) {
+        return `Successfully removed food log entry ${id}`;
+      }
+      return `Failed to remove food log entry: ${result.error}`;
+    } catch (error) {
+      return `Error removing food log entry: ${error instanceof Error ? error.message : "Unknown error"}`;
+    }
+  },
+});
+
 const getDailyLogTool = tool({
   name: "get_daily_log",
   description:
@@ -155,7 +176,7 @@ const getDailyLogTool = tool({
       const summary = Object.entries(grouped)
         .map(([meal, foods]) => {
           const mealCalories = foods.reduce((sum, f) => sum + f.calories, 0);
-          const foodList = foods.map((f) => `  - ${f.food_description} (${f.calories} cal)`).join("\n");
+          const foodList = foods.map((f) => `  - [${f.id}] ${f.food_description} (${f.calories} cal)`).join("\n");
           return `${meal} (${Math.round(mealCalories)} cal):\n${foodList}`;
         })
         .join("\n\n");
@@ -234,7 +255,7 @@ When logging food:
 - Finally log it with the user's specified meal and serving size
 
 When answering about what the user ate:
-- Use get_daily_log with today's date (${new Date().toISOString().split("T")[0]}) unless they specify another date
+- Use get_daily_log with today's date (${getToday()}) unless they specify another date
 
 Be helpful, concise, and encouraging about the user's nutrition journey. Use emojis occasionally to be friendly! 🍎`,
   model: "openai/gpt-oss-20b",
@@ -243,7 +264,7 @@ Be helpful, concise, and encouraging about the user's nutrition journey. Use emo
     parallelToolCalls: false,
     maxTokens: 65536,
   },
-  tools: [searchFoodsTool, getFoodNutritionTool, logFoodTool, getDailyLogTool, webSearchTool],
+  tools: [searchFoodsTool, getFoodNutritionTool, removeFoodLogTool, logFoodTool, getDailyLogTool, webSearchTool],
 });
 
 // ============================================================================
@@ -271,16 +292,15 @@ export interface DisplayMessage {
  */
 export async function runAgent(
   userMessage: string,
-  previousResponseId?: string
+  history: AgentInputItem[]
 ): Promise<{
-  responseId: string | undefined;
+  history: AgentInputItem[];
   newDisplayMessages: DisplayMessage[];
   error?: string;
 }> {
   try {
-    const result = await (previousResponseId
-      ? run(munchyAgent, userMessage, { previousResponseId })
-      : run(munchyAgent, userMessage));
+    history.push({role: "user", content: userMessage});
+    const result = await run(munchyAgent, history);
 
     const newDisplayMessages: DisplayMessage[] = [];
 
@@ -310,13 +330,13 @@ export async function runAgent(
     }
 
     return {
-      responseId: result.lastResponseId,
+      history: result.history,
       newDisplayMessages,
     };
   } catch (error) {
     console.error("Agent error:", error);
     return {
-      responseId: undefined,
+      history,
       newDisplayMessages: [{ role: "user", content: userMessage }],
       error: error instanceof Error ? error.message : "An unexpected error occurred",
     };

@@ -35,10 +35,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="dark" suppressHydrationWarning>
-      <body className={`${geistSans.variable} ${geistMono.variable}`}>
+      <body className={`${geistSans.variable} ${geistMono.variable} flex flex-col h-dvh overflow-hidden`}>
         <Provider>
           <Navbar />
-          {children}
+          <main className="flex-1 overflow-auto">{children}</main>
           <Toaster />
         </Provider>
         <SpeedInsights />

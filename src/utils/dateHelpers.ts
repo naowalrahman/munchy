@@ -16,6 +16,12 @@ export function formatLocalDate(date: Date): string {
   return `${year}-${month}-${day}`;
 }
 
+export function getToday(): string {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  return formatLocalDate(today);
+}
+
 /**
  * Get first day of month (0 = Sunday, 1 = Monday, etc.)
  */

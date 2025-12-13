@@ -69,7 +69,7 @@ export default function NavbarClient({ initialUser }: NavbarClientProps) {
   return (
     <Box
       as="nav"
-      py={{ base: 3, md: 4 }}
+      py={{ base: 1, md: 2 }}
       px={{ base: 4, md: 8 }}
       bg="bg.panel"
       shadow="sm"
@@ -85,7 +85,7 @@ export default function NavbarClient({ initialUser }: NavbarClientProps) {
         align="center"
         maxW={{ base: "full", lg: "7xl" }}
         mx="auto"
-        gap={{ base: 2, md: 4 }}
+        gap={{ base: 1, md: 2 }}
       >
         <Link href="/">
           <Heading size={{ base: "md", md: "lg" }} color="brand.500" letterSpacing="tight">

@@ -1,134 +1,56 @@
 "use client";
 
 import { runAgent, DisplayMessage } from "@/app/actions/agent";
-import { AgentInputItem } from "@openai/agents";
 import { Box, Button, Flex, Heading, HStack, IconButton, Input, Spinner, Text, VStack } from "@chakra-ui/react";
-import { motion, AnimatePresence } from "framer-motion";
+import { AnimatePresence } from "framer-motion";
 import { useCallback, useRef, useEffect, useState } from "react";
-import { IoArrowBack, IoSend } from "react-icons/io5";
+import { IoArrowBack, IoSend, IoAdd } from "react-icons/io5";
 import { useRouter } from "next/navigation";
-
-const MotionBox = motion.create(Box);
-
-const glassStyles = {
-  bg: "rgba(255, 255, 255, 0.05)",
-  backdropFilter: "blur(16px)",
-  border: "1px solid rgba(255, 255, 255, 0.1)",
-  boxShadow: "0 8px 32px rgba(0, 0, 0, 0.3)",
-};
-
-function MessageBubble({ message, index }: { message: DisplayMessage; index: number }) {
-  const isUser = message.role === "user";
-  const isTool = message.role === "tool";
-
-  if (isTool) {
-    return (
-      <MotionBox
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.3, delay: index * 0.05 }}
-        alignSelf="center"
-        maxW="90%"
-        w="full"
-        px={4}
-        py={3}
-        borderRadius="xl"
-        bg="rgba(49, 151, 149, 0.15)"
-        border="1px solid rgba(49, 151, 149, 0.3)"
-        fontSize="sm"
-      >
-        <HStack gap={2} mb={2}>
-          <Box
-            w={2}
-            h={2}
-            borderRadius="full"
-            bg="brand.400"
-            animation={message.toolResult ? undefined : "pulse 1s infinite"}
-          />
-          <Text fontWeight="semibold" color="brand.300">
-            🔧 {message.toolName}
-          </Text>
-        </HStack>
-        {message.toolArgs && Object.keys(message.toolArgs).length > 0 && (
-          <Box
-            bg="rgba(0, 0, 0, 0.2)"
-            p={2}
-            borderRadius="md"
-            mb={2}
-            fontFamily="mono"
-            fontSize="xs"
-            color="text.muted"
-          >
-            <Text fontWeight="medium" color="text.default" mb={1}>
-              Input:
-            </Text>
-            <Text whiteSpace="pre-wrap">{JSON.stringify(message.toolArgs, null, 2)}</Text>
-          </Box>
-        )}
-        {message.toolResult && (
-          <Box
-            bg="rgba(0, 0, 0, 0.2)"
-            p={2}
-            borderRadius="md"
-            fontFamily="mono"
-            fontSize="xs"
-            color="text.muted"
-            maxH="200px"
-            overflowY="auto"
-          >
-            <Text fontWeight="medium" color="text.default" mb={1}>
-              Result:
-            </Text>
-            <Text whiteSpace="pre-wrap">{(message.toolResult as { text?: string })?.text}</Text>
-          </Box>
-        )}
-        {!message.toolResult && (
-          <HStack gap={2}>
-            <Spinner size="xs" color="brand.400" />
-            <Text color="text.muted" fontSize="xs">
-              Running...
-            </Text>
-          </HStack>
-        )}
-      </MotionBox>
-    );
-  }
-
-  return (
-    <MotionBox
-      initial={{ opacity: 0, x: isUser ? 20 : -20 }}
-      animate={{ opacity: 1, x: 0 }}
-      transition={{ duration: 0.3, delay: index * 0.05 }}
-      alignSelf={isUser ? "flex-end" : "flex-start"}
-      maxW="80%"
-      px={4}
-      py={3}
-      borderRadius="2xl"
-      {...(isUser
-        ? {
-            bg: "linear-gradient(135deg, rgba(49, 151, 149, 0.8), rgba(56, 178, 172, 0.6))",
-            borderBottomRightRadius: "md",
-          }
-        : {
-            ...glassStyles,
-            borderBottomLeftRadius: "md",
-          })}
-    >
-      <Text color={isUser ? "white" : "text.default"} whiteSpace="pre-wrap" lineHeight="tall">
-        {message.content}
-      </Text>
-    </MotionBox>
-  );
-}
+import { AgentInputItem } from "@openai/agents";
+import { liquidGlassStyles } from "@/theme";
+import { MessageBubble } from "./MessageBubble";
+import { MotionBox } from "@/components/ui/motion-box";
 
 export default function AgentChat() {
   const router = useRouter();
-  const [displayMessages, setDisplayMessages] = useState<DisplayMessage[]>([]);
-  const [previousResponseId, setPreviousResponseId] = useState<string | undefined>(undefined);
+  const [displayMessages, setDisplayMessages] = useState<DisplayMessage[]>(() => {
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("munchy-messages");
+      return saved ? JSON.parse(saved) : [];
+    }
+    return [];
+  });
+  const [history, setHistory] = useState<AgentInputItem[]>(() => {
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("munchy-history");
+      return saved ? JSON.parse(saved) : [];
+    }
+    return [];
+  });
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  // Persist chat history to local storage
+  useEffect(() => {
+    if (history) {
+      localStorage.setItem("munchy-history", JSON.stringify(history));
+    }
+  }, [history]);
+
+  // Persist messages to local storage
+  useEffect(() => {
+    localStorage.setItem("munchy-messages", JSON.stringify(displayMessages));
+  }, [displayMessages]);
+
+  const handleNewChat = () => {
+    setDisplayMessages([]);
+    setHistory([]);
+    localStorage.removeItem("munchy-history");
+    localStorage.removeItem("munchy-messages");
+    inputRef.current?.focus();
+  };
 
   const scrollToBottom = useCallback(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -154,7 +76,7 @@ export default function AgentChat() {
     ]);
 
     try {
-      const result = await (previousResponseId ? runAgent(trimmedInput, previousResponseId) : runAgent(trimmedInput));
+      const result = await runAgent(trimmedInput, history);
 
       if (result.error) {
         setDisplayMessages((prev) => [
@@ -166,7 +88,7 @@ export default function AgentChat() {
         ]);
       } else {
         setDisplayMessages((prev) => [...prev, ...result.newDisplayMessages]);
-        setPreviousResponseId(result.responseId);
+        setHistory(result.history);
       }
     } catch (error) {
       setDisplayMessages((prev) => [
@@ -190,46 +112,59 @@ export default function AgentChat() {
   };
 
   return (
-    <VStack h="calc(100dvh - 64px)" gap={0}>
-      {/* Header */}
+    <Box h="full" position="relative" overflow="hidden">
+      {/* Header - Fixed at top */}
       <MotionBox
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        w="full"
+        position="fixed"
+        top={2}
+        left={0}
+        right={0}
+        mx="auto"
+        w="fit-content"
+        maxW="4xl"
         px={4}
-        py={4}
-        {...glassStyles}
-        borderRadius="2xl"
-        mb={4}
+        zIndex={10}
       >
-        <HStack justify="space-between">
-          <HStack gap={3}>
+        <Box px={4} py={0} {...liquidGlassStyles} borderRadius="2xl">
+          <HStack justify="space-between">
+            <HStack gap={3}>
+              <IconButton
+                aria-label="Back to dashboard"
+                variant="ghost"
+                size="sm"
+                onClick={() => router.push("/dashboard")}
+              >
+                <IoArrowBack />
+              </IconButton>
+              <Box>
+                <Heading size="md" color="text.default">
+                  Munchy AI 🍎
+                </Heading>
+              </Box>
+            </HStack>
             <IconButton
-              aria-label="Back to dashboard"
+              aria-label="New chat"
               variant="ghost"
               size="sm"
-              onClick={() => router.push("/dashboard")}
+              onClick={handleNewChat}
+              disabled={isLoading || displayMessages.length === 0}
             >
-              <IoArrowBack />
+              <IoAdd />
             </IconButton>
-            <Box>
-              <Heading size="md" color="text.default">
-                Munchy AI 🍎
-              </Heading>
-              <Text fontSize="sm" color="text.muted">
-                Your nutrition assistant
-              </Text>
-            </Box>
           </HStack>
-        </HStack>
+        </Box>
       </MotionBox>
 
       {/* Messages area */}
       <Box
-        flex={1}
+        h="full"
         w="full"
         overflowY="auto"
         px={2}
+        pt={"40px"}
+        pb={"100px"}
         css={{
           "&::-webkit-scrollbar": {
             width: "6px",
@@ -297,7 +232,7 @@ export default function AgentChat() {
               py={3}
               borderRadius="2xl"
               borderBottomLeftRadius="md"
-              {...glassStyles}
+              {...liquidGlassStyles}
             >
               <HStack gap={2}>
                 <Spinner size="sm" color="brand.400" />
@@ -310,44 +245,50 @@ export default function AgentChat() {
         </VStack>
       </Box>
 
-      {/* Input area */}
+      {/* Input area - Fixed at bottom */}
       <MotionBox
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
+        position="fixed"
+        bottom={4}
+        left={0}
+        right={0}
+        mx="auto"
         w="full"
-        p={4}
-        {...glassStyles}
-        borderRadius="2xl"
-        mt={4}
+        maxW="4xl"
+        px={4}
+        zIndex={10}
       >
-        <HStack gap={3}>
-          <Input
-            ref={inputRef}
-            placeholder="Ask me anything about food & nutrition..."
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={handleKeyDown}
-            disabled={isLoading}
-            size="lg"
-            bg="rgba(0, 0, 0, 0.3)"
-            border="1px solid rgba(255, 255, 255, 0.1)"
-            _placeholder={{ color: "text.muted" }}
-            _focus={{
-              borderColor: "brand.500",
-              boxShadow: "0 0 0 1px var(--chakra-colors-brand-500)",
-            }}
-          />
-          <IconButton
-            aria-label="Send message"
-            colorPalette="brand"
-            size="lg"
-            onClick={handleSubmit}
-            disabled={!input.trim() || isLoading}
-          >
-            <IoSend />
-          </IconButton>
-        </HStack>
+        <Box p={4} {...liquidGlassStyles} borderRadius="2xl">
+          <HStack gap={3}>
+            <Input
+              ref={inputRef}
+              placeholder="Ask me anything about food & nutrition..."
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={handleKeyDown}
+              disabled={isLoading}
+              size="lg"
+              bg="rgba(0, 0, 0, 0.3)"
+              border="1px solid rgba(255, 255, 255, 0.1)"
+              _placeholder={{ color: "text.muted" }}
+              _focus={{
+                borderColor: "brand.500",
+                boxShadow: "0 0 0 1px var(--chakra-colors-brand-500)",
+              }}
+            />
+            <IconButton
+              aria-label="Send message"
+              colorPalette="brand"
+              size="lg"
+              onClick={handleSubmit}
+              disabled={!input.trim() || isLoading}
+            >
+              <IoSend />
+            </IconButton>
+          </HStack>
+        </Box>
       </MotionBox>
-    </VStack>
+    </Box>
   );
 }
