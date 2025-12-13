@@ -15,13 +15,12 @@ import {
     VStack,
 } from "@chakra-ui/react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useCallback, useRef, useState, useEffect } from "react";
+import { useCallback, useRef, useEffect, useState } from "react";
 import { IoArrowBack, IoSend } from "react-icons/io5";
 import { useRouter } from "next/navigation";
 
 const MotionBox = motion.create(Box);
 
-// Glassmorphism styles
 const glassStyles = {
     bg: "rgba(255, 255, 255, 0.05)",
     backdropFilter: "blur(16px)",
@@ -29,7 +28,6 @@ const glassStyles = {
     boxShadow: "0 8px 32px rgba(0, 0, 0, 0.3)",
 };
 
-// Message bubble component
 function MessageBubble({
     message,
     index,
@@ -150,10 +148,8 @@ function MessageBubble({
 
 export default function AgentChat() {
     const router = useRouter();
-    // Agent history for conversation continuity (result.history from SDK)
-    const [agentHistory, setAgentHistory] = useState<AgentInputItem[]>([]);
-    // Display messages for the UI
     const [displayMessages, setDisplayMessages] = useState<DisplayMessage[]>([]);
+    const [previousResponseId, setPreviousResponseId] = useState<string | undefined>(undefined);
     const [input, setInput] = useState("");
     const [isLoading, setIsLoading] = useState(false);
     const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -174,39 +170,28 @@ export default function AgentChat() {
         setInput("");
         setIsLoading(true);
 
-        // Add user message immediately for display
-        const userMessage: DisplayMessage = { role: "user", content: trimmedInput };
-        setDisplayMessages((prev) => [...prev, userMessage]);
+        setDisplayMessages((prev) => [...prev, {
+            role: "user",
+            content: trimmedInput
+        }]);
 
         try {
-            // Pass the agent history (from result.history) to maintain conversation
-            const result = await runAgent(trimmedInput, agentHistory);
+            const result = await (previousResponseId ? runAgent(trimmedInput, previousResponseId) : runAgent(trimmedInput));
 
             if (result.error) {
-                setDisplayMessages((prev) => [
-                    ...prev,
-                    {
-                        role: "assistant",
-                        content: `Sorry, I encountered an error: ${result.error}`,
-                    },
-                ]);
-                // Update history even on error so we don't lose the user message
-                setAgentHistory(result.history);
+                setDisplayMessages((prev) => [...prev, {
+                    role: "assistant",
+                    content: `Sorry, I encountered an error: ${result.error}`,
+                }]);
             } else {
-                // Update the agent history for the next turn
-                setAgentHistory(result.history);
-                // Add new display messages (skip the first user message as we already added it)
-                const newMessages = result.displayMessages.slice(1);
-                setDisplayMessages((prev) => [...prev, ...newMessages]);
+                setDisplayMessages((prev) => [...prev, ...result.newDisplayMessages]);
+                setPreviousResponseId(result.responseId);
             }
         } catch (error) {
-            setDisplayMessages((prev) => [
-                ...prev,
-                {
-                    role: "assistant",
-                    content: "Sorry, something went wrong. Please try again.",
-                },
-            ]);
+            setDisplayMessages((prev) => [...prev, {
+                role: "assistant",
+                content: "Sorry, something went wrong. Please try again.",
+            }]);
         } finally {
             setIsLoading(false);
             inputRef.current?.focus();

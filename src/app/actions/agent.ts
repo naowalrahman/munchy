@@ -3,7 +3,7 @@
 import OpenAI from "openai";
 import { setDefaultOpenAIClient } from "@openai/agents-openai";
 import { Agent, run, tool, user } from "@openai/agents";
-import type { AgentInputItem, AgentOutputItem } from "@openai/agents";
+import type { AgentInputItem, AgentOutputItem, RunToolCallItem, RunToolCallOutputItem } from "@openai/agents";
 import { z } from "zod";
 import { searchFoods, getFoodNutrition, NutritionalData, FoodSearchResult } from "./food";
 import { logFoodEntry, getFoodLogsForDate, FoodLogEntry } from "./foodLog";
@@ -269,25 +269,22 @@ export interface DisplayMessage {
  */
 export async function runAgent(
     userMessage: string,
-    history: AgentInputItem[]
+    previousResponseId?: string
 ): Promise<{
-    history: AgentInputItem[];
-    displayMessages: DisplayMessage[];
-    finalOutput: string;
-    error?: string;
+    responseId: string | undefined,
+    newDisplayMessages: DisplayMessage[],
+    error?: string,
 }> {
     try {
-        history.push(user(userMessage));
-        const result = await run(munchyAgent, history, { maxTurns: 30 });
+        const result = await (previousResponseId ? run(munchyAgent, userMessage, { previousResponseId }) : run(munchyAgent, userMessage));
 
-        const displayMessages: DisplayMessage[] = [];
-        displayMessages.push({ role: "user", content: userMessage });
+        const newDisplayMessages: DisplayMessage[] = [];
 
         if (result.newItems) {
             for (const item of result.newItems) {
                 if (item.type === "tool_call_item") {
-                    const toolCall = item as AgentOutputItem & { rawItem?: { name?: string; arguments?: string } };
-                    displayMessages.push({
+                    const toolCall = item as RunToolCallItem & { rawItem?: { name?: string; arguments?: string } };
+                    newDisplayMessages.push({
                         role: "tool",
                         content: "",
                         toolName: toolCall.rawItem?.name || "unknown",
@@ -296,11 +293,9 @@ export async function runAgent(
                             : {},
                     });
                 } else if (item.type === "tool_call_output_item") {
-                    const toolOutput = item as AgentOutputItem & { rawItem?: { output?: string }; output?: string };
+                    const toolOutput = item as RunToolCallOutputItem & { rawItem?: { output?: string }; output?: string };
                     // Find the matching tool call and add the result
-                    const lastToolMsg = [...displayMessages]
-                        .reverse()
-                        .find((m) => m.role === "tool" && !m.toolResult);
+                    const lastToolMsg = newDisplayMessages.findLast((m) => m.role === "tool" && !m.toolResult);
                     if (lastToolMsg) {
                         lastToolMsg.toolResult = toolOutput.rawItem?.output || toolOutput.output;
                     }
@@ -309,20 +304,18 @@ export async function runAgent(
         }
 
         if (result.finalOutput) {
-            displayMessages.push({ role: "assistant", content: result.finalOutput });
+            newDisplayMessages.push({ role: "assistant", content: result.finalOutput });
         }
 
         return {
-            history: result.history,
-            displayMessages,
-            finalOutput: result.finalOutput || "",
+            responseId: result.lastResponseId,
+            newDisplayMessages,
         };
     } catch (error) {
         console.error("Agent error:", error);
         return {
-            history: [...history, user(userMessage)],
-            displayMessages: [{ role: "user", content: userMessage }],
-            finalOutput: "",
+            responseId: undefined,
+            newDisplayMessages: [{ role: "user", content: userMessage }],
             error: error instanceof Error ? error.message : "An unexpected error occurred",
         };
     }
