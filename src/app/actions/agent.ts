@@ -23,7 +23,7 @@ export async function runAgent(
   error?: string;
 }> {
   try {
-    history.push({role: "user", content: userMessage});
+    history.push({ role: "user", content: userMessage });
     const result = await run(munchyAgent, history);
 
     const newDisplayMessages: DisplayMessage[] = [];

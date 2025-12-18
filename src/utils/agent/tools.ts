@@ -1,4 +1,3 @@
-
 import { tool } from "@openai/agents";
 import { z } from "zod";
 import { searchFoods, getFoodNutrition, NutritionalData, FoodSearchResult } from "@/app/actions/food";
@@ -214,4 +213,11 @@ const webSearchTool = tool({
   },
 });
 
-export const agentTools = [searchFoodsTool, getFoodNutritionTool, removeFoodLogTool, logFoodTool, getDailyLogTool, webSearchTool];
+export const agentTools = [
+  searchFoodsTool,
+  getFoodNutritionTool,
+  removeFoodLogTool,
+  logFoodTool,
+  getDailyLogTool,
+  webSearchTool,
+];
