@@ -6,6 +6,7 @@ import { Toaster } from "@/components/ui/toaster";
 import Navbar from "@/components/Navbar";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { Analytics } from "@vercel/analytics/next";
+import { Box, Flex } from "@chakra-ui/react";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -35,11 +36,15 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="dark" suppressHydrationWarning>
-      <body className={`${geistSans.variable} ${geistMono.variable} flex flex-col h-dvh overflow-hidden`}>
+      <body className={`${geistSans.variable} ${geistMono.variable}`}>
         <Provider>
-          <Navbar />
-          <main className="flex-1 overflow-auto">{children}</main>
-          <Toaster />
+          <Flex direction="column" h="100dvh" overflow="hidden">
+            <Navbar />
+            <Box as="main" flex="1" overflow="auto">
+              {children}
+            </Box>
+            <Toaster />
+          </Flex>
         </Provider>
         <SpeedInsights />
         <Analytics />

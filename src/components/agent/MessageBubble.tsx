@@ -3,6 +3,7 @@ import { liquidGlassStyles } from "@/theme";
 import { Box, Collapsible, HStack, Icon, Spinner, Text } from "@chakra-ui/react";
 import { MotionBox } from "@/components/ui/motion-box";
 import { LuChevronDown, LuChevronRight } from "react-icons/lu";
+import { Markdown } from "@/components/Markdown";
 
 function ToolCallDetails({ summary, details }: { summary: string; details?: string }) {
   return (
@@ -115,9 +116,15 @@ export function MessageBubble({ message, index }: { message: DisplayMessage; ind
             borderBottomLeftRadius: "md",
           })}
     >
-      <Text color={isUser ? "white" : "text.default"} whiteSpace="pre-wrap" lineHeight="tall">
-        {message.content}
-      </Text>
+      {isUser ? (
+        <Text color="white" whiteSpace="pre-wrap" lineHeight="tall">
+          {message.content}
+        </Text>
+      ) : (
+        <Box>
+          <Markdown>{message.content}</Markdown>
+        </Box>
+      )}
     </MotionBox>
   );
 }
