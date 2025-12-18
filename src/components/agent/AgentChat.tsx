@@ -1,6 +1,7 @@
 "use client";
 
-import { runAgent, DisplayMessage } from "@/app/actions/agent";
+import { runAgent } from "@/app/actions/agent";
+import { DisplayMessage } from "@/utils/agent/model";
 import { Box, Button, Flex, Heading, HStack, IconButton, Input, Spinner, Text, VStack } from "@chakra-ui/react";
 import { AnimatePresence } from "framer-motion";
 import { useCallback, useRef, useEffect, useState } from "react";
