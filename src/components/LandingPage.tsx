@@ -1,5 +1,5 @@
 import { Box, Container, Heading, Text, Button, VStack, SimpleGrid, Icon } from "@chakra-ui/react";
-import { FaRocket, FaRobot, FaChartLine } from "react-icons/fa";
+import { FaRocket, FaChartLine } from "react-icons/fa";
 import { HiSparkles } from "react-icons/hi2";
 import type { IconType } from "react-icons";
 import Link from "next/link";
