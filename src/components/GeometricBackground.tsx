@@ -1,10 +1,6 @@
-"use client";
-
 import { Box } from "@chakra-ui/react";
-import { motion } from "framer-motion";
+import { MotionBox } from "./ui/motion";
 import { useMemo } from "react";
-
-const MotionBox = motion.create(Box);
 
 type Shape = {
   id: number;

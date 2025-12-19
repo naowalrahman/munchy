@@ -1,17 +1,10 @@
-"use client";
-
-import { Box, Container, Heading, Text, Button, VStack, SimpleGrid, Icon, Stack } from "@chakra-ui/react";
-import { FaCamera, FaRobot, FaChartLine } from "react-icons/fa";
+import { Box, Container, Heading, Text, Button, VStack, SimpleGrid, Icon } from "@chakra-ui/react";
+import { FaRocket, FaRobot, FaChartLine } from "react-icons/fa";
+import { HiSparkles } from "react-icons/hi2";
 import type { IconType } from "react-icons";
 import Link from "next/link";
-import { motion } from "framer-motion";
 import GeometricBackground from "./GeometricBackground";
-
-const MotionBox = motion.create(Box);
-const MotionVStack = motion.create(VStack);
-const MotionHeading = motion.create(Heading);
-const MotionText = motion.create(Text);
-const MotionStack = motion.create(Stack);
+import { MotionBox, MotionHeading, MotionText, MotionVStack, MotionStack } from "./ui/motion";
 
 export default function LandingPage() {
   return (
@@ -119,15 +112,15 @@ export default function LandingPage() {
             </MotionHeading>
             <SimpleGrid columns={{ base: 1, md: 3 }} gap={{ base: 6, md: 8 }} w="full">
               <FeatureCard
-                icon={FaRobot}
-                title="AI Food Logging"
-                description="Just say &lsquo;I had a chicken sandwich and fries&rsquo; and let our AI agent handle the rest."
+                icon={HiSparkles}
+                title="AI Assistance"
+                description="Equipped with tool calls, API access, web search, and more, all our AI agent needs from you is &lsquo;I had a chicken sandwich and fries&rsquo;."
                 delay={0}
               />
               <FeatureCard
-                icon={FaCamera}
+                icon={FaRocket}
                 title="Rapid Meal Logging"
-                description="Quickly log your meals in just a few clicks with our robust, user-friendly, and feature-packed platform."
+                description="Quickly log your meals in just a few clicks - our platform is actively engineered to be as robust and feature-packed as possible."
                 delay={0.2}
               />
               <FeatureCard
@@ -151,7 +144,7 @@ type FeatureCardProps = {
   delay: number;
 };
 
-function FeatureCard({ icon, title, description, delay }: FeatureCardProps) {
+function FeatureCard({ icon: IconComponent, title, description, delay }: FeatureCardProps) {
   return (
     <MotionBox
       p={{ base: 6, md: 8 }}
@@ -165,7 +158,9 @@ function FeatureCard({ icon, title, description, delay }: FeatureCardProps) {
     >
       <VStack align="start" gap={5}>
         <Box p={3} bg="brand.900" borderRadius="xl" color="brand.300">
-          <Icon as={icon} fontSize={{ base: "2xl", md: "3xl" }} />
+          <Icon fontSize={{ base: "2xl", md: "3xl" }}>
+            <IconComponent />
+          </Icon>
         </Box>
         <Heading size={{ base: "lg", md: "xl" }}>{title}</Heading>
         <Text color="text.muted" fontSize={{ base: "md", md: "lg" }} lineHeight="tall">

@@ -10,7 +10,7 @@ import { useRouter } from "next/navigation";
 import { AgentInputItem } from "@openai/agents";
 import { liquidGlassStyles } from "@/theme";
 import { MessageBubble } from "./MessageBubble";
-import { MotionBox } from "@/components/ui/motion-box";
+import { MotionBox } from "@/components/ui/motion";
 
 export default function AgentChat() {
   const router = useRouter();
