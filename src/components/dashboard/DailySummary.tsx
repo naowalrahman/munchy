@@ -15,7 +15,6 @@ export function DailySummary({ entries, initialGoals = null }: DailySummaryProps
   const totalCarbs = entries.reduce((sum, entry) => sum + (entry.carbohydrates || 0), 0);
   const totalFat = entries.reduce((sum, entry) => sum + (entry.total_fat || 0), 0);
 
-  // Use user's goals or defaults
   const calorieGoal = initialGoals?.calorie_goal || 2000;
   const proteinGoal = initialGoals?.protein_goal || 150;
   const carbGoal = initialGoals?.carb_goal || 250;

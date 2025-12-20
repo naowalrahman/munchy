@@ -8,7 +8,7 @@ import { DailySummarySkeleton, MealSectionSkeleton } from "@/components/dashboar
 import { MealSection } from "@/components/dashboard/MealSection";
 import { DateSelector } from "@/components/dashboard/DateSelector";
 import { toaster } from "@/components/ui/toaster";
-import { Box, Button, Container, Heading, HStack, VStack } from "@chakra-ui/react";
+import { Box, Button, Container, HStack, VStack } from "@chakra-ui/react";
 import { motion } from "framer-motion";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { IoAdd, IoChatbubbleEllipses } from "react-icons/io5";
@@ -127,7 +127,12 @@ export default function DashboardClient({
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.4, delay: 0.2 + index * 0.1 }}
                 >
-                  <MealSection mealName={mealName} entries={mealData[mealName] || []} onFoodAdded={loadFoodLogs} />
+                  <MealSection
+                    mealName={mealName}
+                    entries={mealData[mealName] || []}
+                    selectedDate={selectedDate}
+                    onFoodAdded={loadFoodLogs}
+                  />
                 </MotionBox>
               ))}
 
@@ -139,7 +144,13 @@ export default function DashboardClient({
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.4, delay: 0.5 + index * 0.1 }}
                 >
-                  <MealSection mealName={mealName} entries={mealData[mealName] || []} onFoodAdded={loadFoodLogs} />
+                  <MealSection
+                    mealName={mealName}
+                    entries={mealData[mealName] || []}
+                    selectedDate={selectedDate}
+                    onFoodAdded={loadFoodLogs}
+                    isCustom
+                  />
                 </MotionBox>
               ))}
 

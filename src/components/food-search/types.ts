@@ -4,6 +4,7 @@ export interface FoodSearchDialogProps {
   isOpen: boolean;
   onClose: () => void;
   mealName: string;
+  selectedDate: string;
   onFoodAdded: () => void;
 }
 

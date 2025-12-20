@@ -38,7 +38,7 @@ export interface LogFoodEntryInput {
   protein: number | null;
   carbohydrates: number | null;
   total_fat: number | null;
-  date?: string; // Optional, defaults to today
+  date: string;
   barcode?: string | null; // Optional barcode for foods added via barcode scanning
 }
 
@@ -81,7 +81,7 @@ export async function logFoodEntry(input: LogFoodEntryInput): Promise<FoodLogRes
         protein: input.protein,
         carbohydrates: input.carbohydrates,
         total_fat: input.total_fat,
-        date: input.date || new Date().toISOString().split("T")[0],
+        date: input.date,
         barcode: input.barcode || null,
       })
       .select()
@@ -134,14 +134,6 @@ export async function getFoodLogsForDate(date: string): Promise<FoodLogResponse>
     console.error("Unexpected error fetching food logs:", error);
     return { success: false, error: "An unexpected error occurred" };
   }
-}
-
-/**
- * Get food logs for today
- */
-export async function getTodayFoodLogs(): Promise<FoodLogResponse> {
-  const today = new Date().toISOString().split("T")[0];
-  return getFoodLogsForDate(today);
 }
 
 /**
@@ -249,7 +241,6 @@ export async function getMealSummary(date: string): Promise<{
       },
       {} as Record<string, FoodLogEntry[]>
     );
-
     return { success: true, data: grouped };
   } catch (error) {
     console.error("Unexpected error getting meal summary:", error);

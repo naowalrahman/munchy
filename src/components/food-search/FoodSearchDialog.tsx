@@ -57,7 +57,7 @@ const normalizeUnit = (unit: string): string => {
   return unitMap[normalized] || normalized;
 };
 
-export function FoodSearchDialog({ isOpen, onClose, mealName, onFoodAdded }: FoodSearchDialogProps) {
+export function FoodSearchDialog({ isOpen, onClose, mealName, selectedDate, onFoodAdded }: FoodSearchDialogProps) {
   const [selectedFood, setSelectedFood] = useState<NutritionalData | null>(null);
   const [isNutritionDrawerOpen, setIsNutritionDrawerOpen] = useState(false);
   const [isLoadingNutrition, setIsLoadingNutrition] = useState(false);
@@ -154,6 +154,7 @@ export function FoodSearchDialog({ isOpen, onClose, mealName, onFoodAdded }: Foo
           calories: item.nutritionData.calories * multiplier,
           protein: item.nutritionData.protein ? item.nutritionData.protein.amount * multiplier : null,
           carbohydrates: item.nutritionData.carbohydrates ? item.nutritionData.carbohydrates.amount * multiplier : null,
+          date: selectedDate,
           total_fat: item.nutritionData.totalFat ? item.nutritionData.totalFat.amount * multiplier : null,
           barcode: item.barcode,
         });

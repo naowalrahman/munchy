@@ -1,6 +1,6 @@
 "use client";
 
-import { Box, VStack, HStack, Text, Button, Heading, IconButton, Grid, Spinner } from "@chakra-ui/react";
+import { Box, VStack, HStack, Text, Heading, IconButton, Spinner } from "@chakra-ui/react";
 import { useState } from "react";
 import { FoodLogEntry, deleteFoodEntry, updateFoodEntry } from "@/app/actions/foodLog";
 import { getFoodNutrition, lookupBarcode, NutritionalData } from "@/app/actions/food";
@@ -15,6 +15,8 @@ interface MealSectionProps {
   mealName: string;
   entries: FoodLogEntry[];
   onFoodAdded: () => void;
+  isCustom?: boolean;
+  selectedDate: string;
 }
 
 const MotionBox = motion.create(Box);
@@ -29,7 +31,7 @@ const NutritionFactsDrawer = dynamic<NutritionFactsDrawerProps>(
   { ssr: false }
 );
 
-export function MealSection({ mealName, entries, onFoodAdded }: MealSectionProps) {
+export function MealSection({ mealName, entries, onFoodAdded, isCustom, selectedDate }: MealSectionProps) {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [editingEntry, setEditingEntry] = useState<FoodLogEntry | null>(null);
@@ -329,7 +331,9 @@ export function MealSection({ mealName, entries, onFoodAdded }: MealSectionProps
               borderStyle="dashed"
             >
               <Text color="text.muted" fontSize="sm">
-                No foods logged yet. Click &ldquo;Add Food&rdquo; to get started.
+                {isCustom
+                  ? "This meal will only be saved if you add foods to it."
+                  : 'No foods logged yet. Click "Add Food" to get started.'}
               </Text>
             </Box>
           )}
@@ -342,6 +346,7 @@ export function MealSection({ mealName, entries, onFoodAdded }: MealSectionProps
           isOpen={isSearchOpen}
           onClose={() => setIsSearchOpen(false)}
           mealName={mealName}
+          selectedDate={selectedDate}
           onFoodAdded={onFoodAdded}
         />
       )}
