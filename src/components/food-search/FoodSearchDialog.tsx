@@ -16,7 +16,6 @@ import { StagedItemsCard } from "./StagedItemsCard";
 import { useBarcodeScanner } from "./useBarcodeScanner";
 import { useFoodSearch } from "./useFoodSearch";
 import type { FoodSearchDialogProps, InputMode, StagedFood } from "./types";
-import React from "react";
 
 const MotionBox = motion.create(Box);
 
@@ -247,13 +246,11 @@ export function FoodSearchDialog({ isOpen, onClose, mealName, selectedDate, onFo
         )}
       </AnimatePresence>
 
-      {console.log("isMobile", isMobile)}
-
       <AnimatePresence>
         {isOpen && (
           <MotionBox
             position="fixed"
-            top={isMobile ? 0 : "50%"}
+            top={isMobile ? 0 : "10%"}
             left={isMobile ? 0 : "50%"}
             right={isMobile ? 0 : "auto"}
             bottom={isMobile ? 0 : "auto"}

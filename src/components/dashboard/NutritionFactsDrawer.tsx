@@ -365,7 +365,7 @@ export function NutritionFactsDrawer({
           {/* Drawer/Modal Content */}
           <MotionBox
             position="fixed"
-            top={isWideScreen ? "50%" : 0}
+            top={0}
             right={isWideScreen ? 0 : "auto"}
             bottom={isWideScreen ? 0 : undefined}
             left={isMobile ? "50%" : undefined}
