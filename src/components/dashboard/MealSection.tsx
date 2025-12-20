@@ -203,56 +203,60 @@ export function MealSection({ mealName, entries, onFoodAdded }: MealSectionProps
         }}
       >
         <VStack align="stretch" gap={4}>
-          {/* Header */}
-          <HStack justify="space-between" align="center">
-            <Heading size={{ base: "md", md: "lg" }} color="text.default">
-              {mealName}
-            </Heading>
-            <Button colorPalette="brand" size={{ base: "sm", md: "sm" }} onClick={() => setIsSearchOpen(true)}>
+          {/* Header & Summary */}
+          <HStack justify="space-between" align="center" gap={3} mb={1}>
+            <HStack flex="1" gap={{ base: 2, md: 4 }} overflow="hidden">
+              <Heading size="md" color="text.default" whiteSpace="nowrap">
+                {mealName}
+              </Heading>
+              {entries.length > 0 && (
+                <HStack
+                  gap={{ base: 1.5, md: 3 }}
+                  fontSize={{ base: "xs", md: "sm" }}
+                  bg="background.canvas"
+                  px={{ base: 2, md: 3 }}
+                  py={1}
+                  borderRadius="full"
+                  borderWidth="1px"
+                  borderColor="border.muted"
+                >
+                  <Text fontWeight="bold" color="brand.500" whiteSpace="nowrap">
+                    {totalCalories.toFixed(0)} cal
+                  </Text>
+                  <HStack gap={{ base: 1.5, md: 3 }} color="text.muted" whiteSpace="nowrap">
+                    <Text>
+                      <Box as="span" color="text.default" fontWeight="bold">
+                        P
+                      </Box>{" "}
+                      {totalProtein.toFixed(0)}g
+                    </Text>
+                    <Text>
+                      <Box as="span" color="text.default" fontWeight="bold">
+                        C
+                      </Box>{" "}
+                      {totalCarbs.toFixed(0)}g
+                    </Text>
+                    <Text>
+                      <Box as="span" color="text.default" fontWeight="bold">
+                        F
+                      </Box>{" "}
+                      {totalFat.toFixed(0)}g
+                    </Text>
+                  </HStack>
+                </HStack>
+              )}
+            </HStack>
+            <IconButton
+              aria-label="Add food"
+              colorPalette="brand"
+              variant="subtle"
+              size="sm"
+              rounded="full"
+              onClick={() => setIsSearchOpen(true)}
+            >
               <IoAdd />
-              Add Food
-            </Button>
+            </IconButton>
           </HStack>
-
-          {/* Meal Summary */}
-          {entries.length > 0 && (
-            <Box bg="background.subtle" borderRadius="lg" p={4}>
-              <Grid templateColumns={{ base: "repeat(2, 1fr)", md: "repeat(4, 1fr)" }} gap={{ base: 3, md: 4 }}>
-                <Box textAlign="center">
-                  <Text fontSize={{ base: "xl", md: "2xl" }} fontWeight="bold" color="brand.500">
-                    {totalCalories.toFixed(0)}
-                  </Text>
-                  <Text fontSize="xs" color="text.muted" textTransform="uppercase">
-                    Calories
-                  </Text>
-                </Box>
-                <Box textAlign="center">
-                  <Text fontSize={{ base: "xl", md: "2xl" }} fontWeight="bold" color="text.default">
-                    {totalProtein.toFixed(1)}g
-                  </Text>
-                  <Text fontSize="xs" color="text.muted" textTransform="uppercase">
-                    Protein
-                  </Text>
-                </Box>
-                <Box textAlign="center">
-                  <Text fontSize={{ base: "xl", md: "2xl" }} fontWeight="bold" color="text.default">
-                    {totalCarbs.toFixed(1)}g
-                  </Text>
-                  <Text fontSize="xs" color="text.muted" textTransform="uppercase">
-                    Carbs
-                  </Text>
-                </Box>
-                <Box textAlign="center">
-                  <Text fontSize={{ base: "xl", md: "2xl" }} fontWeight="bold" color="text.default">
-                    {totalFat.toFixed(1)}g
-                  </Text>
-                  <Text fontSize="xs" color="text.muted" textTransform="uppercase">
-                    Fat
-                  </Text>
-                </Box>
-              </Grid>
-            </Box>
-          )}
 
           {/* Food Entries List */}
           <VStack align="stretch" gap={2}>

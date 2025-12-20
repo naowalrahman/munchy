@@ -13,7 +13,6 @@ import { motion } from "framer-motion";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { IoAdd, IoChatbubbleEllipses } from "react-icons/io5";
 import { useRouter } from "next/navigation";
-import { signOut } from "./actions";
 
 const MotionBox = motion.create(Box);
 const STANDARD_MEALS = ["Breakfast", "Lunch", "Dinner"] as const;
