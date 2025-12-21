@@ -1,11 +1,12 @@
 "use client";
 
-import { Box, Flex, Heading, Button, HStack, Portal, Menu, Avatar } from "@chakra-ui/react";
+import { Box, Flex, HStack, Text, Button, IconButton } from "@chakra-ui/react";
 import Link from "next/link";
+import { usePathname, useRouter } from "next/navigation";
 import { createClient } from "@/utils/supabase/client";
 import { useEffect, useState } from "react";
 import { User } from "@supabase/supabase-js";
-import { useRouter } from "next/navigation";
+import { LuLayoutDashboard, LuBot, LuUser, LuLogOut } from "react-icons/lu";
 
 export type NavbarUser = {
   id: string;
@@ -32,6 +33,7 @@ export default function NavbarClient({ initialUser }: NavbarClientProps) {
   const [user, setUser] = useState<NavbarUser | null>(initialUser);
   const supabase = createClient();
   const router = useRouter();
+  const pathname = usePathname();
 
   useEffect(() => {
     let isMounted = true;
@@ -66,68 +68,75 @@ export default function NavbarClient({ initialUser }: NavbarClientProps) {
     router.refresh();
   };
 
+  const navItems = [
+    { name: "Dashboard", href: "/dashboard", icon: LuLayoutDashboard },
+    { name: "Agent", href: "/agent", icon: LuBot },
+    { name: "Profile", href: "/profile", icon: LuUser },
+  ];
+
   return (
     <Box
       as="nav"
-      py={{ base: 1, md: 2 }}
-      px={{ base: 4, md: 8 }}
-      bg="bg.panel"
-      shadow="sm"
       position="sticky"
-      top="0"
+      top={0}
       zIndex="docked"
-      backdropFilter="blur(10px)"
+      bg="bg.panel"
       borderBottomWidth="1px"
       borderColor="border.muted"
+      backdropFilter="blur(10px)"
+      py={{ base: 2, md: 3 }}
     >
-      <Flex
-        justify="space-between"
-        align="center"
-        maxW={{ base: "full", lg: "7xl" }}
-        mx="auto"
-        gap={{ base: 1, md: 2 }}
-      >
-        <Link href="/">
-          <Heading size={{ base: "md", md: "lg" }} color="brand.500" letterSpacing="tight">
+      <Flex justify="space-between" align="center" maxW="7xl" mx="auto" px={{ base: 4, md: 8 }}>
+        <Link href={user ? "/dashboard" : "/"}>
+          <Text fontWeight="bold" fontSize={{ base: "lg", md: "xl" }} color="brand.500" letterSpacing="tight">
             Munchy
-          </Heading>
+          </Text>
         </Link>
 
-        <HStack gap={{ base: 2, md: 4 }}>
-          {user ? (
-            <Menu.Root positioning={{ placement: "bottom-end" }}>
-              <Menu.Trigger asChild>
-                <Button variant="ghost" borderRadius="full" p={0} minW="auto" size={{ base: "sm", md: "md" }}>
-                  <Avatar.Root>
-                    <Avatar.Fallback name={user.fullName || user.email || undefined} />
-                    {user.avatarUrl && <Avatar.Image src={user.avatarUrl} />}
-                  </Avatar.Root>
+        {user ? (
+          <HStack gap={{ base: 1, md: 2 }}>
+            {navItems.map((item) => {
+              const isActive = pathname === item.href;
+              return (
+                <Button
+                  key={item.name}
+                  asChild
+                  variant="ghost"
+                  size={{ base: "sm", md: "md" }}
+                  colorPalette={isActive ? "brand" : "gray"}
+                  bg={isActive ? "brand.subtle" : undefined}
+                  borderRadius="full"
+                  px={{ base: 3, md: 4 }}
+                >
+                  <Link href={item.href}>
+                    <item.icon />
+                    <Text display={{ base: "none", sm: "inline" }}>{item.name}</Text>
+                  </Link>
                 </Button>
-              </Menu.Trigger>
-              <Portal>
-                <Menu.Positioner>
-                  <Menu.Content>
-                    <Menu.Item value="profile" onClick={() => router.push("/profile")}>
-                      Profile Settings
-                    </Menu.Item>
-                    <Menu.Item value="logout" onClick={handleLogout}>
-                      Log Out
-                    </Menu.Item>
-                  </Menu.Content>
-                </Menu.Positioner>
-              </Portal>
-            </Menu.Root>
-          ) : (
-            <>
-              <Button asChild variant="ghost" colorPalette="brand" size={{ base: "sm", md: "md" }}>
-                <Link href="/login">Log In</Link>
-              </Button>
-              <Button asChild colorPalette="brand" size={{ base: "sm", md: "md" }}>
-                <Link href="/login?mode=signup">Get Started</Link>
-              </Button>
-            </>
-          )}
-        </HStack>
+              );
+            })}
+            <IconButton
+              aria-label="Log out"
+              onClick={handleLogout}
+              variant="ghost"
+              colorPalette="gray"
+              size={{ base: "sm", md: "md" }}
+              borderRadius="full"
+              ml={{ base: 1, md: 2 }}
+            >
+              <LuLogOut />
+            </IconButton>
+          </HStack>
+        ) : (
+          <HStack gap={{ base: 2, md: 4 }}>
+            <Button asChild variant="ghost" colorPalette="brand" size={{ base: "sm", md: "md" }}>
+              <Link href="/login">Log In</Link>
+            </Button>
+            <Button asChild colorPalette="brand" size={{ base: "sm", md: "md" }}>
+              <Link href="/login?mode=signup">Get Started</Link>
+            </Button>
+          </HStack>
+        )}
       </Flex>
     </Box>
   );

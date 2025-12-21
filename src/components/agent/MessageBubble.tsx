@@ -102,19 +102,14 @@ export function MessageBubble({ message, index }: { message: DisplayMessage; ind
       animate={{ opacity: 1, x: 0 }}
       transition={{ duration: 0.3, delay: index * 0.05 }}
       alignSelf={isUser ? "flex-end" : "flex-start"}
-      maxW="80%"
+      maxW="100%"
       px={4}
       py={3}
       borderRadius="2xl"
-      {...(isUser
-        ? {
-            bg: "linear-gradient(135deg, rgba(49, 151, 149, 0.8), rgba(56, 178, 172, 0.6))",
-            borderBottomRightRadius: "md",
-          }
-        : {
-            ...liquidGlassStyles,
-            borderBottomLeftRadius: "md",
-          })}
+      {...(isUser && {
+        bg: "linear-gradient(135deg, rgba(49, 151, 149, 0.8), rgba(56, 178, 172, 0.6))",
+        borderBottomRightRadius: "md",
+      })}
     >
       {isUser ? (
         <Text color="white" whiteSpace="pre-wrap" lineHeight="tall">

@@ -5,12 +5,13 @@ import { DisplayMessage } from "@/utils/agent/model";
 import { Box, Button, Flex, Heading, HStack, IconButton, Input, Spinner, Text, VStack } from "@chakra-ui/react";
 import { AnimatePresence } from "framer-motion";
 import { useCallback, useRef, useEffect, useState } from "react";
-import { IoArrowBack, IoSend, IoAdd } from "react-icons/io5";
 import { useRouter } from "next/navigation";
 import { AgentInputItem } from "@openai/agents";
 import { liquidGlassStyles } from "@/theme";
 import { MessageBubble } from "./MessageBubble";
 import { MotionBox } from "@/components/ui/motion";
+import { FaRegEdit } from "react-icons/fa";
+import { LuSendHorizontal } from "react-icons/lu";
 
 export default function AgentChat() {
   const router = useRouter();
@@ -114,50 +115,6 @@ export default function AgentChat() {
 
   return (
     <Box h="full" position="relative" overflow="hidden">
-      {/* Header - Fixed at top */}
-      <MotionBox
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        position="fixed"
-        top={2}
-        left={0}
-        right={0}
-        mx="auto"
-        w="fit-content"
-        maxW="4xl"
-        px={4}
-        zIndex={10}
-      >
-        <Box px={4} py={0} {...liquidGlassStyles} borderRadius="2xl">
-          <HStack justify="space-between">
-            <HStack gap={3}>
-              <IconButton
-                aria-label="Back to dashboard"
-                variant="ghost"
-                size="sm"
-                onClick={() => router.push("/dashboard")}
-              >
-                <IoArrowBack />
-              </IconButton>
-              <Box>
-                <Heading size="md" color="text.default">
-                  Munchy AI 🍎
-                </Heading>
-              </Box>
-            </HStack>
-            <IconButton
-              aria-label="New chat"
-              variant="ghost"
-              size="sm"
-              onClick={handleNewChat}
-              disabled={isLoading || displayMessages.length === 0}
-            >
-              <IoAdd />
-            </IconButton>
-          </HStack>
-        </Box>
-      </MotionBox>
-
       {/* Messages area */}
       <Box
         h="full"
@@ -168,15 +125,10 @@ export default function AgentChat() {
         pb={"100px"}
         css={{
           "&::-webkit-scrollbar": {
-            width: "6px",
+            display: "none",
           },
-          "&::-webkit-scrollbar-track": {
-            background: "transparent",
-          },
-          "&::-webkit-scrollbar-thumb": {
-            background: "rgba(255, 255, 255, 0.2)",
-            borderRadius: "3px",
-          },
+          "-ms-overflow-style": "none",
+          "scrollbar-width": "none",
         }}
       >
         <VStack gap={3} py={4} align="stretch">
@@ -262,6 +214,19 @@ export default function AgentChat() {
       >
         <Box p={4} {...liquidGlassStyles} borderRadius="2xl">
           <HStack gap={3}>
+            {/* Header - Fixed at top */}
+            <IconButton
+              aria-label="New chat"
+              size="lg"
+              variant="surface"
+              borderRadius="2xl"
+              colorPalette="gray"
+              onClick={handleNewChat}
+              disabled={isLoading || displayMessages.length === 0}
+            >
+              <FaRegEdit />
+            </IconButton>
+
             <Input
               ref={inputRef}
               placeholder="Ask me anything about food & nutrition..."
@@ -282,10 +247,11 @@ export default function AgentChat() {
               aria-label="Send message"
               colorPalette="brand"
               size="lg"
+              borderRadius="2xl"
               onClick={handleSubmit}
               disabled={!input.trim() || isLoading}
             >
-              <IoSend />
+              <LuSendHorizontal />
             </IconButton>
           </HStack>
         </Box>
