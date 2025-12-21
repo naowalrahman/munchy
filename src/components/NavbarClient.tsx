@@ -87,7 +87,7 @@ export default function NavbarClient({ initialUser }: NavbarClientProps) {
       py={{ base: 2, md: 3 }}
     >
       <Flex justify="space-between" align="center" maxW="7xl" mx="auto" px={{ base: 4, md: 8 }}>
-        <Link href={user ? "/dashboard" : "/"}>
+        <Link href="/">
           <Text fontWeight="bold" fontSize={{ base: "lg", md: "xl" }} color="brand.500" letterSpacing="tight">
             Munchy
           </Text>
