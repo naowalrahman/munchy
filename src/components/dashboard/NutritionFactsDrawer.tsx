@@ -35,9 +35,8 @@ export function NutritionFactsDrawer({
   const [servingAmount, setServingAmount] = useState(isEditMode ? initialServingAmount : 1);
   const [servingUnit, setServingUnit] = useState(isEditMode ? initialServingUnit : "serving");
 
-  // Determine if we should show drawer or modal based on screen size
-  const isWideScreen = useBreakpointValue({ base: false, md: true }) ?? false;
-  const isMobile = !isWideScreen;
+  // Used for motion animations only
+  const isMobile = useBreakpointValue({ base: true, md: false }) ?? false;
 
   const handleServingChange = useCallback((amount: number, unit: string) => {
     setServingAmount(amount);
@@ -366,32 +365,32 @@ export function NutritionFactsDrawer({
           <MotionBox
             position="fixed"
             top={0}
-            right={isWideScreen ? 0 : "auto"}
-            bottom={isWideScreen ? 0 : undefined}
-            left={isMobile ? "50%" : undefined}
-            w={isWideScreen ? "500px" : "100vw"}
-            maxW={isWideScreen ? undefined : "100vw"}
-            h={isWideScreen ? "100%" : "100dvh"}
-            maxH={isWideScreen ? "100%" : "100dvh"}
+            right={{ base: "auto", md: 0 }}
+            bottom={{ base: "auto", md: 0 }}
+            left={{ base: "50%", md: "auto" }}
+            w={{ base: "100vw", md: "500px" }}
+            maxW={{ base: "100vw", md: "auto" }}
+            h={{ base: "100dvh", md: "100%" }}
+            maxH={{ base: "100dvh", md: "100%" }}
             bg="background.canvas"
-            borderRadius={isWideScreen ? "0" : "xl"}
-            borderLeftWidth={isWideScreen ? "1px" : "0"}
+            borderRadius={{ base: "xl", md: 0 }}
+            borderLeftWidth={{ base: 0, md: "1px" }}
             borderColor="border.default"
             boxShadow="2xl"
             zIndex={1001}
             p={{ base: 4, md: 6 }}
             overflowY="auto"
             initial={{
-              x: isWideScreen ? "100%" : "-50%",
-              opacity: isWideScreen ? 1 : 0,
+              x: isMobile ? "-50%" : "100%",
+              opacity: isMobile ? 0 : 1,
             }}
             animate={{
-              x: isWideScreen ? 0 : "-50%",
+              x: isMobile ? "-50%" : 0,
               opacity: 1,
             }}
             exit={{
-              x: isWideScreen ? "100%" : "-50%",
-              opacity: isWideScreen ? 1 : 0,
+              x: isMobile ? "-50%" : "100%",
+              opacity: isMobile ? 0 : 1,
             }}
             transition={{ type: "spring", damping: 25, stiffness: 300 }}
           >

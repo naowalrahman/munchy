@@ -25,6 +25,7 @@ export function DateCalendarDialog({ isOpen, onClose, currentDate, onDateChange 
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
+  // Used for motion animations only
   const isMobile = useBreakpointValue({ base: true, md: false }) ?? false;
 
   // State for the month being viewed in the calendar
@@ -148,16 +149,16 @@ export function DateCalendarDialog({ isOpen, onClose, currentDate, onDateChange 
         {isOpen && (
           <MotionBox
             position="fixed"
-            top={isMobile ? 0 : "50%"}
-            left={isMobile ? 0 : "50%"}
-            right={isMobile ? 0 : "auto"}
-            bottom={isMobile ? 0 : "auto"}
-            w={isMobile ? "100vw" : { base: "90vw", md: "400px" }}
-            maxW={isMobile ? "100vw" : "400px"}
-            h={isMobile ? "100dvh" : "auto"}
-            maxH={isMobile ? "100dvh" : "90vh"}
+            top={{ base: 0, md: "50%" }}
+            left={{ base: 0, md: "50%" }}
+            right={{ base: 0, md: "auto" }}
+            bottom={{ base: 0, md: "auto" }}
+            w={{ base: "100vw", md: "400px" }}
+            maxW={{ base: "100vw", md: "400px" }}
+            h={{ base: "100dvh", md: "auto" }}
+            maxH={{ base: "100dvh", md: "90vh" }}
             bg="background.canvas"
-            borderRadius={isMobile ? "0" : "xl"}
+            borderRadius={{ base: 0, md: "xl" }}
             borderWidth="1px"
             borderColor="border.default"
             boxShadow="2xl"
