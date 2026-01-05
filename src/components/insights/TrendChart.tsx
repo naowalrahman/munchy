@@ -4,7 +4,7 @@ import { Box, Text, VStack } from "@chakra-ui/react";
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, ReferenceLine, CartesianGrid } from "recharts";
 import { DailyAggregate } from "@/app/actions/insights";
 
-interface TrendChartProps {
+export interface TrendChartProps {
   data: DailyAggregate[];
   calorieGoal: number;
   isLoading?: boolean;
@@ -86,8 +86,8 @@ export function TrendChart({ data, calorieGoal, isLoading }: TrendChartProps) {
         <Text fontSize="lg" fontWeight="semibold" color="text.default">
           Calorie Trend
         </Text>
-        <Box height={{ base: "250px", md: "300px" }} opacity={isLoading ? 0.5 : 1}>
-          <ResponsiveContainer width="100%" height="100%">
+        <Box height={{ base: "250px", md: "300px" }} width="100%" opacity={isLoading ? 0.5 : 1}>
+          <ResponsiveContainer width="100%" height="100%" minWidth={0}>
             <AreaChart data={chartData} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
               <defs>
                 <linearGradient id="calorieGradient" x1="0" y1="0" x2="0" y2="1">

@@ -28,6 +28,7 @@ export function ViewModeSelector({ value, onChange, isLoading }: ViewModeSelecto
         borderColor="border.default"
         display="flex"
         gap={1}
+        flexWrap="wrap"
       >
         {modes.map((mode) => (
           <Button
@@ -36,7 +37,7 @@ export function ViewModeSelector({ value, onChange, isLoading }: ViewModeSelecto
             variant={value === mode.value ? "solid" : "ghost"}
             colorPalette={value === mode.value ? "brand" : "gray"}
             borderRadius="full"
-            px={4}
+            px={{ base: 3, md: 4 }}
             onClick={() => onChange(mode.value)}
             disabled={isLoading}
           >

@@ -4,7 +4,7 @@ import { Box, Text, VStack } from "@chakra-ui/react";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Legend } from "recharts";
 import { DailyAggregate } from "@/app/actions/insights";
 
-interface MacroBarChartProps {
+export interface MacroBarChartProps {
   data: DailyAggregate[];
   isLoading?: boolean;
 }
@@ -84,8 +84,8 @@ export function MacroBarChart({ data, isLoading }: MacroBarChartProps) {
         <Text fontSize="lg" fontWeight="semibold" color="text.default">
           Daily Macros
         </Text>
-        <Box flex="1" minHeight={{ base: "200px", md: "250px" }} opacity={isLoading ? 0.5 : 1}>
-          <ResponsiveContainer width="100%" height="100%">
+        <Box flex="1" minHeight={{ base: "200px", md: "250px" }} width="100%" opacity={isLoading ? 0.5 : 1}>
+          <ResponsiveContainer width="100%" height="100%" minWidth={0}>
             <BarChart data={chartData} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
               <CartesianGrid strokeDasharray="3 3" stroke={chartColors.grid} vertical={false} />
               <XAxis

@@ -189,32 +189,54 @@ export async function getDailyInsights(days: number = 7): Promise<InsightsRespon
   }
 }
 
-export async function getWeeklyInsights(weeks: number = 4): Promise<InsightsResponse> {
+export async function getWeeklyInsights(weekStartDate?: string): Promise<InsightsResponse> {
   try {
-    const today = new Date();
-    const endOfCurrentWeek = getStartOfWeek(today);
-    endOfCurrentWeek.setDate(endOfCurrentWeek.getDate() + 6);
+    let startOfRange: Date;
+    if (weekStartDate) {
+      const [year, month, day] = weekStartDate.split("-").map(Number);
+      startOfRange = new Date(year, month - 1, day);
+    } else {
+      startOfRange = getStartOfWeek(new Date());
+    }
 
-    const startOfRange = getStartOfWeek(today);
-    startOfRange.setDate(startOfRange.getDate() - (weeks - 1) * 7);
+    const endOfRange = new Date(startOfRange);
+    endOfRange.setDate(endOfRange.getDate() + 6);
 
     const startDate = formatLocalDate(startOfRange);
-    const endDate = formatLocalDate(endOfCurrentWeek);
+    const endDate = formatLocalDate(endOfRange);
 
     const [logs, goalsResponse] = await Promise.all([getFoodLogsForDateRange(startDate, endDate), getUserGoals()]);
 
     const goals = goalsResponse.success ? (goalsResponse.data ?? null) : null;
     const aggregates = aggregateByDay(logs);
 
+    const allDates: DailyAggregate[] = [];
+    for (let i = 0; i < 7; i++) {
+      const currentDate = new Date(startOfRange);
+      currentDate.setDate(currentDate.getDate() + i);
+      const dateStr = formatLocalDate(currentDate);
+      const existing = aggregates.find((a) => a.date === dateStr);
+      allDates.push(
+        existing || {
+          date: dateStr,
+          calories: 0,
+          protein: 0,
+          carbohydrates: 0,
+          fat: 0,
+          entryCount: 0,
+        }
+      );
+    }
+
     const summary = calculateSummary(
-      aggregates.filter((a) => a.entryCount > 0),
+      allDates.filter((a) => a.entryCount > 0),
       goals
     );
 
     return {
       success: true,
       data: {
-        aggregates,
+        aggregates: allDates,
         goals,
         summary,
       },

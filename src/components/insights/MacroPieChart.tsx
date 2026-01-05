@@ -3,7 +3,7 @@
 import { Box, Text, VStack, HStack } from "@chakra-ui/react";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
 
-interface MacroPieChartProps {
+export interface MacroPieChartProps {
   protein: number;
   carbs: number;
   fat: number;
@@ -77,8 +77,8 @@ export function MacroPieChart({ protein, carbs, fat, isLoading }: MacroPieChartP
         <Text fontSize="lg" fontWeight="semibold" color="text.default">
           Macro Distribution
         </Text>
-        <Box flex="1" minHeight={{ base: "180px", md: "200px" }} opacity={isLoading ? 0.5 : 1}>
-          <ResponsiveContainer width="100%" height="100%">
+        <Box flex="1" minHeight={{ base: "180px", md: "200px" }} width="100%" opacity={isLoading ? 0.5 : 1}>
+          <ResponsiveContainer width="100%" height="100%" minWidth={0}>
             <PieChart>
               <Pie data={data} cx="50%" cy="50%" innerRadius="55%" outerRadius="80%" paddingAngle={2} dataKey="value">
                 {data.map((entry, index) => (
