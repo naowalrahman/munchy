@@ -43,3 +43,39 @@ export function getDaysInMonth(date: Date): number {
 export function getDaysInPreviousMonth(date: Date): number {
   return new Date(date.getFullYear(), date.getMonth(), 0).getDate();
 }
+
+/**
+ * Get date string for N days ago
+ */
+export function getDateNDaysAgo(n: number): string {
+  const date = new Date();
+  date.setDate(date.getDate() - n);
+  return formatLocalDate(date);
+}
+
+/**
+ * Get start of week (Sunday) for a given date
+ */
+export function getStartOfWeek(date: Date): Date {
+  const d = new Date(date);
+  const day = d.getDay();
+  const diff = d.getDate() - day;
+  d.setDate(diff);
+  d.setHours(0, 0, 0, 0);
+  return d;
+}
+
+/**
+ * Get first day of a month as YYYY-MM-01
+ */
+export function getStartOfMonth(year: number, month: number): string {
+  return `${year}-${String(month).padStart(2, "0")}-01`;
+}
+
+/**
+ * Get last day of a month as YYYY-MM-DD
+ */
+export function getEndOfMonth(year: number, month: number): string {
+  const lastDay = new Date(year, month, 0).getDate();
+  return `${year}-${String(month).padStart(2, "0")}-${String(lastDay).padStart(2, "0")}`;
+}

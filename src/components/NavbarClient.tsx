@@ -6,7 +6,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { createClient } from "@/utils/supabase/client";
 import { useEffect, useState } from "react";
 import { User } from "@supabase/supabase-js";
-import { LuLayoutDashboard, LuBot, LuUser, LuLogOut } from "react-icons/lu";
+import { LuLayoutDashboard, LuBot, LuUser, LuLogOut, LuChartLine } from "react-icons/lu";
 
 export type NavbarUser = {
   id: string;
@@ -70,6 +70,7 @@ export default function NavbarClient({ initialUser }: NavbarClientProps) {
 
   const navItems = [
     { name: "Dashboard", href: "/dashboard", icon: LuLayoutDashboard },
+    { name: "Insights", href: "/insights", icon: LuChartLine },
     { name: "Agent", href: "/agent", icon: LuBot },
     { name: "Profile", href: "/profile", icon: LuUser },
   ];
