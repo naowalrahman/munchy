@@ -7,9 +7,8 @@ import { getFoodNutrition, lookupBarcode, NutritionalData } from "@/app/actions/
 import { motion, AnimatePresence } from "framer-motion";
 import { IoAdd, IoTrash, IoPencil } from "react-icons/io5";
 import { toaster } from "@/components/ui/toaster";
-import dynamic from "next/dynamic";
-import type { FoodSearchDialogProps } from "@/components/food-search/types";
-import type { NutritionFactsDrawerProps } from "./NutritionFactsDrawer";
+import { FoodSearchDialog } from "@/components/food-search/FoodSearchDialog";
+import { NutritionFactsDrawer } from "./NutritionFactsDrawer";
 
 interface MealSectionProps {
   mealName: string;
@@ -20,16 +19,6 @@ interface MealSectionProps {
 }
 
 const MotionBox = motion.create(Box);
-
-const FoodSearchDialog = dynamic<FoodSearchDialogProps>(
-  () => import("@/components/food-search/FoodSearchDialog").then((mod) => mod.FoodSearchDialog),
-  { ssr: false, loading: () => null }
-);
-
-const NutritionFactsDrawer = dynamic<NutritionFactsDrawerProps>(
-  () => import("./NutritionFactsDrawer").then((mod) => mod.NutritionFactsDrawer),
-  { ssr: false }
-);
 
 export function MealSection({ mealName, entries, onFoodAdded, isCustom, selectedDate }: MealSectionProps) {
   const [isSearchOpen, setIsSearchOpen] = useState(false);

@@ -2,14 +2,13 @@
 
 import { Box, VStack, HStack, Text, Button, Heading, Spinner, useBreakpointValue } from "@chakra-ui/react";
 import { useCallback, useState } from "react";
-import dynamic from "next/dynamic";
 import { motion, AnimatePresence } from "framer-motion";
 import { IoBarcodeOutline, IoClose, IoSearch } from "react-icons/io5";
 import type { FoodSearchResult, NutritionalData } from "@/app/actions/food";
 import { getFoodNutrition } from "@/app/actions/food";
 import { logFoodEntry } from "@/app/actions/foodLog";
 import { toaster } from "@/components/ui/toaster";
-import type { NutritionFactsDrawerProps } from "../dashboard/NutritionFactsDrawer";
+import { NutritionFactsDrawer } from "../dashboard/NutritionFactsDrawer";
 import { ScanSection } from "./ScanSection";
 import { SearchSection } from "./SearchSection";
 import { StagedItemsCard } from "./StagedItemsCard";
@@ -18,11 +17,6 @@ import { useFoodSearch } from "./useFoodSearch";
 import type { FoodSearchDialogProps, InputMode, StagedFood } from "./types";
 
 const MotionBox = motion.create(Box);
-
-const NutritionFactsDrawer = dynamic<NutritionFactsDrawerProps>(
-  () => import("../dashboard/NutritionFactsDrawer").then((mod) => mod.NutritionFactsDrawer),
-  { ssr: false }
-);
 
 const normalizeUnit = (unit: string): string => {
   const unitMap: Record<string, string> = {
