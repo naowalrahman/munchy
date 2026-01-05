@@ -30,7 +30,7 @@
     "recharts": "^3.6.0",
     "shiki": "^3.20.0",
     "streamdown": "^1.6.10",
-    "zod": "^4.3.4"
+    "zod": "^4.3.5"
   },
   "devDependencies": {
     "@types/node": "^20.19.27",
