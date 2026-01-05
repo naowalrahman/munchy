@@ -1,11 +1,10 @@
 import { Box, Flex, HStack, Text, Button, IconButton } from "@chakra-ui/react";
 import Link from "next/link";
-import { headers } from "next/headers";
 import { createClient } from "@/utils/supabase/server";
 import { User } from "@supabase/supabase-js";
-import { LuLayoutDashboard, LuBot, LuUser, LuLogOut } from "react-icons/lu";
+import { LuLogOut } from "react-icons/lu";
 import { logout } from "@/app/actions/auth";
-import { FaChartLine } from "react-icons/fa";
+import NavLinks from "./NavLinks";
 
 export type NavbarUser = {
   id: string;
@@ -32,15 +31,6 @@ export default async function Navbar() {
 
   const user = toNavbarUser(authUser);
 
-  const pathname = (await headers()).get("x-next-pathname") || "/";
-
-  const navItems = [
-    { name: "Dashboard", href: "/dashboard", icon: LuLayoutDashboard },
-    { name: "Insights", href: "/insights", icon: FaChartLine },
-    { name: "Agent", href: "/agent", icon: LuBot },
-    { name: "Profile", href: "/profile", icon: LuUser },
-  ];
-
   return (
     <Box
       as="nav"
@@ -62,29 +52,9 @@ export default async function Navbar() {
 
         {user ? (
           <HStack gap={{ base: 1, md: 2 }}>
-            {navItems.map((item) => {
-              const isActive = pathname.startsWith(item.href);
-              return (
-                <Button
-                  key={item.name}
-                  asChild
-                  variant="ghost"
-                  size={{ base: "sm", md: "md" }}
-                  colorPalette={isActive ? "brand" : "gray"}
-                  bg={isActive ? "brand.subtle" : undefined}
-                  borderRadius="full"
-                  px={{ base: 3, md: 4 }}
-                >
-                  <Link href={item.href}>
-                    <item.icon />
-                    <Text display={{ base: "none", sm: "inline" }}>{item.name}</Text>
-                  </Link>
-                </Button>
-              );
-            })}
+            <NavLinks />
             <form action={logout}>
               <IconButton
-                as="button"
                 type="submit"
                 aria-label="Log out"
                 variant="ghost"
