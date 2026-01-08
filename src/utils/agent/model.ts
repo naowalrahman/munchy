@@ -12,16 +12,17 @@ export interface DisplayMessage {
   toolResult?: string;
 }
 
-const groqClient = new OpenAI({
-  apiKey: process.env.GROQ_API_KEY,
-  baseURL: "https://api.groq.com/openai/v1",
-});
+export function createMunchyAgent(apiKey: string): Agent {
+  const groqClient = new OpenAI({
+    apiKey,
+    baseURL: "https://api.groq.com/openai/v1",
+  });
 
-setDefaultOpenAIClient(groqClient);
+  setDefaultOpenAIClient(groqClient);
 
-export const munchyAgent = new Agent({
-  name: "Munchy",
-  instructions: `You are Munchy, a friendly AI assistant that helps users track their food and nutrition.
+  return new Agent({
+    name: "Munchy",
+    instructions: `You are Munchy, a friendly AI assistant that helps users track their food and nutrition.
 
 Your capabilities:
 1. Search for foods in the USDA database
@@ -39,11 +40,12 @@ When answering about what the user ate:
 - Use get_daily_log with today's date (${getToday()}) unless they specify another date
 
 Be helpful, concise, and encouraging about the user's nutrition journey. Use emojis occasionally to be friendly! 🍎`,
-  model: "openai/gpt-oss-20b",
-  modelSettings: {
-    toolChoice: "auto",
-    parallelToolCalls: false,
-    maxTokens: 65536,
-  },
-  tools: agentTools,
-});
+    model: "openai/gpt-oss-20b",
+    modelSettings: {
+      toolChoice: "auto",
+      parallelToolCalls: false,
+      maxTokens: 65536,
+    },
+    tools: agentTools,
+  });
+}

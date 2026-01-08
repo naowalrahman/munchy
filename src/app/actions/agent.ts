@@ -1,7 +1,8 @@
 "use server";
 
-import { DisplayMessage, munchyAgent } from "@/utils/agent/model";
+import { createMunchyAgent, DisplayMessage } from "@/utils/agent/model";
 import { AgentInputItem, run, RunToolCallItem, RunToolCallOutputItem } from "@openai/agents";
+import { createClient } from "@/utils/supabase/server";
 
 // ============================================================================
 // Server Action
@@ -23,6 +24,29 @@ export async function runAgent(
   error?: string;
 }> {
   try {
+    const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) {
+      return {
+        history,
+        newDisplayMessages: [],
+        error: "You must be logged in to use the AI agent.",
+      };
+    }
+
+    const apiKey = user.user_metadata?.groq_api_key;
+    if (!apiKey) {
+      return {
+        history,
+        newDisplayMessages: [],
+        error: "Please set your Groq API key in profile settings to use the AI agent.",
+      };
+    }
+
+    const munchyAgent = createMunchyAgent(apiKey);
     history.push({ role: "user", content: userMessage });
     const result = await run(munchyAgent, history);
 

@@ -1,13 +1,26 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
-import { Box, Button, Input, VStack, Heading, Text, Stack, Container, HStack, Separator } from "@chakra-ui/react";
+import {
+  Box,
+  Button,
+  Input,
+  VStack,
+  Heading,
+  Text,
+  Stack,
+  Container,
+  HStack,
+  Separator,
+  Link as ChakraLink,
+} from "@chakra-ui/react";
 import { createClient } from "@/utils/supabase/client";
 import { useRouter } from "next/navigation";
 import { User } from "@supabase/supabase-js";
 import { GoalSettings } from "@/components/profile/GoalSettings";
 import { motion } from "framer-motion";
 import { IoArrowBack } from "react-icons/io5";
+import { LuExternalLink } from "react-icons/lu";
 import Link from "next/link";
 import { Toaster, toaster } from "@/components/ui/toaster";
 
@@ -17,7 +30,9 @@ export default function ProfilePage() {
   const [user, setUser] = useState<User | null>(null);
   const [name, setName] = useState("");
   const [password, setPassword] = useState("");
+  const [groqApiKey, setGroqApiKey] = useState("");
   const [loading, setLoading] = useState(false);
+  const [apiKeyLoading, setApiKeyLoading] = useState(false);
   const router = useRouter();
   const supabase = useMemo(() => createClient(), []);
 
@@ -33,6 +48,7 @@ export default function ProfilePage() {
       }
       setUser(user);
       setName(user.user_metadata.full_name || "");
+      setGroqApiKey(user.user_metadata.groq_api_key || "");
     };
     getUser();
   }, [router, supabase]);
@@ -74,6 +90,35 @@ export default function ProfilePage() {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleUpdateApiKey = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setApiKeyLoading(true);
+
+    try {
+      const { error } = await supabase.auth.updateUser({
+        data: { groq_api_key: groqApiKey },
+      });
+
+      if (error) throw error;
+
+      toaster.create({
+        title: "API Key updated!",
+        description: "Your Groq API key has been saved successfully.",
+        type: "success",
+        duration: 3000,
+      });
+    } catch (err: unknown) {
+      toaster.create({
+        title: "Error",
+        description: err instanceof Error ? err.message : "Failed to update API key",
+        type: "error",
+        duration: 5000,
+      });
+    } finally {
+      setApiKeyLoading(false);
     }
   };
 
@@ -145,6 +190,59 @@ export default function ProfilePage() {
 
                 <Button type="submit" colorPalette="brand" w="full" loading={loading}>
                   Update Profile
+                </Button>
+              </VStack>
+            </Box>
+          </MotionBox>
+
+          <Separator />
+
+          {/* AI Agent Settings */}
+          <MotionBox
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, delay: 0.2 }}
+          >
+            <Box
+              p={0}
+              borderRadius="none"
+              bg="background.panel"
+              backdropFilter="blur(12px)"
+              boxShadow="0 4px 30px rgba(0, 0, 0, 0.1)"
+            >
+              <VStack gap={6} as="form" onSubmit={handleUpdateApiKey}>
+                <Heading size="lg" color="text.default">
+                  AI Agent Settings
+                </Heading>
+
+                <Stack gap={4} w="full">
+                  <Box>
+                    <Text mb={2} fontWeight="medium" color="text.default">
+                      Groq API Key
+                    </Text>
+                    <Input
+                      type="password"
+                      value={groqApiKey}
+                      onChange={(e) => setGroqApiKey(e.target.value)}
+                      placeholder="gsk_..."
+                    />
+                    <Text mt={2} fontSize="sm" color="text.muted">
+                      Required to use the AI agent.{" "}
+                      <ChakraLink
+                        href="https://console.groq.com/keys"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        color="brand.400"
+                        _hover={{ color: "brand.300" }}
+                      >
+                        Get your API key here <LuExternalLink style={{ display: "inline", verticalAlign: "middle" }} />
+                      </ChakraLink>
+                    </Text>
+                  </Box>
+                </Stack>
+
+                <Button type="submit" colorPalette="brand" w="full" loading={apiKeyLoading}>
+                  Save API Key
                 </Button>
               </VStack>
             </Box>

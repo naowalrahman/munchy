@@ -1,7 +1,7 @@
 import { Box, Code, Heading, Link, List, Table, Text, Separator, Flex, Badge } from "@chakra-ui/react";
 import { Streamdown } from "streamdown";
 import React from "react";
-import { liquidGlassStyles } from "@/theme";
+import { liquidGlassStyles } from "@/utils/liquidGlassStyles";
 import { codeToHtml } from "shiki";
 
 const components = {

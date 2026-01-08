@@ -1,5 +1,5 @@
 import { DisplayMessage } from "@/utils/agent/model";
-import { liquidGlassStyles } from "@/theme";
+import { liquidGlassStyles } from "@/utils/liquidGlassStyles";
 import { Box, Collapsible, HStack, Icon, Spinner, Text } from "@chakra-ui/react";
 import { MotionBox } from "@/components/ui/motion";
 import { LuChevronDown, LuChevronRight } from "react-icons/lu";

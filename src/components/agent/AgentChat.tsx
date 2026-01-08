@@ -7,7 +7,7 @@ import { AnimatePresence } from "framer-motion";
 import { useCallback, useRef, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { AgentInputItem } from "@openai/agents";
-import { liquidGlassStyles } from "@/theme";
+import { liquidGlassStyles } from "@/utils/liquidGlassStyles";
 import { MessageBubble } from "./MessageBubble";
 import { MotionBox } from "@/components/ui/motion";
 import { FaRegEdit } from "react-icons/fa";
