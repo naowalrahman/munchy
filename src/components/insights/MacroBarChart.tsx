@@ -96,7 +96,7 @@ export function MacroBarChart({ data, isLoading }: MacroBarChartProps) {
                 axisLine={false}
               />
               <YAxis stroke={chartColors.text} fontSize={12} tickLine={false} axisLine={false} />
-              <Tooltip content={<CustomTooltip />} />
+              <Tooltip content={<CustomTooltip />} cursor={{ fill: "rgba(255, 255, 255, 0.05)" }} />
               <Legend
                 wrapperStyle={{ fontSize: "12px", color: chartColors.text }}
                 formatter={(value) => <span style={{ color: chartColors.text }}>{value}</span>}
