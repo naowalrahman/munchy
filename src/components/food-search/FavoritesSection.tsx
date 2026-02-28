@@ -1,30 +1,32 @@
-import { Box, Button, HStack, Input, Spinner, Text, VStack } from "@chakra-ui/react";
+"use client";
+
+import { Box, Button, HStack, Input, Text, VStack } from "@chakra-ui/react";
+import { useState } from "react";
 import { motion } from "framer-motion";
-import { IoHeart, IoHeartOutline, IoSearch } from "react-icons/io5";
-import type { FoodSearchResult } from "@/app/actions/food";
+import { IoHeart, IoSearch } from "react-icons/io5";
+import type { FavoritedFood } from "./types";
 
 const MotionVStack = motion.create(VStack);
 const MotionBox = motion.create(Box);
 
-interface SearchSectionProps {
-  searchQuery: string;
-  onSearchQueryChange: (value: string) => void;
-  isSearching: boolean;
-  searchResults: FoodSearchResult[];
-  onFoodClick: (food: FoodSearchResult) => Promise<void>;
-  isFavorited: (fdcId: number) => boolean;
-  onToggleFavorite: (food: FoodSearchResult) => void;
+interface FavoritesSectionProps {
+  favorites: FavoritedFood[];
+  onFoodClick: (food: FavoritedFood) => Promise<void>;
+  onToggleFavorite: (food: FavoritedFood) => void;
 }
 
-export function SearchSection({
-  searchQuery,
-  onSearchQueryChange,
-  isSearching,
-  searchResults,
-  onFoodClick,
-  isFavorited,
-  onToggleFavorite,
-}: SearchSectionProps) {
+export function FavoritesSection({ favorites, onFoodClick, onToggleFavorite }: FavoritesSectionProps) {
+  const [filterQuery, setFilterQuery] = useState("");
+
+  const filtered =
+    filterQuery.trim().length > 0
+      ? favorites.filter(
+          (f) =>
+            f.description.toLowerCase().includes(filterQuery.toLowerCase()) ||
+            f.brandName?.toLowerCase().includes(filterQuery.toLowerCase())
+        )
+      : favorites;
+
   return (
     <>
       <Box position="relative" w="full">
@@ -32,9 +34,9 @@ export function SearchSection({
           <IoSearch size={20} />
         </Box>
         <Input
-          placeholder="Search for foods..."
-          value={searchQuery}
-          onChange={(e) => onSearchQueryChange(e.target.value)}
+          placeholder="Filter favorites..."
+          value={filterQuery}
+          onChange={(e) => setFilterQuery(e.target.value)}
           size="lg"
           pl={10}
           bg="background.subtle"
@@ -47,13 +49,19 @@ export function SearchSection({
         />
       </Box>
 
-      {isSearching && (
-        <HStack justify="center" py={8}>
-          <Spinner size="lg" colorPalette="brand" />
-        </HStack>
+      {favorites.length === 0 && (
+        <Box py={8} textAlign="center">
+          <Text color="text.muted">No favorites yet. Tap the heart on any food to save it here.</Text>
+        </Box>
       )}
 
-      {!isSearching && searchResults.length > 0 && (
+      {favorites.length > 0 && filtered.length === 0 && (
+        <Box py={8} textAlign="center">
+          <Text color="text.muted">No favorites match your filter.</Text>
+        </Box>
+      )}
+
+      {filtered.length > 0 && (
         <Box flex="1" overflowY="auto" maxH="400px" borderRadius="md" borderWidth="1px" borderColor="border.default">
           <MotionVStack
             align="stretch"
@@ -68,11 +76,11 @@ export function SearchSection({
               },
             }}
           >
-            {searchResults.map((food, index) => (
+            {filtered.map((food, index) => (
               <MotionBox
                 key={food.fdcId}
                 p={4}
-                borderBottomWidth={index < searchResults.length - 1 ? "1px" : "0"}
+                borderBottomWidth={index < filtered.length - 1 ? "1px" : "0"}
                 borderColor="border.default"
                 cursor="pointer"
                 _hover={{
@@ -107,32 +115,20 @@ export function SearchSection({
                   <Button
                     size="sm"
                     variant="ghost"
-                    colorPalette={isFavorited(food.fdcId) ? "red" : "gray"}
+                    colorPalette="red"
                     onClick={(e) => {
                       e.stopPropagation();
                       onToggleFavorite(food);
                     }}
-                    aria-label={isFavorited(food.fdcId) ? "Remove from favorites" : "Add to favorites"}
+                    aria-label="Remove from favorites"
                     flexShrink={0}
                   >
-                    {isFavorited(food.fdcId) ? <IoHeart size={18} /> : <IoHeartOutline size={18} />}
+                    <IoHeart size={18} />
                   </Button>
                 </HStack>
               </MotionBox>
             ))}
           </MotionVStack>
-        </Box>
-      )}
-
-      {!isSearching && searchQuery.trim().length >= 2 && searchResults.length === 0 && (
-        <Box py={8} textAlign="center">
-          <Text color="text.muted">No foods found. Try a different search term.</Text>
-        </Box>
-      )}
-
-      {!isSearching && searchQuery.trim().length < 2 && (
-        <Box py={8} textAlign="center">
-          <Text color="text.muted">Start typing to search for foods</Text>
         </Box>
       )}
     </>

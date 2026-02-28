@@ -8,7 +8,16 @@ export interface FoodSearchDialogProps {
   onFoodAdded: () => void;
 }
 
-export type InputMode = "search" | "scan";
+export type InputMode = "search" | "scan" | "favorites";
+
+export interface FavoritedFood {
+  fdcId: number;
+  description: string;
+  brandName?: string;
+  servingSize?: number;
+  servingSizeUnit?: string;
+  barcode?: string;
+}
 
 export type StagedFood = {
   id: string;

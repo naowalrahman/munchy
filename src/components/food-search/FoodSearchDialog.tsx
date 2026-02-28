@@ -3,18 +3,20 @@
 import { Box, VStack, HStack, Text, Button, Heading, Spinner, useBreakpointValue } from "@chakra-ui/react";
 import { useCallback, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { IoBarcodeOutline, IoClose, IoSearch } from "react-icons/io5";
+import { IoBarcodeOutline, IoClose, IoHeart, IoSearch } from "react-icons/io5";
 import type { FoodSearchResult, NutritionalData } from "@/app/actions/food";
-import { getFoodNutrition } from "@/app/actions/food";
+import { getFoodNutrition, lookupBarcode } from "@/app/actions/food";
 import { logFoodEntry } from "@/app/actions/foodLog";
 import { toaster } from "@/components/ui/toaster";
 import { NutritionFactsDrawer } from "../dashboard/NutritionFactsDrawer";
+import { FavoritesSection } from "./FavoritesSection";
 import { ScanSection } from "./ScanSection";
 import { SearchSection } from "./SearchSection";
 import { StagedItemsCard } from "./StagedItemsCard";
 import { useBarcodeScanner } from "./useBarcodeScanner";
+import { useFavorites } from "./useFavorites";
 import { useFoodSearch } from "./useFoodSearch";
-import type { FoodSearchDialogProps, InputMode, StagedFood } from "./types";
+import type { FavoritedFood, FoodSearchDialogProps, InputMode, StagedFood } from "./types";
 
 const MotionBox = motion.create(Box);
 
@@ -60,6 +62,7 @@ export function FoodSearchDialog({ isOpen, onClose, mealName, selectedDate, onFo
   const [scannedBarcode, setScannedBarcode] = useState<string | null>(null);
 
   const { searchQuery, setSearchQuery, searchResults, isSearching, resetSearch } = useFoodSearch(inputMode);
+  const { favorites, isFavorited, toggleFavorite } = useFavorites();
 
   // Used for conditional rendering and motion animations only
   const isMobile = useBreakpointValue({ base: true, md: false }) ?? false;
@@ -77,12 +80,18 @@ export function FoodSearchDialog({ isOpen, onClose, mealName, selectedDate, onFo
     setIsLoadingNutrition,
   });
 
-  const handleFoodClick = async (food: FoodSearchResult) => {
+  const openNutritionDrawer = async (fdcId: number, barcode: string | null) => {
     setIsLoadingNutrition(true);
     try {
-      const nutritionData = await getFoodNutrition(food.fdcId);
+      let nutritionData: NutritionalData;
+      if (barcode) {
+        nutritionData = await lookupBarcode(barcode);
+        setScannedBarcode(barcode);
+      } else {
+        nutritionData = await getFoodNutrition(fdcId);
+        setScannedBarcode(null);
+      }
       setSelectedFood(nutritionData);
-      setScannedBarcode(null);
       setIsNutritionDrawerOpen(true);
     } catch (error) {
       console.error("Error loading nutrition:", error);
@@ -94,6 +103,36 @@ export function FoodSearchDialog({ isOpen, onClose, mealName, selectedDate, onFo
     } finally {
       setIsLoadingNutrition(false);
     }
+  };
+
+  const handleFoodClick = async (food: FoodSearchResult) => {
+    await openNutritionDrawer(food.fdcId, null);
+  };
+
+  const handleFavoriteClick = async (food: FavoritedFood) => {
+    await openNutritionDrawer(food.fdcId, food.barcode ?? null);
+  };
+
+  const handleToggleFavoriteFromSearch = (food: FoodSearchResult) => {
+    toggleFavorite({
+      fdcId: food.fdcId,
+      description: food.description,
+      brandName: food.brandName,
+      servingSize: food.servingSize,
+      servingSizeUnit: food.servingSizeUnit,
+    });
+  };
+
+  const handleToggleFavoriteFromDrawer = () => {
+    if (!selectedFood) return;
+    toggleFavorite({
+      fdcId: selectedFood.fdcId,
+      description: selectedFood.description,
+      brandName: selectedFood.brandName,
+      servingSize: selectedFood.servingSize,
+      servingSizeUnit: selectedFood.servingSizeUnit,
+      barcode: scannedBarcode ?? undefined,
+    });
   };
 
   const stageFood = (servingAmount: number, servingUnit: string, nutritionData: NutritionalData) => {
@@ -218,6 +257,8 @@ export function FoodSearchDialog({ isOpen, onClose, mealName, selectedDate, onFo
     resetScannerState();
   };
 
+  const headingText = inputMode === "search" ? "Search Foods" : inputMode === "scan" ? "Scan Barcode" : "Favorites";
+
   if (!isOpen) return null;
 
   return (
@@ -270,7 +311,7 @@ export function FoodSearchDialog({ isOpen, onClose, mealName, selectedDate, onFo
             <VStack align="stretch" gap={{ base: 3, md: 4 }} h="full">
               <HStack justify="space-between" align="center">
                 <Heading size={{ base: "md", md: "lg" }} color="text.default">
-                  {inputMode === "search" ? "Search Foods" : "Scan Barcode"}
+                  {headingText}
                 </Heading>
                 <Button onClick={handleClose} variant="ghost" size="sm" colorPalette="gray">
                   <IoClose size={24} />
@@ -305,6 +346,16 @@ export function FoodSearchDialog({ isOpen, onClose, mealName, selectedDate, onFo
                   <IoBarcodeOutline size={18} />
                   <Text ml={2}>Scan</Text>
                 </Button>
+                <Button
+                  flex={1}
+                  variant={inputMode === "favorites" ? "solid" : "outline"}
+                  colorPalette={inputMode === "favorites" ? "brand" : "gray"}
+                  onClick={() => handleModeToggle("favorites")}
+                  size={{ base: "sm", md: "md" }}
+                >
+                  <IoHeart size={18} />
+                  <Text ml={2}>Favorites</Text>
+                </Button>
               </HStack>
 
               {inputMode === "search" ? (
@@ -314,13 +365,21 @@ export function FoodSearchDialog({ isOpen, onClose, mealName, selectedDate, onFo
                   isSearching={isSearching}
                   searchResults={searchResults}
                   onFoodClick={handleFoodClick}
+                  isFavorited={isFavorited}
+                  onToggleFavorite={handleToggleFavoriteFromSearch}
                 />
-              ) : (
+              ) : inputMode === "scan" ? (
                 <ScanSection
                   isScannerReady={isScannerReady}
                   isStartingScanner={isStartingScanner}
                   scannerError={scannerError}
                   onRetry={startScanner}
+                />
+              ) : (
+                <FavoritesSection
+                  favorites={favorites}
+                  onFoodClick={handleFavoriteClick}
+                  onToggleFavorite={toggleFavorite}
                 />
               )}
 
@@ -359,6 +418,8 @@ export function FoodSearchDialog({ isOpen, onClose, mealName, selectedDate, onFo
             isOpen={isNutritionDrawerOpen}
             onClose={handleDrawerClose}
             onAddToMeal={stageFood}
+            isFavorited={isFavorited(selectedFood.fdcId)}
+            onToggleFavorite={handleToggleFavoriteFromDrawer}
           />
         )
       )}

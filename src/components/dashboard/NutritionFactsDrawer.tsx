@@ -5,7 +5,7 @@ import { useState, useCallback } from "react";
 import { NutritionalData } from "@/app/actions/food";
 import { ServingSizeControl } from "./ServingSizeControl";
 import { motion, AnimatePresence } from "framer-motion";
-import { IoClose } from "react-icons/io5";
+import { IoClose, IoHeart, IoHeartOutline } from "react-icons/io5";
 
 export interface NutritionFactsDrawerProps {
   nutritionData: NutritionalData | null;
@@ -13,6 +13,8 @@ export interface NutritionFactsDrawerProps {
   isOpen: boolean;
   onClose: () => void;
   onAddToMeal: (servingAmount: number, servingUnit: string, nutritionData: NutritionalData) => void;
+  isFavorited?: boolean;
+  onToggleFavorite?: () => void;
   // Edit mode props
   isEditMode?: boolean;
   initialServingAmount?: number;
@@ -28,6 +30,8 @@ export function NutritionFactsDrawer({
   isOpen,
   onClose,
   onAddToMeal,
+  isFavorited,
+  onToggleFavorite,
   isEditMode = false,
   initialServingAmount = 1,
   initialServingUnit = "serving",
@@ -162,9 +166,22 @@ export function NutritionFactsDrawer({
         <Heading size={{ base: "md", md: "lg" }} color="text.default">
           Nutrition Facts
         </Heading>
-        <Button onClick={onClose} variant="ghost" size="sm" colorPalette="gray">
-          <IoClose size={24} />
-        </Button>
+        <HStack gap={1}>
+          {onToggleFavorite && (
+            <Button
+              onClick={onToggleFavorite}
+              variant="ghost"
+              size="sm"
+              colorPalette={isFavorited ? "red" : "gray"}
+              aria-label={isFavorited ? "Remove from favorites" : "Add to favorites"}
+            >
+              {isFavorited ? <IoHeart size={20} /> : <IoHeartOutline size={20} />}
+            </Button>
+          )}
+          <Button onClick={onClose} variant="ghost" size="sm" colorPalette="gray">
+            <IoClose size={24} />
+          </Button>
+        </HStack>
       </HStack>
 
       {/* Food Description */}

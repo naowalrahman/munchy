@@ -1,35 +1,25 @@
-# Project: Munchy
+## Code Style
 
-## Best Practices Guidelines
+- Default to Server Components; use `'use client'` only when needed (hooks, browser APIs)
+- Fetch data in Server Components or Server Actions, not `useEffect`
+- Use Server Actions for forms/mutations
+- Keep files under 400 lines; split large components if it aids clarity
+- No `any`; prefer type inference where possible, otherwise define types with interfaces or Zod schemas
+- Comments only when high-value; don't narrate to the user
 
-- **Prefer Server Components:** Always default to Next.js Server Components. Only use `'use client'` when absolutely necessary for interactivity (hooks like `useState`, `useEffect`, or browser APIs).
-- **Data Fetching:** Perform data fetching in Server Components or via Server Actions. Avoid fetching data in `useEffect` on the client whenever possible.
-- **Form Handling:** Use Server Actions for all form submissions and data mutations.
-- **File Sizing:** Keeping individual files under 400 lines is recommended for readability and maintainability. When implementing large components or features, consider breaking them down into smaller sub-components in different files if it makes sense for clarity.
+## Structure
 
-## Performance & Optimization
+- Follow Next.js App Router conventions
+- `src/utils` for reusable logic; `src/components` organized by page/feature
 
-- **Minimize Bundle Size:** Be cautious with large client-side libraries. Leverage Server Components to keep the client-side bundle lean.
-- **Efficient Styling:** Utilize Chakra UI v3 effectively, ensuring styles are computed efficiently and avoiding unnecessary re-renders.
-- **Streaming & Suspense:** Implement `loading.tsx` and React Suspense to provide a responsive user experience while server-side operations are in progress.
+## Performance
 
-## Type Safety
+- Keep client bundle lean; avoid large client-side libraries
+- Use `loading.tsx` and Suspense for streaming
 
-- **TypeScript Rigor:** Maintain strict type safety across the application. Avoid `any` and ensure all data structures (especially from Supabase and external APIs like USDA) are well-defined with interfaces or Zod schemas.
+## Stack
 
-## Code Structure
-
-- **App Router:** Follow Next.js App Router conventions strictly.
-- **Utility Functions:** Place reusable logic in `src/utils`.
-- Components should be organized in `src/components` by the page or feature they belong to.
-
-## Tech Stack Specifics
-
-- **Next.js + React:** Leverage the latest features, including the React Compiler and improved Server Action support.
-- **Chakra UI v3:** Follow Chakra's latest patterns for styling and theming.
-- **Supabase:** Use `@supabase/ssr` for authentication and database interactions, ensuring consistent session management across server and client.
-- **Bun:** The project uses Bun as the primary runtime and package manager. Use `bun run` for scripts.
-
-## Comments policy
-
-Only write high-value comments if at all. Avoid talking to the user through comments.
+- **Next.js/React** – use React Compiler + latest Server Action patterns
+- **Chakra UI v3** – follow latest styling/theming patterns
+- **Supabase** – use `@supabase/ssr` for auth and DB
+- **Bun** – runtime and package manager; use `bun run` for scripts
