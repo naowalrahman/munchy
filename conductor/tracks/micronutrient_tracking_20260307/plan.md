@@ -1,13 +1,13 @@
 # Implementation Plan: Micronutrient Tracking & Caching
 
-## Phase 1: Database and Schema Updates
+## Phase 1: Database and Schema Updates [checkpoint: 974aa62]
 - [x] Task: Create Supabase migration to add `nutrient_details` (JSONB) to `food_logs` table. 42b680d
 - [x] Task: Create Supabase migration to add `nutrient_cache` (JSONB) to `favorites` table. e65d7fc
 - [x] Task: Update Zod schemas in `src/components/food-search/types.ts` (or relevant file) to support detailed nutrients. f76be41
-- [~] Task: Conductor - User Manual Verification 'Phase 1: Database and Schema Updates' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Phase 1: Database and Schema Updates' (Protocol in workflow.md) 974aa62
 
 ## Phase 2: Enhanced USDA API Integration
-- [ ] Task: Write failing unit tests for the enhanced USDA nutrient parser.
+- [~] Task: Write failing unit tests for the enhanced USDA nutrient parser.
 - [ ] Task: Update the USDA API integration in `src/app/actions/food.ts` to fetch and parse full `foodNutrients`.
 - [ ] Task: Implement nutrient mapping for common micronutrients (Fiber, Sodium, Potassium, Vitamins).
 - [ ] Task: Verify tests pass and check coverage for the new parser.
