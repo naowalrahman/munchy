@@ -14,6 +14,7 @@ Munchy is an AI-powered calorie tracking application designed to simplify meal l
 ## Core Features (MVP)
 - **AI Food Logging:** Natural language meal description processing for instant logging.
 - **Nutrition Insights:** Visualizations of calorie and macronutrient intake (Recharts).
+- **Detailed Micronutrient Tracking:** View comprehensive nutritional data including fiber, sodium, potassium, and essential vitamins.
 - **Maximally Convenient Tools:** Features designed to reduce friction, such as barcode scanning (html5-qrcode), quick-add favorites, and automated calorie calculations.
 - **Goal Management:** Customizable user profiles with targets based on the Mifflin-St Jeor equation.
 - **Daily Summaries:** Comprehensive breakdown of daily nutrition and progress towards goals.
