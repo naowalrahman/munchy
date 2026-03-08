@@ -9,6 +9,7 @@ import { IoAdd, IoTrash, IoPencil } from "react-icons/io5";
 import { toaster } from "@/components/ui/toaster";
 import { FoodSearchDialog } from "@/components/food-search/FoodSearchDialog";
 import { NutritionFactsDrawer } from "./NutritionFactsDrawer";
+import { useFavorites } from "@/components/food-search/useFavorites";
 
 interface MealSectionProps {
   mealName: string;
@@ -26,6 +27,8 @@ export function MealSection({ mealName, entries, onFoodAdded, isCustom, selected
   const [editingEntry, setEditingEntry] = useState<FoodLogEntry | null>(null);
   const [editNutritionData, setEditNutritionData] = useState<NutritionalData | null>(null);
   const [isLoadingEditData, setIsLoadingEditData] = useState(false);
+
+  const { getFavorite } = useFavorites();
 
   const totalCalories = entries.reduce((sum, entry) => sum + (entry.calories || 0), 0);
   const totalProtein = entries.reduce((sum, entry) => sum + (entry.protein || 0), 0);
@@ -63,6 +66,14 @@ export function MealSection({ mealName, entries, onFoodAdded, isCustom, selected
   };
 
   const handleEdit = async (entry: FoodLogEntry) => {
+    // Check cache first
+    const favoritedItem = getFavorite(entry.food_fdc_id);
+    if (favoritedItem?.nutrientCache) {
+      setEditNutritionData(favoritedItem.nutrientCache);
+      setEditingEntry(entry);
+      return;
+    }
+
     setIsLoadingEditData(true);
     try {
       let nutritionData: NutritionalData;
