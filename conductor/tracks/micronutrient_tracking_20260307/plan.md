@@ -2,7 +2,7 @@
 
 ## Phase 1: Database and Schema Updates [checkpoint: 974aa62]
 - [x] Task: Create Supabase migration to add `nutrient_details` (JSONB) to `food_logs` table. 42b680d
-- [x] Task: Create Supabase migration to add `nutrient_cache` (JSONB) to `favorites` table. e65d7fc
+- [x] Task: Create Supabase migration to add `nutrient_cache` (JSONB) to `favorites` table. e65d7fc (Note: Reverted, favorites are locally stored)
 - [x] Task: Update Zod schemas in `src/components/food-search/types.ts` (or relevant file) to support detailed nutrients. f76be41
 - [x] Task: Conductor - User Manual Verification 'Phase 1: Database and Schema Updates' (Protocol in workflow.md) 974aa62
 
@@ -14,10 +14,9 @@
 - [~] Task: Conductor - User Manual Verification 'Phase 2: Enhanced USDA API Integration' (Protocol in workflow.md)
 
 ## Phase 3: Nutrient Caching and Persistence
-- [ ] Task: Write failing unit tests for the nutrient caching logic.
-- [ ] Task: Update `favoriteFood` server action to fetch and store full nutrient data in `nutrient_cache`.
-- [ ] Task: Update `logFood` server action to prefer cached nutrients for favorited items.
-- [ ] Task: Verify tests pass and check coverage for caching logic.
+- [ ] Task: Update `useFavorites` hook to fetch and store full nutrient data in localStorage.
+- [ ] Task: Update the food logging flow to prefer cached nutrients for favorited items when added from the favorites list.
+- [ ] Task: Verify the caching logic.
 - [ ] Task: Conductor - User Manual Verification 'Phase 3: Nutrient Caching and Persistence' (Protocol in workflow.md)
 
 ## Phase 4: UI Enhancements (Micronutrient Display)
