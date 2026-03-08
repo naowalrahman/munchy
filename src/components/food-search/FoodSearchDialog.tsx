@@ -206,7 +206,6 @@ export function FoodSearchDialog({ isOpen, onClose, mealName, selectedDate, onFo
           date: selectedDate,
           total_fat: item.nutritionData.totalFat ? item.nutritionData.totalFat.amount * multiplier : null,
           barcode: item.barcode,
-          nutrient_details: item.nutritionData,
         });
 
         if (!response.success) {

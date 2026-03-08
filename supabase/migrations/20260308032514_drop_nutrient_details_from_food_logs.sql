@@ -1,0 +1,1 @@
+ALTER TABLE public.food_logs DROP COLUMN IF EXISTS nutrient_details;
