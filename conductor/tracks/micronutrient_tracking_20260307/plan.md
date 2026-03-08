@@ -6,15 +6,15 @@
 - [x] Task: Update Zod schemas in `src/components/food-search/types.ts` (or relevant file) to support detailed nutrients. f76be41
 - [x] Task: Conductor - User Manual Verification 'Phase 1: Database and Schema Updates' (Protocol in workflow.md) 974aa62
 
-## Phase 2: Enhanced USDA API Integration
+## Phase 2: Enhanced USDA API Integration [checkpoint: 2ba0ae7]
 - [x] Task: Write failing unit tests for the enhanced USDA nutrient parser. 135ae98
 - [x] Task: Update the USDA API integration in `src/app/actions/food.ts` to fetch and parse full `foodNutrients`. 5934817
 - [x] Task: Implement nutrient mapping for common micronutrients (Fiber, Sodium, Potassium, Vitamins). 156d4ff
 - [x] Task: Verify tests pass and check coverage for the new parser. b266889
-- [~] Task: Conductor - User Manual Verification 'Phase 2: Enhanced USDA API Integration' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Phase 2: Enhanced USDA API Integration' (Protocol in workflow.md) 2ba0ae7
 
 ## Phase 3: Nutrient Caching and Persistence
-- [ ] Task: Update `useFavorites` hook to fetch and store full nutrient data in localStorage.
+- [~] Task: Update `useFavorites` hook to fetch and store full nutrient data in localStorage.
 - [ ] Task: Update the food logging flow to prefer cached nutrients for favorited items when added from the favorites list.
 - [ ] Task: Verify the caching logic.
 - [ ] Task: Conductor - User Manual Verification 'Phase 3: Nutrient Caching and Persistence' (Protocol in workflow.md)
