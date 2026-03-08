@@ -38,7 +38,6 @@ export function NutritionFactsDrawer({
 }: NutritionFactsDrawerProps) {
   const [servingAmount, setServingAmount] = useState(isEditMode ? initialServingAmount : 1);
   const [servingUnit, setServingUnit] = useState(isEditMode ? initialServingUnit : "serving");
-  const [showMicros, setShowMicros] = useState(false);
 
   // Used for motion animations only
   const isMobile = useBreakpointValue({ base: true, md: false }) ?? false;
@@ -274,80 +273,68 @@ export function NutritionFactsDrawer({
 
           <Separator />
 
-          {/* Micronutrients Toggle */}
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setShowMicros(!showMicros)}
-            color="text.muted"
-            justifyContent="space-between"
-            w="full"
-          >
-            <Text fontSize="sm" fontWeight="bold">
+          {/* Micronutrients */}
+          <VStack align="stretch" gap={2} pt={2}>
+            <Text fontSize="sm" fontWeight="bold" color="text.muted">
               VITAMINS & MINERALS
             </Text>
-            <Text fontSize="xs">{showMicros ? "Hide" : "Show"}</Text>
-          </Button>
+            
+            <Grid templateColumns="1fr auto" gap={2}>
+              {nutritionData.sodium && (
+                <>
+                  <Text color="text.default">Sodium</Text>
+                  <Text fontWeight="medium" color="text.default">
+                    {formatNutrientValue(nutritionData.sodium.amount)} {nutritionData.sodium.unit}
+                  </Text>
+                </>
+              )}
 
-          {showMicros && (
-            <VStack align="stretch" gap={2} pt={2}>
-              <Grid templateColumns="1fr auto" gap={2}>
-                {nutritionData.sodium && (
-                  <>
-                    <Text color="text.default">Sodium</Text>
-                    <Text fontWeight="medium" color="text.default">
-                      {formatNutrientValue(nutritionData.sodium.amount)} {nutritionData.sodium.unit}
-                    </Text>
-                  </>
-                )}
+              {nutritionData.potassium && (
+                <>
+                  <Text color="text.default">Potassium</Text>
+                  <Text fontWeight="medium" color="text.default">
+                    {formatNutrientValue(nutritionData.potassium.amount)} {nutritionData.potassium.unit}
+                  </Text>
+                </>
+              )}
 
-                {nutritionData.potassium && (
-                  <>
-                    <Text color="text.default">Potassium</Text>
-                    <Text fontWeight="medium" color="text.default">
-                      {formatNutrientValue(nutritionData.potassium.amount)} {nutritionData.potassium.unit}
-                    </Text>
-                  </>
-                )}
+              {nutritionData.calcium && (
+                <>
+                  <Text color="text.default">Calcium</Text>
+                  <Text fontWeight="medium" color="text.default">
+                    {formatNutrientValue(nutritionData.calcium.amount)} {nutritionData.calcium.unit}
+                  </Text>
+                </>
+              )}
 
-                {nutritionData.calcium && (
-                  <>
-                    <Text color="text.default">Calcium</Text>
-                    <Text fontWeight="medium" color="text.default">
-                      {formatNutrientValue(nutritionData.calcium.amount)} {nutritionData.calcium.unit}
-                    </Text>
-                  </>
-                )}
+              {nutritionData.iron && (
+                <>
+                  <Text color="text.default">Iron</Text>
+                  <Text fontWeight="medium" color="text.default">
+                    {formatNutrientValue(nutritionData.iron.amount)} {nutritionData.iron.unit}
+                  </Text>
+                </>
+              )}
 
-                {nutritionData.iron && (
-                  <>
-                    <Text color="text.default">Iron</Text>
-                    <Text fontWeight="medium" color="text.default">
-                      {formatNutrientValue(nutritionData.iron.amount)} {nutritionData.iron.unit}
-                    </Text>
-                  </>
-                )}
+              {nutritionData.vitaminC && (
+                <>
+                  <Text color="text.default">Vitamin C</Text>
+                  <Text fontWeight="medium" color="text.default">
+                    {formatNutrientValue(nutritionData.vitaminC.amount)} {nutritionData.vitaminC.unit}
+                  </Text>
+                </>
+              )}
 
-                {nutritionData.vitaminC && (
-                  <>
-                    <Text color="text.default">Vitamin C</Text>
-                    <Text fontWeight="medium" color="text.default">
-                      {formatNutrientValue(nutritionData.vitaminC.amount)} {nutritionData.vitaminC.unit}
-                    </Text>
-                  </>
-                )}
-
-                {nutritionData.vitaminA && (
-                  <>
-                    <Text color="text.default">Vitamin A</Text>
-                    <Text fontWeight="medium" color="text.default">
-                      {formatNutrientValue(nutritionData.vitaminA.amount)} {nutritionData.vitaminA.unit}
-                    </Text>
-                  </>
-                )}
-              </Grid>
-            </VStack>
-          )}
+              {nutritionData.vitaminA && (
+                <>
+                  <Text color="text.default">Vitamin A</Text>
+                  <Text fontWeight="medium" color="text.default">
+                    {formatNutrientValue(nutritionData.vitaminA.amount)} {nutritionData.vitaminA.unit}
+                  </Text>
+                </>
+              )}
+            </Grid>
+          </VStack>
         </VStack>
       </Box>
 

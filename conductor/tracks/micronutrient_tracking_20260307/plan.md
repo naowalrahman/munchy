@@ -21,7 +21,7 @@
 
 ## Phase 4: UI Enhancements (Micronutrient Display)
 - [x] Task: Update `NutritionFactsDrawer.tsx` to display micronutrients below the main macros. 4e107d8
-- [x] Task: Implement a "Show More" / collapsible section for micronutrients to optimize for mobile. 4e107d8
+- [x] Task: Ensure the micronutrients section is always shown (reverted collapsible behavior per user request).
 - [x] Task: Ensure the UI correctly reflects data from the new `nutrient_details` or `nutrient_cache`. 5d1c115
 - [x] Task: Verify mobile responsiveness and accessibility of the new nutrient display. 5d1c115
 - [~] Task: Conductor - User Manual Verification 'Phase 4: UI Enhancements' (Protocol in workflow.md)
