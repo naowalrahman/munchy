@@ -7,11 +7,11 @@
 - [x] Task: Conductor - User Manual Verification 'Phase 1: Database and Schema Updates' (Protocol in workflow.md) 974aa62
 
 ## Phase 2: Enhanced USDA API Integration
-- [~] Task: Write failing unit tests for the enhanced USDA nutrient parser.
-- [ ] Task: Update the USDA API integration in `src/app/actions/food.ts` to fetch and parse full `foodNutrients`.
-- [ ] Task: Implement nutrient mapping for common micronutrients (Fiber, Sodium, Potassium, Vitamins).
-- [ ] Task: Verify tests pass and check coverage for the new parser.
-- [ ] Task: Conductor - User Manual Verification 'Phase 2: Enhanced USDA API Integration' (Protocol in workflow.md)
+- [x] Task: Write failing unit tests for the enhanced USDA nutrient parser. 135ae98
+- [x] Task: Update the USDA API integration in `src/app/actions/food.ts` to fetch and parse full `foodNutrients`. 5934817
+- [x] Task: Implement nutrient mapping for common micronutrients (Fiber, Sodium, Potassium, Vitamins). 156d4ff
+- [x] Task: Verify tests pass and check coverage for the new parser. b266889
+- [~] Task: Conductor - User Manual Verification 'Phase 2: Enhanced USDA API Integration' (Protocol in workflow.md)
 
 ## Phase 3: Nutrient Caching and Persistence
 - [ ] Task: Write failing unit tests for the nutrient caching logic.
