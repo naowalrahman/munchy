@@ -62,7 +62,7 @@ export function FoodSearchDialog({ isOpen, onClose, mealName, selectedDate, onFo
   const [scannedBarcode, setScannedBarcode] = useState<string | null>(null);
 
   const { searchQuery, setSearchQuery, searchResults, isSearching, resetSearch } = useFoodSearch(inputMode);
-  const { favorites, isFavorited, toggleFavorite } = useFavorites();
+  const { favorites, isFavorited, toggleFavorite, getFavorite, updateFavoriteCache } = useFavorites();
 
   // Used for conditional rendering and motion animations only
   const isMobile = useBreakpointValue({ base: true, md: false }) ?? false;
@@ -81,6 +81,15 @@ export function FoodSearchDialog({ isOpen, onClose, mealName, selectedDate, onFo
   });
 
   const openNutritionDrawer = async (fdcId: number, barcode: string | null) => {
+    // Check cache first if it's favorited
+    const favoritedItem = getFavorite(fdcId);
+    if (favoritedItem?.nutrientCache) {
+      setSelectedFood(favoritedItem.nutrientCache);
+      setScannedBarcode(barcode);
+      setIsNutritionDrawerOpen(true);
+      return;
+    }
+
     setIsLoadingNutrition(true);
     try {
       let nutritionData: NutritionalData;
@@ -91,6 +100,12 @@ export function FoodSearchDialog({ isOpen, onClose, mealName, selectedDate, onFo
         nutritionData = await getFoodNutrition(fdcId);
         setScannedBarcode(null);
       }
+      
+      // Update cache if favorited
+      if (favoritedItem) {
+        updateFavoriteCache(fdcId, nutritionData);
+      }
+      
       setSelectedFood(nutritionData);
       setIsNutritionDrawerOpen(true);
     } catch (error) {
@@ -132,6 +147,7 @@ export function FoodSearchDialog({ isOpen, onClose, mealName, selectedDate, onFo
       servingSize: selectedFood.servingSize,
       servingSizeUnit: selectedFood.servingSizeUnit,
       barcode: scannedBarcode ?? undefined,
+      nutrientCache: selectedFood,
     });
   };
 
@@ -190,6 +206,7 @@ export function FoodSearchDialog({ isOpen, onClose, mealName, selectedDate, onFo
           date: selectedDate,
           total_fat: item.nutritionData.totalFat ? item.nutritionData.totalFat.amount * multiplier : null,
           barcode: item.barcode,
+          nutrient_details: item.nutritionData,
         });
 
         if (!response.success) {
