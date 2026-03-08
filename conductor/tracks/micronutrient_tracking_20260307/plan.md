@@ -14,10 +14,10 @@
 - [x] Task: Conductor - User Manual Verification 'Phase 2: Enhanced USDA API Integration' (Protocol in workflow.md) 2ba0ae7
 
 ## Phase 3: Nutrient Caching and Persistence
-- [~] Task: Update `useFavorites` hook to fetch and store full nutrient data in localStorage.
-- [ ] Task: Update the food logging flow to prefer cached nutrients for favorited items when added from the favorites list.
-- [ ] Task: Verify the caching logic.
-- [ ] Task: Conductor - User Manual Verification 'Phase 3: Nutrient Caching and Persistence' (Protocol in workflow.md)
+- [x] Task: Update `useFavorites` hook to fetch and store full nutrient data in localStorage. 3edaa71
+- [x] Task: Update the food logging flow to prefer cached nutrients for favorited items when added from the favorites list. 3edaa71
+- [x] Task: Verify the caching logic. 3edaa71
+- [~] Task: Conductor - User Manual Verification 'Phase 3: Nutrient Caching and Persistence' (Protocol in workflow.md)
 
 ## Phase 4: UI Enhancements (Micronutrient Display)
 - [ ] Task: Update `NutritionFactsDrawer.tsx` to display micronutrients below the main macros.
