@@ -19,14 +19,14 @@
 - [x] Task: Verify the caching logic. 3edaa71
 - [x] Task: Conductor - User Manual Verification 'Phase 3: Nutrient Caching and Persistence' (Protocol in workflow.md) d6c45c7
 
-## Phase 4: UI Enhancements (Micronutrient Display)
+## Phase 4: UI Enhancements (Micronutrient Display) [checkpoint: bab6ea0]
 - [x] Task: Update `NutritionFactsDrawer.tsx` to display micronutrients below the main macros. 4e107d8
-- [x] Task: Ensure the micronutrients section is always shown (reverted collapsible behavior per user request).
+- [x] Task: Ensure the micronutrients section is always shown (reverted collapsible behavior per user request). 7e95fb4
 - [x] Task: Ensure the UI correctly reflects data from the new `nutrient_details` or `nutrient_cache`. 5d1c115
 - [x] Task: Verify mobile responsiveness and accessibility of the new nutrient display. 5d1c115
-- [~] Task: Conductor - User Manual Verification 'Phase 4: UI Enhancements' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Phase 4: UI Enhancements' (Protocol in workflow.md) bab6ea0
 
 ## Phase 5: Final Verification & Cleanup
-- [ ] Task: Perform a full end-to-end test of logging a food item, favoriting it, and verifying cached data is used.
+- [~] Task: Perform a full end-to-end test of logging a food item, favoriting it, and verifying cached data is used.
 - [ ] Task: Final check of code coverage (>80%) and linting.
 - [ ] Task: Conductor - User Manual Verification 'Phase 5: Final Verification' (Protocol in workflow.md)
