@@ -13,14 +13,14 @@
 - [x] Task: Verify tests pass and check coverage for the new parser. b266889
 - [x] Task: Conductor - User Manual Verification 'Phase 2: Enhanced USDA API Integration' (Protocol in workflow.md) 2ba0ae7
 
-## Phase 3: Nutrient Caching and Persistence
+## Phase 3: Nutrient Caching and Persistence [checkpoint: d6c45c7]
 - [x] Task: Update `useFavorites` hook to fetch and store full nutrient data in localStorage. 3edaa71
 - [x] Task: Update the food logging flow to prefer cached nutrients for favorited items when added from the favorites list. 3edaa71
 - [x] Task: Verify the caching logic. 3edaa71
-- [~] Task: Conductor - User Manual Verification 'Phase 3: Nutrient Caching and Persistence' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Phase 3: Nutrient Caching and Persistence' (Protocol in workflow.md) d6c45c7
 
 ## Phase 4: UI Enhancements (Micronutrient Display)
-- [ ] Task: Update `NutritionFactsDrawer.tsx` to display micronutrients below the main macros.
+- [~] Task: Update `NutritionFactsDrawer.tsx` to display micronutrients below the main macros.
 - [ ] Task: Implement a "Show More" / collapsible section for micronutrients to optimize for mobile.
 - [ ] Task: Ensure the UI correctly reflects data from the new `nutrient_details` or `nutrient_cache`.
 - [ ] Task: Verify mobile responsiveness and accessibility of the new nutrient display.
