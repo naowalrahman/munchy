@@ -2,6 +2,7 @@
 
 import { createClient } from "@/utils/supabase/server";
 import { revalidatePath } from "next/cache";
+import type { NutritionalData } from "./food";
 
 /**
  * Food log entry type
@@ -23,6 +24,7 @@ export interface FoodLogEntry {
   created_at: string;
   updated_at: string;
   barcode?: string | null; // Original barcode for foods added via barcode scanning
+  nutrient_details?: NutritionalData | null; // Detailed micronutrients
 }
 
 /**
@@ -40,6 +42,7 @@ export interface LogFoodEntryInput {
   total_fat: number | null;
   date: string;
   barcode?: string | null; // Optional barcode for foods added via barcode scanning
+  nutrient_details?: NutritionalData | null; // Detailed micronutrients
 }
 
 /**
@@ -83,6 +86,7 @@ export async function logFoodEntry(input: LogFoodEntryInput): Promise<FoodLogRes
         total_fat: input.total_fat,
         date: input.date,
         barcode: input.barcode || null,
+        nutrient_details: input.nutrient_details || null,
       })
       .select()
       .single();

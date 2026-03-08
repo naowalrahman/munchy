@@ -17,6 +17,7 @@ export interface FavoritedFood {
   servingSize?: number;
   servingSizeUnit?: string;
   barcode?: string;
+  nutrientCache?: NutritionalData | null;
 }
 
 export type StagedFood = {
