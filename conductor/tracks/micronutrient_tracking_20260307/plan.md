@@ -1,8 +1,8 @@
 # Implementation Plan: Micronutrient Tracking & Caching
 
 ## Phase 1: Database and Schema Updates
-- [ ] Task: Create Supabase migration to add `nutrient_details` (JSONB) to `food_logs` table.
-- [ ] Task: Create Supabase migration to add `nutrient_cache` (JSONB) to `favorites` table.
+- [x] Task: Create Supabase migration to add `nutrient_details` (JSONB) to `food_logs` table. 42b680d
+- [~] Task: Create Supabase migration to add `nutrient_cache` (JSONB) to `favorites` table.
 - [ ] Task: Update Zod schemas in `src/components/food-search/types.ts` (or relevant file) to support detailed nutrients.
 - [ ] Task: Conductor - User Manual Verification 'Phase 1: Database and Schema Updates' (Protocol in workflow.md)
 
