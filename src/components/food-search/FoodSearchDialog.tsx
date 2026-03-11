@@ -3,13 +3,14 @@
 import { Box, VStack, HStack, Text, Button, Heading, Spinner, useBreakpointValue } from "@chakra-ui/react";
 import { useCallback, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { IoBarcodeOutline, IoClose, IoHeart, IoSearch } from "react-icons/io5";
+import { IoBarcodeOutline, IoClose, IoHeart, IoRestaurant, IoSearch } from "react-icons/io5";
 import type { FoodSearchResult, NutritionalData } from "@/app/actions/food";
 import { getFoodNutrition, lookupBarcode } from "@/app/actions/food";
 import { logFoodEntry } from "@/app/actions/foodLog";
 import { toaster } from "@/components/ui/toaster";
 import { NutritionFactsDrawer } from "../dashboard/NutritionFactsDrawer";
 import { FavoritesSection } from "./FavoritesSection";
+import { RecipesSection } from "./RecipesSection";
 import { ScanSection } from "./ScanSection";
 import { SearchSection } from "./SearchSection";
 import { StagedItemsCard } from "./StagedItemsCard";
@@ -273,7 +274,14 @@ export function FoodSearchDialog({ isOpen, onClose, mealName, selectedDate, onFo
     resetScannerState();
   };
 
-  const headingText = inputMode === "search" ? "Search Foods" : inputMode === "scan" ? "Scan Barcode" : "Favorites";
+  const headingText =
+    inputMode === "search"
+      ? "Search Foods"
+      : inputMode === "scan"
+        ? "Scan Barcode"
+        : inputMode === "recipes"
+          ? "Add Recipe"
+          : "Favorites";
 
   if (!isOpen) return null;
 
@@ -372,6 +380,16 @@ export function FoodSearchDialog({ isOpen, onClose, mealName, selectedDate, onFo
                   <IoHeart size={18} />
                   <Text ml={2}>Favorites</Text>
                 </Button>
+                <Button
+                  flex={1}
+                  variant={inputMode === "recipes" ? "solid" : "outline"}
+                  colorPalette={inputMode === "recipes" ? "brand" : "gray"}
+                  onClick={() => handleModeToggle("recipes")}
+                  size={{ base: "sm", md: "md" }}
+                >
+                  <IoRestaurant size={18} />
+                  <Text ml={2}>Recipes</Text>
+                </Button>
               </HStack>
 
               {inputMode === "search" ? (
@@ -391,6 +409,13 @@ export function FoodSearchDialog({ isOpen, onClose, mealName, selectedDate, onFo
                   scannerError={scannerError}
                   onRetry={startScanner}
                 />
+              ) : inputMode === "recipes" ? (
+                <RecipesSection
+                  mealName={mealName}
+                  selectedDate={selectedDate}
+                  onRecipeAdded={onFoodAdded}
+                  onClose={handleClose}
+                />
               ) : (
                 <FavoritesSection
                   favorites={favorites}
@@ -399,22 +424,30 @@ export function FoodSearchDialog({ isOpen, onClose, mealName, selectedDate, onFo
                 />
               )}
 
-              <StagedItemsCard stagedItems={stagedItems} onRemove={handleRemoveStaged} />
-
-              <HStack gap={3} pt={1}>
-                <Button variant="outline" colorPalette="gray" onClick={handleClose} flex={1} disabled={isSaving}>
+              {inputMode !== "recipes" && (
+                <>
+                  <StagedItemsCard stagedItems={stagedItems} onRemove={handleRemoveStaged} />
+                  <HStack gap={3} pt={1}>
+                    <Button variant="outline" colorPalette="gray" onClick={handleClose} flex={1} disabled={isSaving}>
+                      Cancel
+                    </Button>
+                    <Button
+                      colorPalette="brand"
+                      flex={1}
+                      onClick={handleSaveAll}
+                      loading={isSaving}
+                      disabled={stagedItems.length === 0 || isSaving}
+                    >
+                      Save {stagedItems.length > 0 ? `(${stagedItems.length})` : ""}
+                    </Button>
+                  </HStack>
+                </>
+              )}
+              {inputMode === "recipes" && (
+                <Button variant="outline" colorPalette="gray" onClick={handleClose} w="full">
                   Cancel
                 </Button>
-                <Button
-                  colorPalette="brand"
-                  flex={1}
-                  onClick={handleSaveAll}
-                  loading={isSaving}
-                  disabled={stagedItems.length === 0 || isSaving}
-                >
-                  Save {stagedItems.length > 0 ? `(${stagedItems.length})` : ""}
-                </Button>
-              </HStack>
+              )}
             </VStack>
           </MotionBox>
         )}

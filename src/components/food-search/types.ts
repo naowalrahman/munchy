@@ -8,7 +8,7 @@ export interface FoodSearchDialogProps {
   onFoodAdded: () => void;
 }
 
-export type InputMode = "search" | "scan" | "favorites";
+export type InputMode = "search" | "scan" | "favorites" | "recipes";
 
 export interface FavoritedFood {
   fdcId: number;

@@ -23,6 +23,8 @@ export interface FoodLogEntry {
   created_at: string;
   updated_at: string;
   barcode?: string | null; // Original barcode for foods added via barcode scanning
+  recipe_id?: string | null;
+  entry_type?: "food" | "recipe" | null;
 }
 
 /**

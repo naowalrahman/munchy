@@ -4,11 +4,13 @@ import { Box, VStack, HStack, Text, Heading, IconButton, Spinner } from "@chakra
 import { useState } from "react";
 import { FoodLogEntry, deleteFoodEntry, updateFoodEntry } from "@/app/actions/foodLog";
 import { getFoodNutrition, lookupBarcode, NutritionalData } from "@/app/actions/food";
+import { getLoggedRecipeIngredients, type LoggedRecipeIngredient } from "@/app/actions/recipes";
 import { motion, AnimatePresence } from "framer-motion";
-import { IoAdd, IoTrash, IoPencil } from "react-icons/io5";
+import { IoAdd, IoTrash, IoPencil, IoChevronDown, IoChevronForward } from "react-icons/io5";
 import { toaster } from "@/components/ui/toaster";
 import { FoodSearchDialog } from "@/components/food-search/FoodSearchDialog";
 import { NutritionFactsDrawer } from "./NutritionFactsDrawer";
+import { LoggedRecipeIngredientEditor } from "./LoggedRecipeIngredientEditor";
 import { useFavorites } from "@/components/food-search/useFavorites";
 
 interface MealSectionProps {
@@ -27,8 +29,29 @@ export function MealSection({ mealName, entries, onFoodAdded, isCustom, selected
   const [editingEntry, setEditingEntry] = useState<FoodLogEntry | null>(null);
   const [editNutritionData, setEditNutritionData] = useState<NutritionalData | null>(null);
   const [isLoadingEditData, setIsLoadingEditData] = useState(false);
+  const [editingRecipeLogId, setEditingRecipeLogId] = useState<string | null>(null);
+  const [expandedRecipeIds, setExpandedRecipeIds] = useState<Set<string>>(new Set());
+  const [recipeIngredientsCache, setRecipeIngredientsCache] = useState<Record<string, LoggedRecipeIngredient[]>>({});
 
   const { getFavorite } = useFavorites();
+
+  const toggleRecipeExpand = async (entryId: string) => {
+    if (expandedRecipeIds.has(entryId)) {
+      setExpandedRecipeIds((prev) => {
+        const next = new Set(prev);
+        next.delete(entryId);
+        return next;
+      });
+      return;
+    }
+    setExpandedRecipeIds((prev) => new Set(prev).add(entryId));
+    if (!recipeIngredientsCache[entryId]) {
+      const res = await getLoggedRecipeIngredients(entryId);
+      if (res.success && res.data) {
+        setRecipeIngredientsCache((prev) => ({ ...prev, [entryId]: res.data! }));
+      }
+    }
+  };
 
   const totalCalories = entries.reduce((sum, entry) => sum + (entry.calories || 0), 0);
   const totalProtein = entries.reduce((sum, entry) => sum + (entry.protein || 0), 0);
@@ -66,7 +89,11 @@ export function MealSection({ mealName, entries, onFoodAdded, isCustom, selected
   };
 
   const handleEdit = async (entry: FoodLogEntry) => {
-    // Check cache first
+    if (entry.entry_type === "recipe") {
+      setEditingRecipeLogId(entry.id);
+      return;
+    }
+
     const favoritedItem = getFavorite(entry.food_fdc_id);
     if (favoritedItem?.nutrientCache) {
       setEditNutritionData(favoritedItem.nutrientCache);
@@ -77,15 +104,11 @@ export function MealSection({ mealName, entries, onFoodAdded, isCustom, selected
     setIsLoadingEditData(true);
     try {
       let nutritionData: NutritionalData;
-
-      // If barcode exists, this is a barcode-scanned food - use Open Food Facts API
       if (entry.barcode) {
         nutritionData = await lookupBarcode(entry.barcode);
       } else {
-        // Otherwise, use USDA API with the fdcId
         nutritionData = await getFoodNutrition(entry.food_fdc_id);
       }
-
       setEditNutritionData(nutritionData);
       setEditingEntry(entry);
     } catch (error) {
@@ -263,60 +286,100 @@ export function MealSection({ mealName, entries, onFoodAdded, isCustom, selected
           {/* Food Entries List */}
           <VStack align="stretch" gap={2}>
             <AnimatePresence>
-              {entries.map((entry) => (
-                <MotionBox
-                  key={entry.id}
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, x: -100 }}
-                  transition={{ duration: 0.2 }}
-                >
-                  <HStack
-                    justify="space-between"
-                    p={3}
-                    bg="background.subtle"
-                    borderRadius="md"
-                    borderWidth="1px"
-                    borderColor="border.muted"
-                    transition="all 0.2s"
-                    _hover={{
-                      borderColor: "brand.500/50",
-                      bg: "background.canvas",
-                      transform: "translateX(4px)",
-                    }}
+              {entries.map((entry) => {
+                const isRecipe = entry.entry_type === "recipe";
+                const isExpanded = expandedRecipeIds.has(entry.id);
+                const ingredients = recipeIngredientsCache[entry.id] ?? [];
+
+                return (
+                  <MotionBox
+                    key={entry.id}
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, x: -100 }}
+                    transition={{ duration: 0.2 }}
                   >
-                    <VStack align="start" gap={1} flex="1">
-                      <Text color="text.default" fontWeight="medium" fontSize="sm">
-                        {entry.food_description}
-                      </Text>
-                      <Text color="text.muted" fontSize="xs">
-                        {entry.serving_amount} {entry.serving_unit} • {entry.calories.toFixed(0)} cal
-                      </Text>
-                    </VStack>
-                    <HStack gap={1}>
-                      <IconButton
-                        aria-label="Edit food entry"
-                        size="sm"
-                        variant="ghost"
-                        colorPalette="blue"
-                        onClick={() => handleEdit(entry)}
+                    <Box
+                      borderRadius="md"
+                      borderWidth="1px"
+                      borderColor="border.muted"
+                      overflow="hidden"
+                      _hover={{ borderColor: "brand.500/50" }}
+                    >
+                      <HStack
+                        justify="space-between"
+                        p={3}
+                        bg="background.subtle"
+                        transition="all 0.2s"
+                        _hover={{ bg: "background.canvas" }}
                       >
-                        <IoPencil />
-                      </IconButton>
-                      <IconButton
-                        aria-label="Delete food entry"
-                        size="sm"
-                        variant="ghost"
-                        colorPalette="red"
-                        onClick={() => handleDelete(entry.id)}
-                        loading={deletingId === entry.id}
-                      >
-                        <IoTrash />
-                      </IconButton>
-                    </HStack>
-                  </HStack>
-                </MotionBox>
-              ))}
+                        <HStack
+                          flex="1"
+                          minW={0}
+                          gap={2}
+                          cursor={isRecipe ? "pointer" : undefined}
+                          onClick={isRecipe ? () => toggleRecipeExpand(entry.id) : undefined}
+                        >
+                          {isRecipe && (
+                            <Box color="text.muted" flexShrink={0}>
+                              {isExpanded ? <IoChevronDown size={16} /> : <IoChevronForward size={16} />}
+                            </Box>
+                          )}
+                          <VStack align="start" gap={1} flex="1" minW={0}>
+                            <Text color="text.default" fontWeight="medium" fontSize="sm">
+                              {entry.food_description}
+                            </Text>
+                            <Text color="text.muted" fontSize="xs">
+                              {entry.serving_amount} {entry.serving_unit} • {entry.calories.toFixed(0)} cal
+                            </Text>
+                          </VStack>
+                        </HStack>
+                        <HStack gap={1} onClick={(e) => e.stopPropagation()}>
+                          <IconButton
+                            aria-label="Edit entry"
+                            size="sm"
+                            variant="ghost"
+                            colorPalette="blue"
+                            onClick={() => handleEdit(entry)}
+                          >
+                            <IoPencil />
+                          </IconButton>
+                          <IconButton
+                            aria-label="Delete entry"
+                            size="sm"
+                            variant="ghost"
+                            colorPalette="red"
+                            onClick={() => handleDelete(entry.id)}
+                            loading={deletingId === entry.id}
+                          >
+                            <IoTrash />
+                          </IconButton>
+                        </HStack>
+                      </HStack>
+                      {isRecipe && isExpanded && (
+                        <Box px={3} pb={3} pt={0}>
+                          <VStack align="stretch" gap={1} pl={6} borderLeftWidth="2px" borderColor="brand.500/30">
+                            {ingredients.length > 0 ? (
+                              ingredients.map((ing) => (
+                                <HStack key={ing.id} justify="space-between" fontSize="xs" color="text.muted">
+                                  <Text lineClamp={1}>{ing.food_description}</Text>
+                                  <Text whiteSpace="nowrap">
+                                    {ing.serving_amount} {ing.serving_unit} · {ing.calories.toFixed(0)} cal
+                                  </Text>
+                                </HStack>
+                              ))
+                            ) : (
+                              <Text fontSize="xs" color="text.muted">
+                                No ingredients
+                              </Text>
+                            )}
+                          </VStack>
+                        </Box>
+                      )}
+                    </Box>
+                  </MotionBox>
+                );
+              })}
             </AnimatePresence>
           </VStack>
 
@@ -340,7 +403,6 @@ export function MealSection({ mealName, entries, onFoodAdded, isCustom, selected
         </VStack>
       </Box>
 
-      {/* Food Search Dialog */}
       {isSearchOpen && (
         <FoodSearchDialog
           isOpen={isSearchOpen}
@@ -348,6 +410,19 @@ export function MealSection({ mealName, entries, onFoodAdded, isCustom, selected
           mealName={mealName}
           selectedDate={selectedDate}
           onFoodAdded={onFoodAdded}
+        />
+      )}
+
+      {editingRecipeLogId && (
+        <LoggedRecipeIngredientEditor
+          isOpen
+          onClose={() => setEditingRecipeLogId(null)}
+          foodLogId={editingRecipeLogId}
+          recipeName={entries.find((e) => e.id === editingRecipeLogId)?.food_description ?? "Recipe"}
+          onSaved={() => {
+            setEditingRecipeLogId(null);
+            onFoodAdded();
+          }}
         />
       )}
 
