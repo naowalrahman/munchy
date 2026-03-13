@@ -23,6 +23,9 @@ export interface FoodLogEntry {
   created_at: string;
   updated_at: string;
   barcode?: string | null; // Original barcode for foods added via barcode scanning
+  recipe_group_id?: string | null; // UUID linking recipe items together
+  recipe_name?: string | null; // Name of the recipe
+  servings_consumed?: number | null; // How many servings of the recipe were consumed
 }
 
 /**
@@ -40,6 +43,9 @@ export interface LogFoodEntryInput {
   total_fat: number | null;
   date: string;
   barcode?: string | null; // Optional barcode for foods added via barcode scanning
+  recipe_group_id?: string | null; // UUID for grouping recipe items
+  recipe_name?: string | null; // Name of the recipe
+  servings_consumed?: number | null; // How many servings of the recipe were consumed
 }
 
 /**
@@ -83,6 +89,9 @@ export async function logFoodEntry(input: LogFoodEntryInput): Promise<FoodLogRes
         total_fat: input.total_fat,
         date: input.date,
         barcode: input.barcode || null,
+        recipe_group_id: input.recipe_group_id || null,
+        recipe_name: input.recipe_name || null,
+        servings_consumed: input.servings_consumed || 1,
       })
       .select()
       .single();
@@ -175,6 +184,102 @@ export async function updateFoodEntry(
     return { success: true, data };
   } catch (error) {
     console.error("Unexpected error updating food entry:", error);
+    return { success: false, error: "An unexpected error occurred" };
+  }
+}
+
+/**
+ * Delete all food log entries in a recipe group
+ */
+export async function deleteRecipeGroup(recipeGroupId: string): Promise<FoodLogResponse> {
+  try {
+    const supabase = await createClient();
+
+    const {
+      data: { user },
+      error: userError,
+    } = await supabase.auth.getUser();
+    if (userError || !user) {
+      return { success: false, error: "User not authenticated" };
+    }
+
+    const { error } = await supabase
+      .from("food_logs")
+      .delete()
+      .eq("recipe_group_id", recipeGroupId)
+      .eq("user_id", user.id);
+
+    if (error) {
+      console.error("Error deleting recipe group:", error);
+      return { success: false, error: error.message };
+    }
+
+    revalidatePath("/dashboard");
+    return { success: true };
+  } catch (error) {
+    console.error("Unexpected error deleting recipe group:", error);
+    return { success: false, error: "An unexpected error occurred" };
+  }
+}
+
+/**
+ * Update servings consumed for a recipe group
+ * This scales all entries in the group proportionally
+ */
+export async function updateRecipeGroupServings(
+  recipeGroupId: string,
+  newServingsConsumed: number
+): Promise<FoodLogResponse> {
+  try {
+    const supabase = await createClient();
+
+    const {
+      data: { user },
+      error: userError,
+    } = await supabase.auth.getUser();
+    if (userError || !user) {
+      return { success: false, error: "User not authenticated" };
+    }
+
+    // Get current entries in the recipe group
+    const { data: entries, error: fetchError } = await supabase
+      .from("food_logs")
+      .select("*")
+      .eq("recipe_group_id", recipeGroupId)
+      .eq("user_id", user.id);
+
+    if (fetchError || !entries || entries.length === 0) {
+      return { success: false, error: "Recipe group not found" };
+    }
+
+    const currentServings = entries[0].servings_consumed || 1;
+    const scaleFactor = newServingsConsumed / currentServings;
+
+    // Update each entry with scaled values
+    for (const entry of entries) {
+      const { error: updateError } = await supabase
+        .from("food_logs")
+        .update({
+          calories: entry.calories * scaleFactor,
+          protein: entry.protein ? entry.protein * scaleFactor : null,
+          carbohydrates: entry.carbohydrates ? entry.carbohydrates * scaleFactor : null,
+          total_fat: entry.total_fat ? entry.total_fat * scaleFactor : null,
+          serving_amount: entry.serving_amount * scaleFactor,
+          servings_consumed: newServingsConsumed,
+        })
+        .eq("id", entry.id)
+        .eq("user_id", user.id);
+
+      if (updateError) {
+        console.error("Error updating recipe entry:", updateError);
+        return { success: false, error: updateError.message };
+      }
+    }
+
+    revalidatePath("/dashboard");
+    return { success: true, data: entries };
+  } catch (error) {
+    console.error("Unexpected error updating recipe group servings:", error);
     return { success: false, error: "An unexpected error occurred" };
   }
 }
