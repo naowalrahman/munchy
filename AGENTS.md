@@ -22,4 +22,5 @@
 - **Next.js/React** – use React Compiler + latest Server Action patterns
 - **Chakra UI v3** – follow latest styling/theming patterns
 - **Supabase** – use `@supabase/ssr` for auth and DB
+  - use `bun supabase` command to make any necessary changes to auth/DB config
 - **Bun** – runtime and package manager; use `bun run` for scripts
