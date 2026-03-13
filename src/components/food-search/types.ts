@@ -6,9 +6,11 @@ export interface FoodSearchDialogProps {
   mealName: string;
   selectedDate: string;
   onFoodAdded: () => void;
+  recipeMode?: boolean;
+  onRecipeItemsAdded?: (items: StagedFood[]) => void;
 }
 
-export type InputMode = "search" | "scan" | "favorites";
+export type InputMode = "search" | "scan" | "favorites" | "recipes";
 
 export interface FavoritedFood {
   fdcId: number;
