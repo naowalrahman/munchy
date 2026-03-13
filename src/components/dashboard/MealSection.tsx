@@ -1,14 +1,15 @@
 "use client";
 
 import { Box, VStack, HStack, Text, Heading, IconButton, Spinner } from "@chakra-ui/react";
-import { useState } from "react";
-import { FoodLogEntry, deleteFoodEntry, updateFoodEntry } from "@/app/actions/foodLog";
+import { useState, useMemo, useCallback } from "react";
+import { FoodLogEntry, deleteFoodEntry, updateFoodEntry, deleteRecipeGroup, updateRecipeGroupServings } from "@/app/actions/foodLog";
 import { getFoodNutrition, lookupBarcode, NutritionalData } from "@/app/actions/food";
 import { motion, AnimatePresence } from "framer-motion";
-import { IoAdd, IoTrash, IoPencil } from "react-icons/io5";
+import { IoAdd, IoTrash, IoPencil, IoChevronDown, IoChevronForward } from "react-icons/io5";
 import { toaster } from "@/components/ui/toaster";
 import { FoodSearchDialog } from "@/components/food-search/FoodSearchDialog";
 import { NutritionFactsDrawer } from "./NutritionFactsDrawer";
+import { RecipeNutritionDrawer } from "./RecipeNutritionDrawer";
 import { useFavorites } from "@/components/food-search/useFavorites";
 
 interface MealSectionProps {
@@ -19,6 +20,12 @@ interface MealSectionProps {
   selectedDate: string;
 }
 
+interface RecipeGroup {
+  groupId: string;
+  recipeName: string;
+  entries: FoodLogEntry[];
+}
+
 const MotionBox = motion.create(Box);
 
 export function MealSection({ mealName, entries, onFoodAdded, isCustom, selectedDate }: MealSectionProps) {
@@ -27,13 +34,58 @@ export function MealSection({ mealName, entries, onFoodAdded, isCustom, selected
   const [editingEntry, setEditingEntry] = useState<FoodLogEntry | null>(null);
   const [editNutritionData, setEditNutritionData] = useState<NutritionalData | null>(null);
   const [isLoadingEditData, setIsLoadingEditData] = useState(false);
+  const [expandedRecipes, setExpandedRecipes] = useState<Set<string>>(new Set());
+  const [deletingRecipeGroupId, setDeletingRecipeGroupId] = useState<string | null>(null);
+  const [editingRecipeGroup, setEditingRecipeGroup] = useState<RecipeGroup | null>(null);
+  const [isSavingRecipeServings, setIsSavingRecipeServings] = useState(false);
 
   const { getFavorite } = useFavorites();
 
+  // Group entries by recipe_group_id
+  const { recipeGroups, standaloneEntries } = useMemo(() => {
+    const groups: Map<string, RecipeGroup> = new Map();
+    const standalone: FoodLogEntry[] = [];
+
+    for (const entry of entries) {
+      if (entry.recipe_group_id) {
+        const existing = groups.get(entry.recipe_group_id);
+        if (existing) {
+          existing.entries.push(entry);
+        } else {
+          groups.set(entry.recipe_group_id, {
+            groupId: entry.recipe_group_id,
+            recipeName: entry.recipe_name || "Recipe",
+            entries: [entry],
+          });
+        }
+      } else {
+        standalone.push(entry);
+      }
+    }
+
+    return {
+      recipeGroups: Array.from(groups.values()),
+      standaloneEntries: standalone,
+    };
+  }, [entries]);
+
+  // Calculate totals including recipe group aggregated values
   const totalCalories = entries.reduce((sum, entry) => sum + (entry.calories || 0), 0);
   const totalProtein = entries.reduce((sum, entry) => sum + (entry.protein || 0), 0);
   const totalCarbs = entries.reduce((sum, entry) => sum + (entry.carbohydrates || 0), 0);
   const totalFat = entries.reduce((sum, entry) => sum + (entry.total_fat || 0), 0);
+
+  const toggleRecipeExpand = (groupId: string) => {
+    setExpandedRecipes((prev) => {
+      const next = new Set(prev);
+      if (next.has(groupId)) {
+        next.delete(groupId);
+      } else {
+        next.add(groupId);
+      }
+      return next;
+    });
+  };
 
   const handleDelete = async (id: string) => {
     setDeletingId(id);
@@ -97,6 +149,75 @@ export function MealSection({ mealName, entries, onFoodAdded, isCustom, selected
       });
     } finally {
       setIsLoadingEditData(false);
+    }
+  };
+
+  const handleDeleteRecipeGroup = async (groupId: string) => {
+    if (!confirm("Delete this entire recipe? This will remove all its ingredients from this meal.")) return;
+
+    setDeletingRecipeGroupId(groupId);
+    try {
+      const response = await deleteRecipeGroup(groupId);
+      if (response.success) {
+        toaster.create({
+          title: "Recipe removed",
+          description: "Recipe and all its ingredients deleted",
+          type: "success",
+        });
+        onFoodAdded();
+      } else {
+        toaster.create({
+          title: "Failed to delete",
+          description: response.error || "Something went wrong",
+          type: "error",
+        });
+      }
+    } catch (error) {
+      console.error("Error deleting recipe group:", error);
+      toaster.create({
+        title: "Error",
+        description: "Failed to delete recipe",
+        type: "error",
+      });
+    } finally {
+      setDeletingRecipeGroupId(null);
+    }
+  };
+
+  const handleEditRecipeGroup = (group: RecipeGroup) => {
+    setEditingRecipeGroup(group);
+  };
+
+  const handleUpdateRecipeServings = async (servingsConsumed: number) => {
+    if (!editingRecipeGroup) return;
+
+    setIsSavingRecipeServings(true);
+    try {
+      const response = await updateRecipeGroupServings(editingRecipeGroup.groupId, servingsConsumed);
+      if (response.success) {
+        toaster.create({
+          title: "Servings updated",
+          description: `Recipe servings updated to ${servingsConsumed}`,
+          type: "success",
+        });
+        onFoodAdded();
+        setEditingRecipeGroup(null);
+      } else {
+        toaster.create({
+          title: "Failed to update",
+          description: response.error || "Something went wrong",
+          type: "error",
+        });
+      }
+    } catch (error) {
+      console.error("Error updating recipe servings:", error);
+      toaster.create({
+        title: "Error",
+        description: "Failed to update servings",
+        type: "error",
+      });
+    } finally {
+      setIsSavingRecipeServings(false);
     }
   };
 
@@ -190,6 +311,173 @@ export function MealSection({ mealName, entries, onFoodAdded, isCustom, selected
     }
   };
 
+  const renderFoodEntry = (entry: FoodLogEntry, showRecipeBadge = false) => (
+    <HStack
+      key={entry.id}
+      justify="space-between"
+      p={3}
+      bg="background.subtle"
+      borderRadius="md"
+      borderWidth="1px"
+      borderColor="border.muted"
+      transition="all 0.2s"
+      _hover={{
+        borderColor: "brand.500/50",
+        bg: "background.canvas",
+        transform: "translateX(4px)",
+      }}
+    >
+      <VStack align="start" gap={1} flex="1">
+        <Text color="text.default" fontWeight="medium" fontSize="sm">
+          {entry.food_description}
+        </Text>
+        <Text color="text.muted" fontSize="xs">
+          {entry.serving_amount} {entry.serving_unit} • {entry.calories.toFixed(0)} cal
+        </Text>
+      </VStack>
+      <HStack gap={1}>
+        <IconButton
+          aria-label="Edit food entry"
+          size="sm"
+          variant="ghost"
+          colorPalette="blue"
+          onClick={() => handleEdit(entry)}
+        >
+          <IoPencil />
+        </IconButton>
+        <IconButton
+          aria-label="Delete food entry"
+          size="sm"
+          variant="ghost"
+          colorPalette="red"
+          onClick={() => handleDelete(entry.id)}
+          loading={deletingId === entry.id}
+        >
+          <IoTrash />
+        </IconButton>
+      </HStack>
+    </HStack>
+  );
+
+  const renderRecipeGroup = (group: RecipeGroup) => {
+    const isExpanded = expandedRecipes.has(group.groupId);
+    const groupCalories = group.entries.reduce((sum, e) => sum + e.calories, 0);
+    const groupProtein = group.entries.reduce((sum, e) => sum + (e.protein || 0), 0);
+    const groupCarbs = group.entries.reduce((sum, e) => sum + (e.carbohydrates || 0), 0);
+    const groupFat = group.entries.reduce((sum, e) => sum + (e.total_fat || 0), 0);
+    const servingsConsumed = group.entries[0]?.servings_consumed || 1;
+
+    return (
+      <MotionBox
+        key={group.groupId}
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, x: -100 }}
+        transition={{ duration: 0.2 }}
+      >
+        <Box
+          bg="background.subtle"
+          borderRadius="md"
+          borderWidth="1px"
+          borderColor="brand.500/30"
+          overflow="hidden"
+        >
+          {/* Collapsed Header */}
+          <HStack
+            p={3}
+            _hover={{ bg: "background.canvas" }}
+            transition="all 0.2s"
+          >
+            <IconButton
+              aria-label={isExpanded ? "Collapse" : "Expand"}
+              size="xs"
+              variant="ghost"
+              colorPalette="brand"
+              onClick={() => toggleRecipeExpand(group.groupId)}
+            >
+              {isExpanded ? <IoChevronDown /> : <IoChevronForward />}
+            </IconButton>
+            <VStack align="start" gap={0} flex={1} cursor="pointer" onClick={() => toggleRecipeExpand(group.groupId)}>
+              <HStack>
+                <Text color="text.default" fontWeight="semibold" fontSize="sm">
+                  {group.recipeName}
+                </Text>
+                <Text
+                  fontSize="xs"
+                  bg="brand.500/10"
+                  color="brand.500"
+                  px={2}
+                  py={0.5}
+                  borderRadius="full"
+                  fontWeight="medium"
+                >
+                  Recipe
+                </Text>
+                {servingsConsumed !== 1 && (
+                  <Text fontSize="xs" color="text.muted">
+                    ({servingsConsumed} servings)
+                  </Text>
+                )}
+              </HStack>
+              <Text color="text.muted" fontSize="xs">
+                {group.entries.length} items • {groupCalories.toFixed(0)} cal • P{" "}
+                {groupProtein.toFixed(0)}g • C {groupCarbs.toFixed(0)}g • F {groupFat.toFixed(0)}g
+              </Text>
+            </VStack>
+            <HStack gap={1} onClick={(e) => e.stopPropagation()}>
+              <IconButton
+                aria-label="Edit recipe servings"
+                size="sm"
+                variant="ghost"
+                colorPalette="blue"
+                onClick={() => handleEditRecipeGroup(group)}
+              >
+                <IoPencil />
+              </IconButton>
+              <IconButton
+                aria-label="Delete recipe"
+                size="sm"
+                variant="ghost"
+                colorPalette="red"
+                onClick={() => handleDeleteRecipeGroup(group.groupId)}
+                loading={deletingRecipeGroupId === group.groupId}
+              >
+                <IoTrash />
+              </IconButton>
+            </HStack>
+          </HStack>
+
+          {/* Expanded Content */}
+          <AnimatePresence>
+            {isExpanded && (
+              <motion.div
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: "auto", opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                transition={{ duration: 0.2 }}
+                style={{ overflow: "hidden" }}
+              >
+                <VStack align="stretch" gap={2} p={3} pt={0}>
+                  {group.entries.map((entry, index) => (
+                    <Box
+                      key={entry.id}
+                      pl={6}
+                      borderLeftWidth="2px"
+                      borderLeftColor="brand.500/30"
+                      ml={2}
+                    >
+                      {renderFoodEntry(entry)}
+                    </Box>
+                  ))}
+                </VStack>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </Box>
+      </MotionBox>
+    );
+  };
+
   return (
     <>
       <Box
@@ -263,7 +551,11 @@ export function MealSection({ mealName, entries, onFoodAdded, isCustom, selected
           {/* Food Entries List */}
           <VStack align="stretch" gap={2}>
             <AnimatePresence>
-              {entries.map((entry) => (
+              {/* Render recipe groups first */}
+              {recipeGroups.map((group) => renderRecipeGroup(group))}
+
+              {/* Then render standalone entries */}
+              {standaloneEntries.map((entry) => (
                 <MotionBox
                   key={entry.id}
                   initial={{ opacity: 0, y: -10 }}
@@ -271,50 +563,7 @@ export function MealSection({ mealName, entries, onFoodAdded, isCustom, selected
                   exit={{ opacity: 0, x: -100 }}
                   transition={{ duration: 0.2 }}
                 >
-                  <HStack
-                    justify="space-between"
-                    p={3}
-                    bg="background.subtle"
-                    borderRadius="md"
-                    borderWidth="1px"
-                    borderColor="border.muted"
-                    transition="all 0.2s"
-                    _hover={{
-                      borderColor: "brand.500/50",
-                      bg: "background.canvas",
-                      transform: "translateX(4px)",
-                    }}
-                  >
-                    <VStack align="start" gap={1} flex="1">
-                      <Text color="text.default" fontWeight="medium" fontSize="sm">
-                        {entry.food_description}
-                      </Text>
-                      <Text color="text.muted" fontSize="xs">
-                        {entry.serving_amount} {entry.serving_unit} • {entry.calories.toFixed(0)} cal
-                      </Text>
-                    </VStack>
-                    <HStack gap={1}>
-                      <IconButton
-                        aria-label="Edit food entry"
-                        size="sm"
-                        variant="ghost"
-                        colorPalette="blue"
-                        onClick={() => handleEdit(entry)}
-                      >
-                        <IoPencil />
-                      </IconButton>
-                      <IconButton
-                        aria-label="Delete food entry"
-                        size="sm"
-                        variant="ghost"
-                        colorPalette="red"
-                        onClick={() => handleDelete(entry.id)}
-                        loading={deletingId === entry.id}
-                      >
-                        <IoTrash />
-                      </IconButton>
-                    </HStack>
-                  </HStack>
+                  {renderFoodEntry(entry)}
                 </MotionBox>
               ))}
             </AnimatePresence>
@@ -377,6 +626,34 @@ export function MealSection({ mealName, entries, onFoodAdded, isCustom, selected
             initialServingUnit={editingEntry.serving_unit}
           />
         )
+      )}
+
+      {/* Edit Recipe Servings Drawer */}
+      {editingRecipeGroup && (
+        <RecipeNutritionDrawer
+          isOpen={!!editingRecipeGroup}
+          onClose={() => setEditingRecipeGroup(null)}
+          mealName={mealName}
+          nutritionData={{
+            recipeName: editingRecipeGroup.recipeName,
+            servings: 1, // The entries are already per-serving
+            calories: editingRecipeGroup.entries.reduce((sum, e) => sum + e.calories, 0),
+            protein: { name: "Protein", amount: editingRecipeGroup.entries.reduce((sum, e) => sum + (e.protein || 0), 0), unit: "g" },
+            carbohydrates: { name: "Carbohydrates", amount: editingRecipeGroup.entries.reduce((sum, e) => sum + (e.carbohydrates || 0), 0), unit: "g" },
+            totalFat: { name: "Total Fat", amount: editingRecipeGroup.entries.reduce((sum, e) => sum + (e.total_fat || 0), 0), unit: "g" },
+            fiber: null,
+            sugars: null,
+            sodium: null,
+            potassium: null,
+            calcium: null,
+            iron: null,
+            vitaminC: null,
+            vitaminA: null,
+          }}
+          onAddToMeal={handleUpdateRecipeServings}
+          isEditMode
+          initialServingsConsumed={editingRecipeGroup.entries[0]?.servings_consumed || 1}
+        />
       )}
     </>
   );
