@@ -3,13 +3,16 @@
 import { Box, VStack, HStack, Text, Button, Heading, Spinner, useBreakpointValue } from "@chakra-ui/react";
 import { useCallback, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { IoBarcodeOutline, IoClose, IoHeart, IoSearch } from "react-icons/io5";
+import { IoBarcodeOutline, IoClose, IoHeart, IoRestaurant, IoSearch } from "react-icons/io5";
 import type { FoodSearchResult, NutritionalData } from "@/app/actions/food";
 import { getFoodNutrition, lookupBarcode } from "@/app/actions/food";
 import { logFoodEntry } from "@/app/actions/foodLog";
 import { toaster } from "@/components/ui/toaster";
 import { NutritionFactsDrawer } from "../dashboard/NutritionFactsDrawer";
+import { RecipeNutritionDrawer, RecipeNutritionData } from "../dashboard/RecipeNutritionDrawer";
+import { Recipe } from "@/app/actions/recipes";
 import { FavoritesSection } from "./FavoritesSection";
+import { RecipesSection } from "./RecipesSection";
 import { ScanSection } from "./ScanSection";
 import { SearchSection } from "./SearchSection";
 import { StagedItemsCard } from "./StagedItemsCard";
@@ -52,7 +55,15 @@ const normalizeUnit = (unit: string): string => {
   return unitMap[normalized] || normalized;
 };
 
-export function FoodSearchDialog({ isOpen, onClose, mealName, selectedDate, onFoodAdded }: FoodSearchDialogProps) {
+export function FoodSearchDialog({
+  isOpen,
+  onClose,
+  mealName,
+  selectedDate,
+  onFoodAdded,
+  recipeMode = false,
+  onRecipeItemsAdded,
+}: FoodSearchDialogProps) {
   const [selectedFood, setSelectedFood] = useState<NutritionalData | null>(null);
   const [isNutritionDrawerOpen, setIsNutritionDrawerOpen] = useState(false);
   const [isLoadingNutrition, setIsLoadingNutrition] = useState(false);
@@ -60,6 +71,11 @@ export function FoodSearchDialog({ isOpen, onClose, mealName, selectedDate, onFo
   const [isSaving, setIsSaving] = useState(false);
   const [inputMode, setInputMode] = useState<InputMode>("search");
   const [scannedBarcode, setScannedBarcode] = useState<string | null>(null);
+  const [selectedRecipeGroupId, setSelectedRecipeGroupId] = useState<string | null>(null);
+  const [selectedRecipeName, setSelectedRecipeName] = useState<string | null>(null);
+  const [selectedRecipe, setSelectedRecipe] = useState<Recipe | null>(null);
+  const [selectedRecipeNutrition, setSelectedRecipeNutrition] = useState<RecipeNutritionData | null>(null);
+  const [isRecipeDrawerOpen, setIsRecipeDrawerOpen] = useState(false);
 
   const { searchQuery, setSearchQuery, searchResults, isSearching, resetSearch } = useFoodSearch(inputMode);
   const { favorites, isFavorited, toggleFavorite, getFavorite, updateFavoriteCache } = useFavorites();
@@ -170,7 +186,15 @@ export function FoodSearchDialog({ isOpen, onClose, mealName, selectedDate, onFo
   };
 
   const handleRemoveStaged = (id: string) => {
-    setStagedItems((prev) => prev.filter((item) => item.id !== id));
+    setStagedItems((prev) => {
+      const filtered = prev.filter((item) => item.id !== id);
+      // Clear recipe info if no items left
+      if (filtered.length === 0) {
+        setSelectedRecipeGroupId(null);
+        setSelectedRecipeName(null);
+      }
+      return filtered;
+    });
   };
 
   const handleSaveAll = async () => {
@@ -178,6 +202,9 @@ export function FoodSearchDialog({ isOpen, onClose, mealName, selectedDate, onFo
     setIsSaving(true);
 
     const savedIds = new Set<string>();
+    // Generate a single recipe_group_id for all items if they came from a recipe
+    const recipeGroupId = selectedRecipeGroupId || null;
+    const recipeName = selectedRecipeName || null;
 
     try {
       for (const item of stagedItems) {
@@ -206,6 +233,8 @@ export function FoodSearchDialog({ isOpen, onClose, mealName, selectedDate, onFo
           date: selectedDate,
           total_fat: item.nutritionData.totalFat ? item.nutritionData.totalFat.amount * multiplier : null,
           barcode: item.barcode,
+          recipe_group_id: recipeGroupId,
+          recipe_name: recipeName,
         });
 
         if (!response.success) {
@@ -222,6 +251,8 @@ export function FoodSearchDialog({ isOpen, onClose, mealName, selectedDate, onFo
       });
       setStagedItems([]);
       setScannedBarcode(null);
+      setSelectedRecipeGroupId(null);
+      setSelectedRecipeName(null);
       onFoodAdded();
       onClose();
     } catch (error) {
@@ -264,6 +295,11 @@ export function FoodSearchDialog({ isOpen, onClose, mealName, selectedDate, onFo
     setStagedItems([]);
     setInputMode("search");
     resetScannerState();
+    setSelectedRecipeGroupId(null);
+    setSelectedRecipeName(null);
+    setSelectedRecipe(null);
+    setSelectedRecipeNutrition(null);
+    setIsRecipeDrawerOpen(false);
     onClose();
   };
 
@@ -273,7 +309,74 @@ export function FoodSearchDialog({ isOpen, onClose, mealName, selectedDate, onFo
     resetScannerState();
   };
 
-  const headingText = inputMode === "search" ? "Search Foods" : inputMode === "scan" ? "Scan Barcode" : "Favorites";
+  const headingText =
+    inputMode === "search"
+      ? "Search Foods"
+      : inputMode === "scan"
+        ? "Scan Barcode"
+        : inputMode === "favorites"
+          ? "Favorites"
+          : "Recipes";
+
+  const handleRecipeServingsConfirm = (servingsConsumed: number) => {
+    if (!selectedRecipe) return;
+
+    const scaleFactor = servingsConsumed / (selectedRecipe.servings || 1);
+    const items = selectedRecipe.items || [];
+
+    // Create staged items with scaled nutrition
+    const stagedFromRecipe: StagedFood[] = items.map((item) => ({
+      id: crypto.randomUUID(),
+      nutritionData: {
+        fdcId: item.food_fdc_id,
+        description: item.food_description,
+        servingSize: 100,
+        servingSizeUnit: item.serving_unit,
+        calories: item.calories * scaleFactor,
+        protein: item.protein
+          ? { name: "Protein", amount: item.protein * scaleFactor, unit: "g" }
+          : null,
+        carbohydrates: item.carbohydrates
+          ? { name: "Carbohydrates", amount: item.carbohydrates * scaleFactor, unit: "g" }
+          : null,
+        totalFat: item.total_fat
+          ? { name: "Total Fat", amount: item.total_fat * scaleFactor, unit: "g" }
+          : null,
+        fiber: null,
+        sugars: null,
+        sodium: null,
+        potassium: null,
+        calcium: null,
+        iron: null,
+        vitaminC: null,
+        vitaminA: null,
+      } as NutritionalData,
+      servingAmount: item.serving_amount * scaleFactor,
+      servingUnit: item.serving_unit,
+      barcode: item.barcode,
+    }));
+
+    if (recipeMode && onRecipeItemsAdded) {
+      // In recipe mode (editing a recipe), pass items directly
+      onRecipeItemsAdded(stagedFromRecipe);
+      onClose();
+    } else {
+      // In meal mode, stage items with recipe tracking
+      setStagedItems((prev) => [...prev, ...stagedFromRecipe]);
+      setSelectedRecipeGroupId(crypto.randomUUID());
+      setSelectedRecipeName(selectedRecipe.name);
+      toaster.create({
+        title: "Recipe added",
+        description: `${stagedFromRecipe.length} item(s) staged from "${selectedRecipe.name}"`,
+        type: "success",
+      });
+    }
+
+    // Close recipe drawer
+    setIsRecipeDrawerOpen(false);
+    setSelectedRecipe(null);
+    setSelectedRecipeNutrition(null);
+  };
 
   if (!isOpen) return null;
 
@@ -372,6 +475,16 @@ export function FoodSearchDialog({ isOpen, onClose, mealName, selectedDate, onFo
                   <IoHeart size={18} />
                   <Text ml={2}>Favorites</Text>
                 </Button>
+                <Button
+                  flex={1}
+                  variant={inputMode === "recipes" ? "solid" : "outline"}
+                  colorPalette={inputMode === "recipes" ? "brand" : "gray"}
+                  onClick={() => handleModeToggle("recipes")}
+                  size={{ base: "sm", md: "md" }}
+                >
+                  <IoRestaurant size={18} />
+                  <Text ml={2}>Recipes</Text>
+                </Button>
               </HStack>
 
               {inputMode === "search" ? (
@@ -391,11 +504,55 @@ export function FoodSearchDialog({ isOpen, onClose, mealName, selectedDate, onFo
                   scannerError={scannerError}
                   onRetry={startScanner}
                 />
-              ) : (
+              ) : inputMode === "favorites" ? (
                 <FavoritesSection
                   favorites={favorites}
                   onFoodClick={handleFavoriteClick}
                   onToggleFavorite={toggleFavorite}
+                />
+              ) : (
+                <RecipesSection
+                  onRecipeSelect={(recipe) => {
+                    // Open RecipeNutritionDrawer so user can select servings
+                    setSelectedRecipe(recipe);
+
+                    // Aggregate per-serving nutrition from recipe items
+                    const scaleFactor = 1 / (recipe.servings || 1);
+                    const items = recipe.items || [];
+
+                    const nutrition: RecipeNutritionData = {
+                      recipeName: recipe.name,
+                      servings: recipe.servings,
+                      calories: items.reduce((sum, i) => sum + i.calories * scaleFactor, 0),
+                      protein: {
+                        name: "Protein",
+                        amount: items.reduce((sum, i) => sum + (i.protein || 0) * scaleFactor, 0),
+                        unit: "g",
+                      },
+                      carbohydrates: {
+                        name: "Carbohydrates",
+                        amount: items.reduce((sum, i) => sum + (i.carbohydrates || 0) * scaleFactor, 0),
+                        unit: "g",
+                      },
+                      totalFat: {
+                        name: "Total Fat",
+                        amount: items.reduce((sum, i) => sum + (i.total_fat || 0) * scaleFactor, 0),
+                        unit: "g",
+                      },
+                      // Recipe items don't have micronutrient data
+                      fiber: null,
+                      sugars: null,
+                      sodium: null,
+                      potassium: null,
+                      calcium: null,
+                      iron: null,
+                      vitaminC: null,
+                      vitaminA: null,
+                    };
+
+                    setSelectedRecipeNutrition(nutrition);
+                    setIsRecipeDrawerOpen(true);
+                  }}
                 />
               )}
 
@@ -405,15 +562,31 @@ export function FoodSearchDialog({ isOpen, onClose, mealName, selectedDate, onFo
                 <Button variant="outline" colorPalette="gray" onClick={handleClose} flex={1} disabled={isSaving}>
                   Cancel
                 </Button>
-                <Button
-                  colorPalette="brand"
-                  flex={1}
-                  onClick={handleSaveAll}
-                  loading={isSaving}
-                  disabled={stagedItems.length === 0 || isSaving}
-                >
-                  Save {stagedItems.length > 0 ? `(${stagedItems.length})` : ""}
-                </Button>
+                {recipeMode ? (
+                  <Button
+                    colorPalette="brand"
+                    flex={1}
+                    onClick={() => {
+                      if (stagedItems.length > 0 && onRecipeItemsAdded) {
+                        onRecipeItemsAdded(stagedItems);
+                      }
+                      onClose();
+                    }}
+                    disabled={stagedItems.length === 0}
+                  >
+                    Add to Recipe {stagedItems.length > 0 ? `(${stagedItems.length})` : ""}
+                  </Button>
+                ) : (
+                  <Button
+                    colorPalette="brand"
+                    flex={1}
+                    onClick={handleSaveAll}
+                    loading={isSaving}
+                    disabled={stagedItems.length === 0 || isSaving}
+                  >
+                    Save {stagedItems.length > 0 ? `(${stagedItems.length})` : ""}
+                  </Button>
+                )}
               </HStack>
             </VStack>
           </MotionBox>
@@ -438,6 +611,21 @@ export function FoodSearchDialog({ isOpen, onClose, mealName, selectedDate, onFo
             onToggleFavorite={handleToggleFavoriteFromDrawer}
           />
         )
+      )}
+
+      {/* Recipe Nutrition Drawer */}
+      {isRecipeDrawerOpen && selectedRecipeNutrition && (
+        <RecipeNutritionDrawer
+          isOpen={isRecipeDrawerOpen}
+          onClose={() => {
+            setIsRecipeDrawerOpen(false);
+            setSelectedRecipe(null);
+            setSelectedRecipeNutrition(null);
+          }}
+          nutritionData={selectedRecipeNutrition}
+          mealName={mealName}
+          onAddToMeal={handleRecipeServingsConfirm}
+        />
       )}
     </>
   );
