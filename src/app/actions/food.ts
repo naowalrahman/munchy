@@ -2,29 +2,12 @@
 
 import { OpenFoodFacts } from "@openfoodfacts/openfoodfacts-nodejs";
 
-/**
- * USDA FoodData Central API Server Actions
- *
- * These server functions provide access to the USDA FoodData Central API
- * for searching foods and retrieving nutritional information.
- */
-
-// ============================================================================
-// TypeScript Types
-// ============================================================================
-
-/**
- * Individual nutrient information
- */
 export interface Nutrient {
   name: string;
   amount: number;
   unit: string;
 }
 
-/**
- * Simplified food search result
- */
 export interface FoodSearchResult {
   fdcId: number;
   description: string;
@@ -35,9 +18,6 @@ export interface FoodSearchResult {
   servingSizeUnit?: string;
 }
 
-/**
- * Comprehensive nutritional data for a food item
- */
 export interface NutritionalData {
   fdcId: number;
   description: string;
@@ -64,9 +44,6 @@ export interface NutritionalData {
   vitaminA: Nutrient | null;
 }
 
-/**
- * Raw USDA API response for food search
- */
 interface USDAFoodSearchResponse {
   foods: Array<{
     fdcId: number;
@@ -82,9 +59,6 @@ interface USDAFoodSearchResponse {
   totalPages: number;
 }
 
-/**
- * Raw USDA API response for food details
- */
 interface USDAFoodDetailsResponse {
   fdcId: number;
   description: string;
@@ -108,10 +82,6 @@ interface USDAFoodDetailsResponse {
   }>;
 }
 
-// ============================================================================
-// USDA Nutrient ID Mapping
-// ============================================================================
-
 const NUTRIENT_IDS = {
   ENERGY_KCAL: 1008, // Energy (kcal)
   ENERGY_KJ: 1062, // Energy (kJ) - fallback
@@ -128,13 +98,6 @@ const NUTRIENT_IDS = {
   VITAMIN_A: 1106, // Vitamin A, RAE
 } as const;
 
-// ============================================================================
-// Helper Functions
-// ============================================================================
-
-/**
- * Get API key from environment variables
- */
 function getApiKey(): string {
   const apiKey = process.env.USDA_API_KEY;
   if (!apiKey) {
@@ -143,9 +106,6 @@ function getApiKey(): string {
   return apiKey;
 }
 
-/**
- * Find a nutrient by ID in the food nutrients array
- */
 function findNutrient(foodNutrients: USDAFoodDetailsResponse["foodNutrients"], nutrientId: number): Nutrient | null {
   const nutrient = foodNutrients.find((fn) => {
     // Try Foundation Foods structure first
@@ -166,9 +126,6 @@ function findNutrient(foodNutrients: USDAFoodDetailsResponse["foodNutrients"], n
   };
 }
 
-/**
- * Extract calories, ensuring they are in kcal format
- */
 function extractCalories(foodNutrients: USDAFoodDetailsResponse["foodNutrients"]): number {
   // First try to get kcal directly
   const kcalNutrient = foodNutrients.find((fn) => {
@@ -198,17 +155,6 @@ function extractCalories(foodNutrients: USDAFoodDetailsResponse["foodNutrients"]
   return 0;
 }
 
-// ============================================================================
-// Server Actions
-// ============================================================================
-
-/**
- * Search for foods in the USDA FoodData Central database
- *
- * @param query - Search term (e.g., "chicken breast", "apple")
- * @param pageSize - Number of results to return (default: 25, max: 200)
- * @returns Array of food search results
- */
 export async function searchFoods(query: string, pageSize: number = 25): Promise<FoodSearchResult[]> {
   if (!query || query.trim().length === 0) {
     throw new Error("Search query cannot be empty");
@@ -252,19 +198,12 @@ export async function searchFoods(query: string, pageSize: number = 25): Promise
   }
 }
 
-/**
- * Get detailed nutritional information for a specific food
- *
- * @param fdcId - FoodData Central ID
- * @returns Detailed nutritional data including macros and micros
- */
 export async function getFoodNutrition(fdcId: number): Promise<NutritionalData> {
   if (!fdcId || fdcId <= 0) {
     throw new Error("Invalid FDC ID");
   }
 
   const apiKey = getApiKey();
-  // Use the single food endpoint with GET to ensure compatibility with all food types
   const url = `https://api.nal.usda.gov/fdc/v1/food/${fdcId}?api_key=${apiKey}&format=full`;
 
   try {
@@ -273,7 +212,6 @@ export async function getFoodNutrition(fdcId: number): Promise<NutritionalData> 
       headers: {
         "Content-Type": "application/json",
       },
-      // Add cache control to ensure fresh data
       cache: "no-store",
     });
 
@@ -291,16 +229,12 @@ export async function getFoodNutrition(fdcId: number): Promise<NutritionalData> 
 
     const data: USDAFoodDetailsResponse = await response.json();
 
-    // Validate that we have food nutrients
     if (!data.foodNutrients || data.foodNutrients.length === 0) {
       throw new Error(`No nutritional data available for this food (FDC ID: ${fdcId})`);
     }
 
-    // Calculate adjustment factor for serving size
-    // USDA API returns nutrient values per 100 units, so we need to adjust based on serving size
     const servingSizeMultiplier = data.servingSize ? data.servingSize / 100 : 1.0;
 
-    // Helper function to adjust nutrient object (handles null case)
     const adjustNutrient = (nutrient: Nutrient | null): Nutrient | null => {
       if (!nutrient) return null;
       return {
@@ -309,25 +243,18 @@ export async function getFoodNutrition(fdcId: number): Promise<NutritionalData> 
       };
     };
 
-    // Build the nutritional data object
     return {
       fdcId: data.fdcId,
       description: data.description,
       brandName: data.brandName,
       servingSize: data.servingSize,
       servingSizeUnit: data.servingSizeUnit,
-
-      // Energy (ensure it's in kcal, adjusted for serving size)
       calories: extractCalories(data.foodNutrients) * servingSizeMultiplier,
-
-      // Macronutrients (adjusted for serving size)
       protein: adjustNutrient(findNutrient(data.foodNutrients, NUTRIENT_IDS.PROTEIN)),
       carbohydrates: adjustNutrient(findNutrient(data.foodNutrients, NUTRIENT_IDS.CARBOHYDRATES)),
       totalFat: adjustNutrient(findNutrient(data.foodNutrients, NUTRIENT_IDS.TOTAL_FAT)),
       fiber: adjustNutrient(findNutrient(data.foodNutrients, NUTRIENT_IDS.FIBER)),
       sugars: adjustNutrient(findNutrient(data.foodNutrients, NUTRIENT_IDS.SUGARS)),
-
-      // Micronutrients (adjusted for serving size)
       sodium: adjustNutrient(findNutrient(data.foodNutrients, NUTRIENT_IDS.SODIUM)),
       potassium: adjustNutrient(findNutrient(data.foodNutrients, NUTRIENT_IDS.POTASSIUM)),
       calcium: adjustNutrient(findNutrient(data.foodNutrients, NUTRIENT_IDS.CALCIUM)),
@@ -343,12 +270,6 @@ export async function getFoodNutrition(fdcId: number): Promise<NutritionalData> 
   }
 }
 
-// ============================================================================
-// Open Food Facts API Types
-// ============================================================================
-
-// Open Food Facts product structure (for reference)
-// The SDK handles the API response structure, but we access product fields directly
 interface OpenFoodFactsProduct {
   code: string;
   product_name?: string;
@@ -384,14 +305,6 @@ interface OpenFoodFactsProduct {
   };
 }
 
-// ============================================================================
-// Barcode Lookup Server Action
-// ============================================================================
-
-/**
- * Generate a stable numeric ID from a barcode string
- * Uses a negative number to distinguish from USDA fdcIds
- */
 function barcodeToId(barcode: string): number {
   let hash = 0;
   for (let i = 0; i < barcode.length; i++) {
@@ -403,15 +316,6 @@ function barcodeToId(barcode: string): number {
   return -Math.abs(hash);
 }
 
-/**
- * Look up a food product by barcode using the Open Food Facts API v2
- *
- * Uses the @openfoodfacts/openfoodfacts-nodejs SDK which implements the official API v2.
- * API documentation: https://openfoodfacts.github.io/openfoodfacts-server/api/ref-v2/#get-/api/v2/product/-code-
- *
- * @param barcode - UPC/EAN barcode string (e.g., "0049000006346")
- * @returns Nutritional data in the same format as USDA API
- */
 export async function lookupBarcode(barcode: string): Promise<NutritionalData> {
   if (!barcode || barcode.trim().length === 0) {
     throw new Error("Barcode cannot be empty");

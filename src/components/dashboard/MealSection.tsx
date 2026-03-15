@@ -4,7 +4,7 @@ import { Box, VStack, HStack, Text, Heading, IconButton, Spinner } from "@chakra
 import { useState, useMemo } from "react";
 import { FoodLogEntry, deleteFoodEntry, updateFoodEntry, deleteRecipeGroup, expandRecipeGroup } from "@/app/actions/foodLog";
 import { getFoodNutrition, lookupBarcode, NutritionalData } from "@/app/actions/food";
-import { normalizeUnit } from "@/utils/normalizeUnit";
+import { getNutritionMultiplier } from "@/utils/nutritionMultiplier";
 import { motion, AnimatePresence } from "framer-motion";
 import { IoAdd, IoTrash, IoPencil, IoChevronDown, IoChevronForward, IoGitBranch } from "react-icons/io5";
 import { toaster } from "@/components/ui/toaster";
@@ -219,31 +219,15 @@ export function MealSection({ mealName, entries, onFoodAdded, isCustom, selected
     if (!editingEntry) return;
 
     try {
-      // Calculate nutrition values based on the new amount
-      let multiplier = servingAmount;
-
-      const servingSizeForCalc = nutritionData.servingSize || 100;
-      const servingSizeUnitNormalized = normalizeUnit(nutritionData.servingSizeUnit || "g");
-      const currentUnitNormalized = normalizeUnit(servingUnit);
-
-      if (servingSizeForCalc > 0) {
-        if (currentUnitNormalized === "serving") {
-          // User selected "serving" - multiplier is just the amount
-          multiplier = servingAmount;
-        } else if (currentUnitNormalized === servingSizeUnitNormalized) {
-          // User selected the same unit as the serving size (e.g., "cup" when serving is "cup")
-          // Convert to servings: if 1 serving = 1 cup, then 2 cups = 2 servings
-          multiplier = servingAmount / servingSizeForCalc;
-        }
-      }
+      const m = getNutritionMultiplier(servingAmount, servingUnit, nutritionData.servingSize, nutritionData.servingSizeUnit);
 
       const response = await updateFoodEntry(editingEntry.id, {
         serving_amount: servingAmount,
         serving_unit: servingUnit,
-        calories: nutritionData.calories * multiplier,
-        protein: nutritionData.protein ? nutritionData.protein.amount * multiplier : null,
-        carbohydrates: nutritionData.carbohydrates ? nutritionData.carbohydrates.amount * multiplier : null,
-        total_fat: nutritionData.totalFat ? nutritionData.totalFat.amount * multiplier : null,
+        calories: nutritionData.calories * m,
+        protein: nutritionData.protein ? nutritionData.protein.amount * m : null,
+        carbohydrates: nutritionData.carbohydrates ? nutritionData.carbohydrates.amount * m : null,
+        total_fat: nutritionData.totalFat ? nutritionData.totalFat.amount * m : null,
       });
 
       if (response.success) {
@@ -272,7 +256,7 @@ export function MealSection({ mealName, entries, onFoodAdded, isCustom, selected
     }
   };
 
-  const renderFoodEntry = (entry: FoodLogEntry, showRecipeBadge = false) => (
+  const renderFoodEntry = (entry: FoodLogEntry) => (
     <HStack
       key={entry.id}
       justify="space-between"
@@ -465,7 +449,6 @@ export function MealSection({ mealName, entries, onFoodAdded, isCustom, selected
         }}
       >
         <VStack align="stretch" gap={4}>
-          {/* Header & Summary */}
           <HStack justify="space-between" align="center" gap={3} mb={1}>
             <HStack flex="1" gap={{ base: 2, md: 4 }} overflow="hidden">
               <Heading size="md" color="text.default" whiteSpace="nowrap">
@@ -520,13 +503,9 @@ export function MealSection({ mealName, entries, onFoodAdded, isCustom, selected
             </IconButton>
           </HStack>
 
-          {/* Food Entries List */}
           <VStack align="stretch" gap={2}>
             <AnimatePresence>
-              {/* Render recipe groups first */}
               {recipeGroups.map((group) => renderRecipeGroup(group))}
-
-              {/* Then render standalone entries */}
               {standaloneEntries.map((entry) => (
                 <MotionBox
                   key={entry.id}
@@ -541,7 +520,6 @@ export function MealSection({ mealName, entries, onFoodAdded, isCustom, selected
             </AnimatePresence>
           </VStack>
 
-          {/* Empty State */}
           {entries.length === 0 && (
             <Box
               py={8}
@@ -561,7 +539,6 @@ export function MealSection({ mealName, entries, onFoodAdded, isCustom, selected
         </VStack>
       </Box>
 
-      {/* Food Search Dialog */}
       {isSearchOpen && (
         <FoodSearchDialog
           isOpen={isSearchOpen}
@@ -572,7 +549,6 @@ export function MealSection({ mealName, entries, onFoodAdded, isCustom, selected
         />
       )}
 
-      {/* Edit Nutrition Facts Drawer */}
       {isLoadingEditData ? (
         <>
           <Box position="fixed" top={0} left={0} right={0} bottom={0} bg="blackAlpha.700" zIndex={999} />

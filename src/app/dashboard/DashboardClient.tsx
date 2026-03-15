@@ -10,7 +10,7 @@ import { DateSelector } from "@/components/dashboard/DateSelector";
 import { toaster } from "@/components/ui/toaster";
 import { Box, Button, Container, HStack, VStack } from "@chakra-ui/react";
 import { motion } from "framer-motion";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { IoAdd, IoChatbubbleEllipses } from "react-icons/io5";
 import { useRouter } from "next/navigation";
 
@@ -43,7 +43,7 @@ export default function DashboardClient({
   const isInitialMount = useRef(true);
   const router = useRouter();
 
-  const standardMeals = useMemo(() => [...STANDARD_MEALS], []);
+  const standardMeals = STANDARD_MEALS;
 
   const loadFoodLogs = useCallback(async () => {
     setIsLoadingData(true);

@@ -25,7 +25,7 @@ import {
   getRecipe,
 } from "@/app/actions/recipes";
 import { FoodSearchDialog } from "@/components/food-search/FoodSearchDialog";
-import type { NutritionalData } from "@/app/actions/food";
+import { getNutritionMultiplier } from "@/utils/nutritionMultiplier";
 import type { StagedFood } from "@/components/food-search/types";
 
 const MotionBox = motion.create(Box);
@@ -78,21 +78,6 @@ export function RecipeDialog({
   const [servings, setServings] = useState(existingRecipe?.servings || 1);
   const [isSaving, setIsSaving] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
-
-  const normalizeUnit = (unit: string): string => {
-    const unitMap: Record<string, string> = {
-      g: "g", gram: "g", grams: "g",
-      oz: "oz", ounce: "oz", ounces: "oz",
-      lb: "lb", pound: "lb", pounds: "lb",
-      ml: "ml", milliliter: "ml", milliliters: "ml",
-      cup: "cup", cups: "cup",
-      tbsp: "tbsp", tablespoon: "tbsp", tablespoons: "tbsp",
-      tsp: "tsp", teaspoon: "tsp", teaspoons: "tsp",
-      piece: "piece", pieces: "piece",
-      slice: "slice", slices: "slice",
-    };
-    return unitMap[unit.toLowerCase().trim()] || unit.toLowerCase().trim();
-  };
 
   const handleAddItems = (stagedItems: StagedFood[]) => {
     setItems((prev) => [...prev, ...stagedItems]);
@@ -147,33 +132,18 @@ export function RecipeDialog({
           }
         }
 
-        // Add new items
         for (const item of items) {
           if (!existingItemIds.has(item.id)) {
-            let multiplier = item.servingAmount;
-            const servingSizeForCalc = item.nutritionData.servingSize || 100;
-            const servingSizeUnitNormalized = normalizeUnit(item.nutritionData.servingSizeUnit || "g");
-            const currentUnitNormalized = normalizeUnit(item.servingUnit);
-
-            if (servingSizeForCalc > 0) {
-              if (currentUnitNormalized === "serving") {
-                multiplier = item.servingAmount;
-              } else if (currentUnitNormalized === servingSizeUnitNormalized) {
-                multiplier = item.servingAmount / servingSizeForCalc;
-              }
-            }
-
+            const m = getNutritionMultiplier(item.servingAmount, item.servingUnit, item.nutritionData.servingSize, item.nutritionData.servingSizeUnit);
             await addRecipeItem(existingRecipe.id, {
               food_fdc_id: item.nutritionData.fdcId,
               food_description: item.nutritionData.description,
               serving_amount: item.servingAmount,
               serving_unit: item.servingUnit,
-              calories: item.nutritionData.calories * multiplier,
-              protein: item.nutritionData.protein ? item.nutritionData.protein.amount * multiplier : null,
-              carbohydrates: item.nutritionData.carbohydrates
-                ? item.nutritionData.carbohydrates.amount * multiplier
-                : null,
-              total_fat: item.nutritionData.totalFat ? item.nutritionData.totalFat.amount * multiplier : null,
+              calories: item.nutritionData.calories * m,
+              protein: item.nutritionData.protein ? item.nutritionData.protein.amount * m : null,
+              carbohydrates: item.nutritionData.carbohydrates ? item.nutritionData.carbohydrates.amount * m : null,
+              total_fat: item.nutritionData.totalFat ? item.nutritionData.totalFat.amount * m : null,
               barcode: item.barcode,
             });
           }
@@ -204,32 +174,17 @@ export function RecipeDialog({
 
         const recipe = response.data as Recipe;
 
-        // Add all items
         for (const item of items) {
-          let multiplier = item.servingAmount;
-          const servingSizeForCalc = item.nutritionData.servingSize || 100;
-          const servingSizeUnitNormalized = normalizeUnit(item.nutritionData.servingSizeUnit || "g");
-          const currentUnitNormalized = normalizeUnit(item.servingUnit);
-
-          if (servingSizeForCalc > 0) {
-            if (currentUnitNormalized === "serving") {
-              multiplier = item.servingAmount;
-            } else if (currentUnitNormalized === servingSizeUnitNormalized) {
-              multiplier = item.servingAmount / servingSizeForCalc;
-            }
-          }
-
+          const m = getNutritionMultiplier(item.servingAmount, item.servingUnit, item.nutritionData.servingSize, item.nutritionData.servingSizeUnit);
           await addRecipeItem(recipe.id, {
             food_fdc_id: item.nutritionData.fdcId,
             food_description: item.nutritionData.description,
             serving_amount: item.servingAmount,
             serving_unit: item.servingUnit,
-            calories: item.nutritionData.calories * multiplier,
-            protein: item.nutritionData.protein ? item.nutritionData.protein.amount * multiplier : null,
-            carbohydrates: item.nutritionData.carbohydrates
-              ? item.nutritionData.carbohydrates.amount * multiplier
-              : null,
-            total_fat: item.nutritionData.totalFat ? item.nutritionData.totalFat.amount * multiplier : null,
+            calories: item.nutritionData.calories * m,
+            protein: item.nutritionData.protein ? item.nutritionData.protein.amount * m : null,
+            carbohydrates: item.nutritionData.carbohydrates ? item.nutritionData.carbohydrates.amount * m : null,
+            total_fat: item.nutritionData.totalFat ? item.nutritionData.totalFat.amount * m : null,
             barcode: item.barcode,
           });
         }
@@ -261,20 +216,8 @@ export function RecipeDialog({
   };
 
   const totalCalories = items.reduce((sum, item) => {
-    let multiplier = item.servingAmount;
-    const servingSizeForCalc = item.nutritionData.servingSize || 100;
-    const servingSizeUnitNormalized = normalizeUnit(item.nutritionData.servingSizeUnit || "g");
-    const currentUnitNormalized = normalizeUnit(item.servingUnit);
-
-    if (servingSizeForCalc > 0) {
-      if (currentUnitNormalized === "serving") {
-        multiplier = item.servingAmount;
-      } else if (currentUnitNormalized === servingSizeUnitNormalized) {
-        multiplier = item.servingAmount / servingSizeForCalc;
-      }
-    }
-
-    return sum + item.nutritionData.calories * multiplier;
+    const m = getNutritionMultiplier(item.servingAmount, item.servingUnit, item.nutritionData.servingSize, item.nutritionData.servingSizeUnit);
+    return sum + item.nutritionData.calories * m;
   }, 0);
 
   if (!isOpen) return null;
@@ -429,20 +372,7 @@ export function RecipeDialog({
 
             <AnimatePresence>
               {items.map((item) => {
-                let multiplier = item.servingAmount;
-                const servingSizeForCalc = item.nutritionData.servingSize || 100;
-                const servingSizeUnitNormalized = normalizeUnit(item.nutritionData.servingSizeUnit || "g");
-                const currentUnitNormalized = normalizeUnit(item.servingUnit);
-
-                if (servingSizeForCalc > 0) {
-                  if (currentUnitNormalized === "serving") {
-                    multiplier = item.servingAmount;
-                  } else if (currentUnitNormalized === servingSizeUnitNormalized) {
-                    multiplier = item.servingAmount / servingSizeForCalc;
-                  }
-                }
-
-                const itemCalories = item.nutritionData.calories * multiplier;
+                const itemCalories = item.nutritionData.calories * getNutritionMultiplier(item.servingAmount, item.servingUnit, item.nutritionData.servingSize, item.nutritionData.servingSizeUnit);
 
                 return (
                   <MotionBox

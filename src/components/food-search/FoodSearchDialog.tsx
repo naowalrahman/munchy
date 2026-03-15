@@ -7,7 +7,7 @@ import { IoBarcodeOutline, IoClose, IoHeart, IoRestaurant, IoSearch } from "reac
 import type { FoodSearchResult, NutritionalData } from "@/app/actions/food";
 import { getFoodNutrition, lookupBarcode } from "@/app/actions/food";
 import { logFoodEntry } from "@/app/actions/foodLog";
-import { normalizeUnit } from "@/utils/normalizeUnit";
+import { getNutritionMultiplier } from "@/utils/nutritionMultiplier";
 import { toaster } from "@/components/ui/toaster";
 import { NutritionFactsDrawer } from "../dashboard/NutritionFactsDrawer";
 import { Recipe } from "@/app/actions/recipes";
@@ -174,18 +174,7 @@ export function FoodSearchDialog({
 
     try {
       for (const item of stagedItems) {
-        let multiplier = item.servingAmount;
-        const servingSizeForCalc = item.nutritionData.servingSize || 100;
-        const servingSizeUnitNormalized = normalizeUnit(item.nutritionData.servingSizeUnit || "g");
-        const currentUnitNormalized = normalizeUnit(item.servingUnit);
-
-        if (servingSizeForCalc > 0) {
-          if (currentUnitNormalized === "serving") {
-            multiplier = item.servingAmount;
-          } else if (currentUnitNormalized === servingSizeUnitNormalized) {
-            multiplier = item.servingAmount / servingSizeForCalc;
-          }
-        }
+        const m = getNutritionMultiplier(item.servingAmount, item.servingUnit, item.nutritionData.servingSize, item.nutritionData.servingSizeUnit);
 
         const response = await logFoodEntry({
           meal_name: mealName,
@@ -193,11 +182,11 @@ export function FoodSearchDialog({
           food_description: item.nutritionData.description,
           serving_amount: item.servingAmount,
           serving_unit: item.servingUnit,
-          calories: item.nutritionData.calories * multiplier,
-          protein: item.nutritionData.protein ? item.nutritionData.protein.amount * multiplier : null,
-          carbohydrates: item.nutritionData.carbohydrates ? item.nutritionData.carbohydrates.amount * multiplier : null,
+          calories: item.nutritionData.calories * m,
+          protein: item.nutritionData.protein ? item.nutritionData.protein.amount * m : null,
+          carbohydrates: item.nutritionData.carbohydrates ? item.nutritionData.carbohydrates.amount * m : null,
           date: selectedDate,
-          total_fat: item.nutritionData.totalFat ? item.nutritionData.totalFat.amount * multiplier : null,
+          total_fat: item.nutritionData.totalFat ? item.nutritionData.totalFat.amount * m : null,
           barcode: item.barcode,
           recipe_group_id: recipeGroupId,
           recipe_name: recipeName,

@@ -34,10 +34,6 @@ export function RecipesSection({ onRecipeSelect }: RecipesSectionProps) {
     loadRecipes();
   }, []);
 
-  const handleRecipeClick = (recipe: Recipe) => {
-    onRecipeSelect(recipe);
-  };
-
   const getTotalCalories = (recipe: Recipe) => {
     return (recipe.items || []).reduce((sum, item) => sum + item.calories, 0);
   };
@@ -90,7 +86,7 @@ export function RecipesSection({ onRecipeSelect }: RecipesSectionProps) {
                 borderLeftWidth: "3px",
                 borderLeftColor: "brand.500",
               }}
-              onClick={() => handleRecipeClick(recipe)}
+              onClick={() => onRecipeSelect(recipe)}
               variants={{
                 hidden: { opacity: 0, x: -20 },
                 visible: { opacity: 1, x: 0 },

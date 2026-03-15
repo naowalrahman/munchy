@@ -3,9 +3,6 @@
 import { createClient } from "@/utils/supabase/server";
 import { revalidatePath } from "next/cache";
 
-/**
- * Food log entry type
- */
 export interface FoodLogEntry {
   id: string;
   user_id: string;
@@ -22,15 +19,12 @@ export interface FoodLogEntry {
   date: string;
   created_at: string;
   updated_at: string;
-  barcode?: string | null; // Original barcode for foods added via barcode scanning
-  recipe_group_id?: string | null; // UUID linking recipe items together
-  recipe_name?: string | null; // Name of the recipe
-  servings_consumed?: number | null; // How many servings of the recipe were consumed
+  barcode?: string | null;
+  recipe_group_id?: string | null;
+  recipe_name?: string | null;
+  servings_consumed?: number | null;
 }
 
-/**
- * Input for logging a new food entry
- */
 export interface LogFoodEntryInput {
   meal_name: string;
   food_fdc_id: number;
@@ -42,29 +36,22 @@ export interface LogFoodEntryInput {
   carbohydrates: number | null;
   total_fat: number | null;
   date: string;
-  barcode?: string | null; // Optional barcode for foods added via barcode scanning
-  recipe_group_id?: string | null; // UUID for grouping recipe items
-  recipe_name?: string | null; // Name of the recipe
-  servings_consumed?: number | null; // How many servings of the recipe were consumed
+  barcode?: string | null;
+  recipe_group_id?: string | null;
+  recipe_name?: string | null;
+  servings_consumed?: number | null;
 }
 
-/**
- * Response type for food log operations
- */
 export interface FoodLogResponse {
   success: boolean;
   data?: FoodLogEntry | FoodLogEntry[];
   error?: string;
 }
 
-/**
- * Log a new food entry
- */
 export async function logFoodEntry(input: LogFoodEntryInput): Promise<FoodLogResponse> {
   try {
     const supabase = await createClient();
 
-    // Get current user
     const {
       data: { user },
       error: userError,
@@ -73,7 +60,6 @@ export async function logFoodEntry(input: LogFoodEntryInput): Promise<FoodLogRes
       return { success: false, error: "User not authenticated" };
     }
 
-    // Insert food log entry
     const { data, error } = await supabase
       .from("food_logs")
       .insert({
@@ -109,14 +95,10 @@ export async function logFoodEntry(input: LogFoodEntryInput): Promise<FoodLogRes
   }
 }
 
-/**
- * Get food logs for a specific date
- */
 export async function getFoodLogsForDate(date: string): Promise<FoodLogResponse> {
   try {
     const supabase = await createClient();
 
-    // Get current user
     const {
       data: { user },
       error: userError,
@@ -125,7 +107,6 @@ export async function getFoodLogsForDate(date: string): Promise<FoodLogResponse>
       return { success: false, error: "User not authenticated" };
     }
 
-    // Query food logs for the date
     const { data, error } = await supabase
       .from("food_logs")
       .select("*")
@@ -145,9 +126,6 @@ export async function getFoodLogsForDate(date: string): Promise<FoodLogResponse>
   }
 }
 
-/**
- * Update a food log entry (e.g., change serving size)
- */
 export async function updateFoodEntry(
   id: string,
   updates: Partial<
@@ -157,7 +135,6 @@ export async function updateFoodEntry(
   try {
     const supabase = await createClient();
 
-    // Get current user
     const {
       data: { user },
       error: userError,
@@ -166,7 +143,6 @@ export async function updateFoodEntry(
       return { success: false, error: "User not authenticated" };
     }
 
-    // Update food log entry
     const { data, error } = await supabase
       .from("food_logs")
       .update(updates)
@@ -188,9 +164,6 @@ export async function updateFoodEntry(
   }
 }
 
-/**
- * Delete all food log entries in a recipe group
- */
 export async function deleteRecipeGroup(recipeGroupId: string): Promise<FoodLogResponse> {
   try {
     const supabase = await createClient();
@@ -222,10 +195,6 @@ export async function deleteRecipeGroup(recipeGroupId: string): Promise<FoodLogR
   }
 }
 
-/**
- * Expand a recipe group into standalone entries by clearing recipe metadata.
- * This is irreversible — entries become independent food log items.
- */
 export async function expandRecipeGroup(recipeGroupId: string): Promise<FoodLogResponse> {
   try {
     const supabase = await createClient();
@@ -262,14 +231,10 @@ export async function expandRecipeGroup(recipeGroupId: string): Promise<FoodLogR
   }
 }
 
-/**
- * Delete a food log entry
- */
 export async function deleteFoodEntry(id: string): Promise<FoodLogResponse> {
   try {
     const supabase = await createClient();
 
-    // Get current user
     const {
       data: { user },
       error: userError,
@@ -278,7 +243,6 @@ export async function deleteFoodEntry(id: string): Promise<FoodLogResponse> {
       return { success: false, error: "User not authenticated" };
     }
 
-    // Delete food log entry
     const { error } = await supabase.from("food_logs").delete().eq("id", id).eq("user_id", user.id);
 
     if (error) {
@@ -294,9 +258,6 @@ export async function deleteFoodEntry(id: string): Promise<FoodLogResponse> {
   }
 }
 
-/**
- * Get meal summary for a specific date (grouped by meal_name)
- */
 export async function getMealSummary(date: string): Promise<{
   success: boolean;
   data?: Record<string, FoodLogEntry[]>;
@@ -312,7 +273,6 @@ export async function getMealSummary(date: string): Promise<{
       };
     }
 
-    // Group logs by meal_name
     const logs = Array.isArray(response.data) ? response.data : [response.data];
     const grouped = logs.reduce(
       (acc, log) => {
