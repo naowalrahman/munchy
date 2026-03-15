@@ -24,3 +24,9 @@
 - **Supabase** – use `@supabase/ssr` for auth and DB
   - use `bun supabase` command to make any necessary changes to auth/DB config
 - **Bun** – runtime and package manager; use `bun run` for scripts
+
+## Cursor Cloud specific instructions
+
+- The hosted Supabase instance enforces email confirmation on sign-up. To test auth flows, use the pre-confirmed login
+  - Username: testuser@usemunchy.com
+  - Password: munchyisthebest
