@@ -223,13 +223,10 @@ export async function deleteRecipeGroup(recipeGroupId: string): Promise<FoodLogR
 }
 
 /**
- * Update servings consumed for a recipe group
- * This scales all entries in the group proportionally
+ * Expand a recipe group into standalone entries by clearing recipe metadata.
+ * This is irreversible — entries become independent food log items.
  */
-export async function updateRecipeGroupServings(
-  recipeGroupId: string,
-  newServingsConsumed: number
-): Promise<FoodLogResponse> {
+export async function expandRecipeGroup(recipeGroupId: string): Promise<FoodLogResponse> {
   try {
     const supabase = await createClient();
 
@@ -241,45 +238,26 @@ export async function updateRecipeGroupServings(
       return { success: false, error: "User not authenticated" };
     }
 
-    // Get current entries in the recipe group
-    const { data: entries, error: fetchError } = await supabase
+    const { data, error } = await supabase
       .from("food_logs")
-      .select("*")
+      .update({
+        recipe_group_id: null,
+        recipe_name: null,
+        servings_consumed: null,
+      })
       .eq("recipe_group_id", recipeGroupId)
-      .eq("user_id", user.id);
+      .eq("user_id", user.id)
+      .select();
 
-    if (fetchError || !entries || entries.length === 0) {
-      return { success: false, error: "Recipe group not found" };
-    }
-
-    const currentServings = entries[0].servings_consumed || 1;
-    const scaleFactor = newServingsConsumed / currentServings;
-
-    // Update each entry with scaled values
-    for (const entry of entries) {
-      const { error: updateError } = await supabase
-        .from("food_logs")
-        .update({
-          calories: entry.calories * scaleFactor,
-          protein: entry.protein ? entry.protein * scaleFactor : null,
-          carbohydrates: entry.carbohydrates ? entry.carbohydrates * scaleFactor : null,
-          total_fat: entry.total_fat ? entry.total_fat * scaleFactor : null,
-          serving_amount: entry.serving_amount * scaleFactor,
-          servings_consumed: newServingsConsumed,
-        })
-        .eq("id", entry.id)
-        .eq("user_id", user.id);
-
-      if (updateError) {
-        console.error("Error updating recipe entry:", updateError);
-        return { success: false, error: updateError.message };
-      }
+    if (error) {
+      console.error("Error expanding recipe group:", error);
+      return { success: false, error: error.message };
     }
 
     revalidatePath("/dashboard");
-    return { success: true, data: entries };
+    return { success: true, data: data || [] };
   } catch (error) {
-    console.error("Unexpected error updating recipe group servings:", error);
+    console.error("Unexpected error expanding recipe group:", error);
     return { success: false, error: "An unexpected error occurred" };
   }
 }

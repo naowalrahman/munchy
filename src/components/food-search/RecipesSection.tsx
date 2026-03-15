@@ -4,8 +4,6 @@ import { Box, HStack, Text, VStack, Spinner } from "@chakra-ui/react";
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Recipe, getRecipes } from "@/app/actions/recipes";
-import type { StagedFood } from "./types";
-import type { NutritionalData } from "@/app/actions/food";
 
 const MotionVStack = motion.create(VStack);
 const MotionBox = motion.create(Box);

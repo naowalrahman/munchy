@@ -4,6 +4,7 @@ import { Box, VStack, HStack, Text, Button, Heading, Separator, Grid, useBreakpo
 import { useState, useCallback } from "react";
 import { NutritionalData } from "@/app/actions/food";
 import { ServingSizeControl } from "./ServingSizeControl";
+import { normalizeUnit } from "@/utils/normalizeUnit";
 import { motion, AnimatePresence } from "framer-motion";
 import { IoClose, IoHeart, IoHeartOutline } from "react-icons/io5";
 
@@ -15,7 +16,7 @@ export interface NutritionFactsDrawerProps {
   onAddToMeal: (servingAmount: number, servingUnit: string, nutritionData: NutritionalData) => void;
   isFavorited?: boolean;
   onToggleFavorite?: () => void;
-  // Edit mode props
+  subtitle?: string;
   isEditMode?: boolean;
   initialServingAmount?: number;
   initialServingUnit?: string;
@@ -32,6 +33,7 @@ export function NutritionFactsDrawer({
   onAddToMeal,
   isFavorited,
   onToggleFavorite,
+  subtitle,
   isEditMode = false,
   initialServingAmount = 1,
   initialServingUnit = "serving",
@@ -46,39 +48,6 @@ export function NutritionFactsDrawer({
     setServingAmount(amount);
     setServingUnit(unit);
   }, []);
-
-  // Helper function to normalize unit names for comparison
-  const normalizeUnit = (unit: string): string => {
-    const unitMap: Record<string, string> = {
-      g: "g",
-      gram: "g",
-      grams: "g",
-      oz: "oz",
-      ounce: "oz",
-      ounces: "oz",
-      lb: "lb",
-      pound: "lb",
-      pounds: "lb",
-      ml: "ml",
-      milliliter: "ml",
-      milliliters: "ml",
-      cup: "cup",
-      cups: "cup",
-      tbsp: "tbsp",
-      tablespoon: "tbsp",
-      tablespoons: "tbsp",
-      tsp: "tsp",
-      teaspoon: "tsp",
-      teaspoons: "tsp",
-      piece: "piece",
-      pieces: "piece",
-      slice: "slice",
-      slices: "slice",
-    };
-
-    const normalized = unit.toLowerCase().trim();
-    return unitMap[normalized] || normalized;
-  };
 
   if (!isOpen || !nutritionData) return null;
 
@@ -156,9 +125,9 @@ export function NutritionFactsDrawer({
         <Text fontSize={{ base: "lg", md: "xl" }} fontWeight="semibold" color="text.default">
           {nutritionData.description}
         </Text>
-        {nutritionData.brandName && (
+        {(subtitle || nutritionData.brandName) && (
           <Text fontSize="sm" color="text.muted" mt={1}>
-            {nutritionData.brandName}
+            {subtitle || nutritionData.brandName}
           </Text>
         )}
       </Box>

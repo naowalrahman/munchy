@@ -2,46 +2,14 @@
 
 import { Input, HStack, Text, VStack, Button } from "@chakra-ui/react";
 import { useMemo, useState, useEffect } from "react";
+import { normalizeUnit } from "@/utils/normalizeUnit";
 
 interface ServingSizeControlProps {
   defaultAmount: number;
   defaultUnit: string;
-  servingSize?: number; // Size of one serving
-  servingSizeUnit?: string; // Unit of serving size (e.g., "g", "cup", "tbsp", etc.)
+  servingSize?: number;
+  servingSizeUnit?: string;
   onChange: (amount: number, unit: string) => void;
-}
-
-// Helper function to normalize unit names for display
-function normalizeUnitForDisplay(unit: string): string {
-  const unitMap: Record<string, string> = {
-    g: "g",
-    gram: "g",
-    grams: "g",
-    oz: "oz",
-    ounce: "oz",
-    ounces: "oz",
-    lb: "lb",
-    pound: "lb",
-    pounds: "lb",
-    ml: "ml",
-    milliliter: "ml",
-    milliliters: "ml",
-    cup: "cup",
-    cups: "cup",
-    tbsp: "tbsp",
-    tablespoon: "tbsp",
-    tablespoons: "tbsp",
-    tsp: "tsp",
-    teaspoon: "tsp",
-    teaspoons: "tsp",
-    piece: "piece",
-    pieces: "piece",
-    slice: "slice",
-    slices: "slice",
-  };
-
-  const normalized = unit.toLowerCase().trim();
-  return unitMap[normalized] || normalized;
 }
 
 export function ServingSizeControl({
@@ -53,13 +21,13 @@ export function ServingSizeControl({
 }: ServingSizeControlProps) {
   // Determine available units first
   const effectiveServingSize = servingSize || 100;
-  const effectiveServingSizeUnit = normalizeUnitForDisplay(servingSizeUnit || "g");
+  const effectiveServingSizeUnit = normalizeUnit(servingSizeUnit || "g");
   const availableUnits = useMemo(() => {
     return effectiveServingSizeUnit === "serving" ? ["serving"] : ["serving", effectiveServingSizeUnit];
   }, [effectiveServingSizeUnit]);
 
   // Normalize the default unit and ensure it's in availableUnits
-  const normalizedDefaultUnit = normalizeUnitForDisplay(defaultUnit);
+  const normalizedDefaultUnit = normalizeUnit(defaultUnit);
   const validDefaultUnit = availableUnits.includes(normalizedDefaultUnit) ? normalizedDefaultUnit : "serving";
 
   const [amount, setAmount] = useState(defaultAmount.toString());
@@ -90,7 +58,7 @@ export function ServingSizeControl({
 
     // Convert between units using serving size
     const effectiveServingSize = servingSize || 100;
-    const effectiveServingSizeUnit = normalizeUnitForDisplay(servingSizeUnit || "g");
+    const effectiveServingSizeUnit = normalizeUnit(servingSizeUnit || "g");
 
     if (effectiveServingSize > 0) {
       if (unit === "serving" && newUnit === effectiveServingSizeUnit) {

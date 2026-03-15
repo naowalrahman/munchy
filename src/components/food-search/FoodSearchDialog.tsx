@@ -7,9 +7,9 @@ import { IoBarcodeOutline, IoClose, IoHeart, IoRestaurant, IoSearch } from "reac
 import type { FoodSearchResult, NutritionalData } from "@/app/actions/food";
 import { getFoodNutrition, lookupBarcode } from "@/app/actions/food";
 import { logFoodEntry } from "@/app/actions/foodLog";
+import { normalizeUnit } from "@/utils/normalizeUnit";
 import { toaster } from "@/components/ui/toaster";
 import { NutritionFactsDrawer } from "../dashboard/NutritionFactsDrawer";
-import { RecipeNutritionDrawer, RecipeNutritionData } from "../dashboard/RecipeNutritionDrawer";
 import { Recipe } from "@/app/actions/recipes";
 import { FavoritesSection } from "./FavoritesSection";
 import { RecipesSection } from "./RecipesSection";
@@ -22,38 +22,6 @@ import { useFoodSearch } from "./useFoodSearch";
 import type { FavoritedFood, FoodSearchDialogProps, InputMode, StagedFood } from "./types";
 
 const MotionBox = motion.create(Box);
-
-const normalizeUnit = (unit: string): string => {
-  const unitMap: Record<string, string> = {
-    g: "g",
-    gram: "g",
-    grams: "g",
-    oz: "oz",
-    ounce: "oz",
-    ounces: "oz",
-    lb: "lb",
-    pound: "lb",
-    pounds: "lb",
-    ml: "ml",
-    milliliter: "ml",
-    milliliters: "ml",
-    cup: "cup",
-    cups: "cup",
-    tbsp: "tbsp",
-    tablespoon: "tbsp",
-    tablespoons: "tbsp",
-    tsp: "tsp",
-    teaspoon: "tsp",
-    teaspoons: "tsp",
-    piece: "piece",
-    pieces: "piece",
-    slice: "slice",
-    slices: "slice",
-  };
-
-  const normalized = unit.toLowerCase().trim();
-  return unitMap[normalized] || normalized;
-};
 
 export function FoodSearchDialog({
   isOpen,
@@ -74,8 +42,6 @@ export function FoodSearchDialog({
   const [selectedRecipeGroupId, setSelectedRecipeGroupId] = useState<string | null>(null);
   const [selectedRecipeName, setSelectedRecipeName] = useState<string | null>(null);
   const [selectedRecipe, setSelectedRecipe] = useState<Recipe | null>(null);
-  const [selectedRecipeNutrition, setSelectedRecipeNutrition] = useState<RecipeNutritionData | null>(null);
-  const [isRecipeDrawerOpen, setIsRecipeDrawerOpen] = useState(false);
 
   const { searchQuery, setSearchQuery, searchResults, isSearching, resetSearch } = useFoodSearch(inputMode);
   const { favorites, isFavorited, toggleFavorite, getFavorite, updateFavoriteCache } = useFavorites();
@@ -298,8 +264,6 @@ export function FoodSearchDialog({
     setSelectedRecipeGroupId(null);
     setSelectedRecipeName(null);
     setSelectedRecipe(null);
-    setSelectedRecipeNutrition(null);
-    setIsRecipeDrawerOpen(false);
     onClose();
   };
 
@@ -318,13 +282,12 @@ export function FoodSearchDialog({
           ? "Favorites"
           : "Recipes";
 
-  const handleRecipeServingsConfirm = (servingsConsumed: number) => {
+  const handleRecipeServingsConfirm = (servingAmount: number, _servingUnit: string, _nutritionData: NutritionalData) => {
     if (!selectedRecipe) return;
 
-    const scaleFactor = servingsConsumed / (selectedRecipe.servings || 1);
+    const scaleFactor = servingAmount / (selectedRecipe.servings || 1);
     const items = selectedRecipe.items || [];
 
-    // Create staged items with scaled nutrition
     const stagedFromRecipe: StagedFood[] = items.map((item) => ({
       id: crypto.randomUUID(),
       nutritionData: {
@@ -357,11 +320,9 @@ export function FoodSearchDialog({
     }));
 
     if (recipeMode && onRecipeItemsAdded) {
-      // In recipe mode (editing a recipe), pass items directly
       onRecipeItemsAdded(stagedFromRecipe);
       onClose();
     } else {
-      // In meal mode, stage items with recipe tracking
       setStagedItems((prev) => [...prev, ...stagedFromRecipe]);
       setSelectedRecipeGroupId(crypto.randomUUID());
       setSelectedRecipeName(selectedRecipe.name);
@@ -372,10 +333,9 @@ export function FoodSearchDialog({
       });
     }
 
-    // Close recipe drawer
-    setIsRecipeDrawerOpen(false);
+    setIsNutritionDrawerOpen(false);
+    setSelectedFood(null);
     setSelectedRecipe(null);
-    setSelectedRecipeNutrition(null);
   };
 
   if (!isOpen) return null;
@@ -513,33 +473,32 @@ export function FoodSearchDialog({
               ) : (
                 <RecipesSection
                   onRecipeSelect={(recipe) => {
-                    // Open RecipeNutritionDrawer so user can select servings
                     setSelectedRecipe(recipe);
 
-                    // Aggregate per-serving nutrition from recipe items
-                    const scaleFactor = 1 / (recipe.servings || 1);
+                    const perServing = 1 / (recipe.servings || 1);
                     const items = recipe.items || [];
 
-                    const nutrition: RecipeNutritionData = {
-                      recipeName: recipe.name,
-                      servings: recipe.servings,
-                      calories: items.reduce((sum, i) => sum + i.calories * scaleFactor, 0),
+                    const aggregated: NutritionalData = {
+                      fdcId: 0,
+                      description: recipe.name,
+                      servingSize: 1,
+                      servingSizeUnit: "serving",
+                      calories: items.reduce((s, i) => s + i.calories * perServing, 0),
                       protein: {
                         name: "Protein",
-                        amount: items.reduce((sum, i) => sum + (i.protein || 0) * scaleFactor, 0),
+                        amount: items.reduce((s, i) => s + (i.protein || 0) * perServing, 0),
                         unit: "g",
                       },
                       carbohydrates: {
                         name: "Carbohydrates",
-                        amount: items.reduce((sum, i) => sum + (i.carbohydrates || 0) * scaleFactor, 0),
+                        amount: items.reduce((s, i) => s + (i.carbohydrates || 0) * perServing, 0),
                         unit: "g",
                       },
                       totalFat: {
                         name: "Total Fat",
-                        amount: items.reduce((sum, i) => sum + (i.total_fat || 0) * scaleFactor, 0),
+                        amount: items.reduce((s, i) => s + (i.total_fat || 0) * perServing, 0),
                         unit: "g",
                       },
-                      // Recipe items don't have micronutrient data
                       fiber: null,
                       sugars: null,
                       sodium: null,
@@ -550,8 +509,8 @@ export function FoodSearchDialog({
                       vitaminA: null,
                     };
 
-                    setSelectedRecipeNutrition(nutrition);
-                    setIsRecipeDrawerOpen(true);
+                    setSelectedFood(aggregated);
+                    setIsNutritionDrawerOpen(true);
                   }}
                 />
               )}
@@ -601,31 +560,24 @@ export function FoodSearchDialog({
         isNutritionDrawerOpen &&
         selectedFood && (
           <NutritionFactsDrawer
-            key={selectedFood.fdcId}
+            key={`${selectedFood.fdcId}-${selectedRecipe?.id ?? "food"}`}
             nutritionData={selectedFood}
             mealName={mealName}
             isOpen={isNutritionDrawerOpen}
-            onClose={handleDrawerClose}
-            onAddToMeal={stageFood}
-            isFavorited={isFavorited(selectedFood.fdcId)}
-            onToggleFavorite={handleToggleFavoriteFromDrawer}
+            onClose={() => {
+              handleDrawerClose();
+              setSelectedRecipe(null);
+            }}
+            onAddToMeal={selectedRecipe ? handleRecipeServingsConfirm : stageFood}
+            isFavorited={selectedRecipe ? undefined : isFavorited(selectedFood.fdcId)}
+            onToggleFavorite={selectedRecipe ? undefined : handleToggleFavoriteFromDrawer}
+            subtitle={
+              selectedRecipe
+                ? `Recipe · ${selectedRecipe.servings} ${selectedRecipe.servings === 1 ? "serving" : "servings"} total`
+                : undefined
+            }
           />
         )
-      )}
-
-      {/* Recipe Nutrition Drawer */}
-      {isRecipeDrawerOpen && selectedRecipeNutrition && (
-        <RecipeNutritionDrawer
-          isOpen={isRecipeDrawerOpen}
-          onClose={() => {
-            setIsRecipeDrawerOpen(false);
-            setSelectedRecipe(null);
-            setSelectedRecipeNutrition(null);
-          }}
-          nutritionData={selectedRecipeNutrition}
-          mealName={mealName}
-          onAddToMeal={handleRecipeServingsConfirm}
-        />
       )}
     </>
   );
