@@ -27,34 +27,6 @@
 
 ## Cursor Cloud specific instructions
 
-### Services
-
-| Service | Command | Notes |
-|---|---|---|
-| Next.js dev server | `bun run dev` | Runs on port 3000 |
-| Lint | `bun run lint` | ESLint; pre-existing warnings/errors exist in the codebase |
-| Build | `bun run build` | Production build via Turbopack |
-| Format | `bun run format` | Prettier |
-
-### Environment
-
-- The app connects to a **hosted Supabase** instance (not local). Secrets `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, and `USDA_API_KEY` must be injected as environment variables.
-- A `.env.local` file must be created from those env vars for Next.js to pick them up at runtime. The update script handles this automatically.
-- Bun is installed at `~/.bun/bin/bun`; the update script ensures it is on `PATH`.
-
-### Supabase CLI (`bun supabase`)
-
-- The Supabase CLI is installed as a project dependency and invoked via `bun supabase`.
-- Remote operations (e.g., `bun supabase migration list`, `bun supabase db push`) require:
-  - `SUPABASE_ACCESS_TOKEN` env var — a [personal access token](https://supabase.com/dashboard/account/tokens)
-  - `SUPABASE_DB_PASSWORD` env var — the project's database password
-- The update script automatically links to the remote project (`vssiwhmljayimlodubwn`) when `SUPABASE_ACCESS_TOKEN` is available.
-- Common commands:
-  - `bun supabase migration list` — list local and remote migrations
-  - `bun supabase db push` — push local migrations to the remote DB
-  - `bun supabase migration new <name>` — create a new migration file
-
-### Gotchas
-
-- The hosted Supabase instance enforces email confirmation on sign-up. To test auth flows, either confirm users via the Supabase MCP/dashboard or use an already-confirmed account.
-- `bun run lint` exits non-zero due to pre-existing `@typescript-eslint/no-explicit-any` and `react/no-unescaped-entities` errors — this is expected and not caused by new changes.
+- The hosted Supabase instance enforces email confirmation on sign-up. To test auth flows, use the pre-confirmed login
+  - Username: testuser@usemunchy.com
+  - Password: munchyisthebest
