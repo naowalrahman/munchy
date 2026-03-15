@@ -3,8 +3,9 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/utils/supabase/server";
 import AgentChat from "@/components/agent/AgentChat";
 import { ApiKeyMissing } from "@/components/agent/ApiKeyMissing";
+import { Metadata } from "next";
 
-export const metadata = {
+export const metadata: Metadata = {
   title: "Munchy AI Agent",
   description: "Chat with Munchy AI to log foods and get nutrition help",
 };
