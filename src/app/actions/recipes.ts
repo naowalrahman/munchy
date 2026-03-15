@@ -3,10 +3,6 @@
 import { createClient } from "@/utils/supabase/server";
 import { revalidatePath } from "next/cache";
 
-// ============================================================================
-// Types
-// ============================================================================
-
 export interface Recipe {
   id: string;
   user_id: string;
@@ -29,6 +25,14 @@ export interface RecipeItem {
   protein: number | null;
   carbohydrates: number | null;
   total_fat: number | null;
+  fiber: number | null;
+  sugars: number | null;
+  sodium: number | null;
+  potassium: number | null;
+  calcium: number | null;
+  iron: number | null;
+  vitamin_c: number | null;
+  vitamin_a: number | null;
   barcode: string | null;
   sort_order: number;
   created_at: string;
@@ -55,6 +59,14 @@ export interface AddRecipeItemInput {
   protein: number | null;
   carbohydrates: number | null;
   total_fat: number | null;
+  fiber?: number | null;
+  sugars?: number | null;
+  sodium?: number | null;
+  potassium?: number | null;
+  calcium?: number | null;
+  iron?: number | null;
+  vitamin_c?: number | null;
+  vitamin_a?: number | null;
   barcode?: string | null;
 }
 
@@ -64,13 +76,6 @@ export interface RecipeResponse<T = Recipe | Recipe[]> {
   error?: string;
 }
 
-// ============================================================================
-// Server Actions
-// ============================================================================
-
-/**
- * Get all recipes for the current user
- */
 export async function getRecipes(): Promise<RecipeResponse<Recipe[]>> {
   try {
     const supabase = await createClient();
@@ -97,7 +102,6 @@ export async function getRecipes(): Promise<RecipeResponse<Recipe[]>> {
       return { success: false, error: error.message };
     }
 
-    // Map recipe_items to items and sort
     const recipes = (data || []).map((recipe) => ({
       ...recipe,
       items: (recipe.recipe_items || []).sort((a: RecipeItem, b: RecipeItem) => a.sort_order - b.sort_order),
@@ -110,9 +114,6 @@ export async function getRecipes(): Promise<RecipeResponse<Recipe[]>> {
   }
 }
 
-/**
- * Get a single recipe by ID
- */
 export async function getRecipe(id: string): Promise<RecipeResponse<Recipe>> {
   try {
     const supabase = await createClient();
@@ -152,9 +153,6 @@ export async function getRecipe(id: string): Promise<RecipeResponse<Recipe>> {
   }
 }
 
-/**
- * Create a new recipe
- */
 export async function createRecipe(input: CreateRecipeInput): Promise<RecipeResponse<Recipe>> {
   try {
     const supabase = await createClient();
@@ -191,9 +189,6 @@ export async function createRecipe(input: CreateRecipeInput): Promise<RecipeResp
   }
 }
 
-/**
- * Update a recipe
- */
 export async function updateRecipe(id: string, input: UpdateRecipeInput): Promise<RecipeResponse<Recipe>> {
   try {
     const supabase = await createClient();
@@ -227,9 +222,6 @@ export async function updateRecipe(id: string, input: UpdateRecipeInput): Promis
   }
 }
 
-/**
- * Delete a recipe
- */
 export async function deleteRecipe(id: string): Promise<RecipeResponse<void>> {
   try {
     const supabase = await createClient();
@@ -257,9 +249,6 @@ export async function deleteRecipe(id: string): Promise<RecipeResponse<void>> {
   }
 }
 
-/**
- * Add an item to a recipe
- */
 export async function addRecipeItem(recipeId: string, input: AddRecipeItemInput): Promise<RecipeResponse<RecipeItem>> {
   try {
     const supabase = await createClient();
@@ -272,7 +261,6 @@ export async function addRecipeItem(recipeId: string, input: AddRecipeItemInput)
       return { success: false, error: "User not authenticated" };
     }
 
-    // Verify recipe belongs to user
     const { data: recipe, error: recipeError } = await supabase
       .from("recipes")
       .select("id")
@@ -284,7 +272,6 @@ export async function addRecipeItem(recipeId: string, input: AddRecipeItemInput)
       return { success: false, error: "Recipe not found" };
     }
 
-    // Get the max sort_order
     const { data: maxItem } = await supabase
       .from("recipe_items")
       .select("sort_order")
@@ -307,6 +294,14 @@ export async function addRecipeItem(recipeId: string, input: AddRecipeItemInput)
         protein: input.protein,
         carbohydrates: input.carbohydrates,
         total_fat: input.total_fat,
+        fiber: input.fiber ?? null,
+        sugars: input.sugars ?? null,
+        sodium: input.sodium ?? null,
+        potassium: input.potassium ?? null,
+        calcium: input.calcium ?? null,
+        iron: input.iron ?? null,
+        vitamin_c: input.vitamin_c ?? null,
+        vitamin_a: input.vitamin_a ?? null,
         barcode: input.barcode || null,
         sort_order: nextSortOrder,
       })
@@ -318,7 +313,6 @@ export async function addRecipeItem(recipeId: string, input: AddRecipeItemInput)
       return { success: false, error: error.message };
     }
 
-    // Update recipe updated_at
     await supabase.from("recipes").update({ updated_at: new Date().toISOString() }).eq("id", recipeId);
 
     revalidatePath("/recipes");
@@ -329,9 +323,6 @@ export async function addRecipeItem(recipeId: string, input: AddRecipeItemInput)
   }
 }
 
-/**
- * Update a recipe item
- */
 export async function updateRecipeItem(
   itemId: string,
   input: Partial<AddRecipeItemInput>
@@ -347,7 +338,6 @@ export async function updateRecipeItem(
       return { success: false, error: "User not authenticated" };
     }
 
-    // Verify item belongs to user's recipe
     const { data: item, error: itemError } = await supabase
       .from("recipe_items")
       .select("recipe_id, recipes!inner(user_id)")
@@ -370,7 +360,6 @@ export async function updateRecipeItem(
       return { success: false, error: error.message };
     }
 
-    // Update recipe updated_at
     await supabase.from("recipes").update({ updated_at: new Date().toISOString() }).eq("id", item.recipe_id);
 
     revalidatePath("/recipes");
@@ -381,9 +370,6 @@ export async function updateRecipeItem(
   }
 }
 
-/**
- * Delete a recipe item
- */
 export async function deleteRecipeItem(itemId: string): Promise<RecipeResponse<void>> {
   try {
     const supabase = await createClient();
@@ -396,7 +382,6 @@ export async function deleteRecipeItem(itemId: string): Promise<RecipeResponse<v
       return { success: false, error: "User not authenticated" };
     }
 
-    // Get recipe_id before deleting
     const { data: item } = await supabase
       .from("recipe_items")
       .select("recipe_id, recipes!inner(user_id)")
@@ -414,7 +399,6 @@ export async function deleteRecipeItem(itemId: string): Promise<RecipeResponse<v
       return { success: false, error: error.message };
     }
 
-    // Update recipe updated_at
     await supabase.from("recipes").update({ updated_at: new Date().toISOString() }).eq("id", item.recipe_id);
 
     revalidatePath("/recipes");

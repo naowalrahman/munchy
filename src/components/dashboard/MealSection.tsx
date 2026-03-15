@@ -1,15 +1,15 @@
 "use client";
 
 import { Box, VStack, HStack, Text, Heading, IconButton, Spinner } from "@chakra-ui/react";
-import { useState, useMemo, useCallback } from "react";
-import { FoodLogEntry, deleteFoodEntry, updateFoodEntry, deleteRecipeGroup, updateRecipeGroupServings } from "@/app/actions/foodLog";
+import { useState, useMemo } from "react";
+import { FoodLogEntry, deleteFoodEntry, updateFoodEntry, deleteRecipeGroup, expandRecipeGroup } from "@/app/actions/foodLog";
 import { getFoodNutrition, lookupBarcode, NutritionalData } from "@/app/actions/food";
+import { getNutritionMultiplier } from "@/utils/nutritionMultiplier";
 import { motion, AnimatePresence } from "framer-motion";
-import { IoAdd, IoTrash, IoPencil, IoChevronDown, IoChevronForward } from "react-icons/io5";
+import { IoAdd, IoTrash, IoPencil, IoChevronDown, IoChevronForward, IoGitBranch } from "react-icons/io5";
 import { toaster } from "@/components/ui/toaster";
 import { FoodSearchDialog } from "@/components/food-search/FoodSearchDialog";
 import { NutritionFactsDrawer } from "./NutritionFactsDrawer";
-import { RecipeNutritionDrawer } from "./RecipeNutritionDrawer";
 import { useFavorites } from "@/components/food-search/useFavorites";
 
 interface MealSectionProps {
@@ -36,8 +36,7 @@ export function MealSection({ mealName, entries, onFoodAdded, isCustom, selected
   const [isLoadingEditData, setIsLoadingEditData] = useState(false);
   const [expandedRecipes, setExpandedRecipes] = useState<Set<string>>(new Set());
   const [deletingRecipeGroupId, setDeletingRecipeGroupId] = useState<string | null>(null);
-  const [editingRecipeGroup, setEditingRecipeGroup] = useState<RecipeGroup | null>(null);
-  const [isSavingRecipeServings, setIsSavingRecipeServings] = useState(false);
+  const [expandingRecipeGroupId, setExpandingRecipeGroupId] = useState<string | null>(null);
 
   const { getFavorite } = useFavorites();
 
@@ -184,105 +183,51 @@ export function MealSection({ mealName, entries, onFoodAdded, isCustom, selected
     }
   };
 
-  const handleEditRecipeGroup = (group: RecipeGroup) => {
-    setEditingRecipeGroup(group);
-  };
+  const handleExpandRecipeGroup = async (group: RecipeGroup) => {
+    if (!confirm("Expand this recipe into individual items? This cannot be undone.")) return;
 
-  const handleUpdateRecipeServings = async (servingsConsumed: number) => {
-    if (!editingRecipeGroup) return;
-
-    setIsSavingRecipeServings(true);
+    setExpandingRecipeGroupId(group.groupId);
     try {
-      const response = await updateRecipeGroupServings(editingRecipeGroup.groupId, servingsConsumed);
+      const response = await expandRecipeGroup(group.groupId);
       if (response.success) {
         toaster.create({
-          title: "Servings updated",
-          description: `Recipe servings updated to ${servingsConsumed}`,
+          title: "Recipe expanded",
+          description: `"${group.recipeName}" expanded into ${group.entries.length} individual items`,
           type: "success",
         });
         onFoodAdded();
-        setEditingRecipeGroup(null);
       } else {
         toaster.create({
-          title: "Failed to update",
+          title: "Failed to expand",
           description: response.error || "Something went wrong",
           type: "error",
         });
       }
     } catch (error) {
-      console.error("Error updating recipe servings:", error);
+      console.error("Error expanding recipe group:", error);
       toaster.create({
         title: "Error",
-        description: "Failed to update servings",
+        description: "Failed to expand recipe",
         type: "error",
       });
     } finally {
-      setIsSavingRecipeServings(false);
+      setExpandingRecipeGroupId(null);
     }
-  };
-
-  // Helper function to normalize unit names for comparison
-  const normalizeUnit = (unit: string): string => {
-    const unitMap: Record<string, string> = {
-      g: "g",
-      gram: "g",
-      grams: "g",
-      oz: "oz",
-      ounce: "oz",
-      ounces: "oz",
-      lb: "lb",
-      pound: "lb",
-      pounds: "lb",
-      ml: "ml",
-      milliliter: "ml",
-      milliliters: "ml",
-      cup: "cup",
-      cups: "cup",
-      tbsp: "tbsp",
-      tablespoon: "tbsp",
-      tablespoons: "tbsp",
-      tsp: "tsp",
-      teaspoon: "tsp",
-      teaspoons: "tsp",
-      piece: "piece",
-      pieces: "piece",
-      slice: "slice",
-      slices: "slice",
-    };
-
-    const normalized = unit.toLowerCase().trim();
-    return unitMap[normalized] || normalized;
   };
 
   const handleUpdateEntry = async (servingAmount: number, servingUnit: string, nutritionData: NutritionalData) => {
     if (!editingEntry) return;
 
     try {
-      // Calculate nutrition values based on the new amount
-      let multiplier = servingAmount;
-
-      const servingSizeForCalc = nutritionData.servingSize || 100;
-      const servingSizeUnitNormalized = normalizeUnit(nutritionData.servingSizeUnit || "g");
-      const currentUnitNormalized = normalizeUnit(servingUnit);
-
-      if (servingSizeForCalc > 0) {
-        if (currentUnitNormalized === "serving") {
-          // User selected "serving" - multiplier is just the amount
-          multiplier = servingAmount;
-        } else if (currentUnitNormalized === servingSizeUnitNormalized) {
-          // User selected the same unit as the serving size (e.g., "cup" when serving is "cup")
-          // Convert to servings: if 1 serving = 1 cup, then 2 cups = 2 servings
-          multiplier = servingAmount / servingSizeForCalc;
-        }
-      }
+      const m = getNutritionMultiplier(servingAmount, servingUnit, nutritionData.servingSize, nutritionData.servingSizeUnit);
 
       const response = await updateFoodEntry(editingEntry.id, {
         serving_amount: servingAmount,
         serving_unit: servingUnit,
-        calories: nutritionData.calories * multiplier,
-        protein: nutritionData.protein ? nutritionData.protein.amount * multiplier : null,
-        carbohydrates: nutritionData.carbohydrates ? nutritionData.carbohydrates.amount * multiplier : null,
-        total_fat: nutritionData.totalFat ? nutritionData.totalFat.amount * multiplier : null,
+        calories: nutritionData.calories * m,
+        protein: nutritionData.protein ? nutritionData.protein.amount * m : null,
+        carbohydrates: nutritionData.carbohydrates ? nutritionData.carbohydrates.amount * m : null,
+        total_fat: nutritionData.totalFat ? nutritionData.totalFat.amount * m : null,
       });
 
       if (response.success) {
@@ -311,7 +256,7 @@ export function MealSection({ mealName, entries, onFoodAdded, isCustom, selected
     }
   };
 
-  const renderFoodEntry = (entry: FoodLogEntry, showRecipeBadge = false) => (
+  const renderFoodEntry = (entry: FoodLogEntry) => (
     <HStack
       key={entry.id}
       justify="space-between"
@@ -382,7 +327,6 @@ export function MealSection({ mealName, entries, onFoodAdded, isCustom, selected
           borderColor="brand.500/30"
           overflow="hidden"
         >
-          {/* Collapsed Header */}
           <HStack
             p={3}
             _hover={{ bg: "background.canvas" }}
@@ -420,19 +364,20 @@ export function MealSection({ mealName, entries, onFoodAdded, isCustom, selected
                 )}
               </HStack>
               <Text color="text.muted" fontSize="xs">
-                {group.entries.length} items • {groupCalories.toFixed(0)} cal • P{" "}
-                {groupProtein.toFixed(0)}g • C {groupCarbs.toFixed(0)}g • F {groupFat.toFixed(0)}g
+                {group.entries.length} items · {groupCalories.toFixed(0)} cal · P{" "}
+                {groupProtein.toFixed(0)}g · C {groupCarbs.toFixed(0)}g · F {groupFat.toFixed(0)}g
               </Text>
             </VStack>
             <HStack gap={1} onClick={(e) => e.stopPropagation()}>
               <IconButton
-                aria-label="Edit recipe servings"
+                aria-label="Expand into individual items"
                 size="sm"
                 variant="ghost"
                 colorPalette="blue"
-                onClick={() => handleEditRecipeGroup(group)}
+                onClick={() => handleExpandRecipeGroup(group)}
+                loading={expandingRecipeGroupId === group.groupId}
               >
-                <IoPencil />
+                <IoGitBranch />
               </IconButton>
               <IconButton
                 aria-label="Delete recipe"
@@ -447,7 +392,6 @@ export function MealSection({ mealName, entries, onFoodAdded, isCustom, selected
             </HStack>
           </HStack>
 
-          {/* Expanded Content */}
           <AnimatePresence>
             {isExpanded && (
               <motion.div
@@ -458,16 +402,28 @@ export function MealSection({ mealName, entries, onFoodAdded, isCustom, selected
                 style={{ overflow: "hidden" }}
               >
                 <VStack align="stretch" gap={2} p={3} pt={0}>
-                  {group.entries.map((entry, index) => (
-                    <Box
+                  {group.entries.map((entry) => (
+                    <HStack
                       key={entry.id}
+                      p={3}
+                      ml={2}
                       pl={6}
                       borderLeftWidth="2px"
                       borderLeftColor="brand.500/30"
-                      ml={2}
+                      bg="background.subtle"
+                      borderRadius="md"
+                      borderWidth="1px"
+                      borderColor="border.muted"
                     >
-                      {renderFoodEntry(entry)}
-                    </Box>
+                      <VStack align="start" gap={1} flex="1">
+                        <Text color="text.default" fontWeight="medium" fontSize="sm">
+                          {entry.food_description}
+                        </Text>
+                        <Text color="text.muted" fontSize="xs">
+                          {entry.serving_amount} {entry.serving_unit} · {entry.calories.toFixed(0)} cal
+                        </Text>
+                      </VStack>
+                    </HStack>
                   ))}
                 </VStack>
               </motion.div>
@@ -493,7 +449,6 @@ export function MealSection({ mealName, entries, onFoodAdded, isCustom, selected
         }}
       >
         <VStack align="stretch" gap={4}>
-          {/* Header & Summary */}
           <HStack justify="space-between" align="center" gap={3} mb={1}>
             <HStack flex="1" gap={{ base: 2, md: 4 }} overflow="hidden">
               <Heading size="md" color="text.default" whiteSpace="nowrap">
@@ -548,13 +503,9 @@ export function MealSection({ mealName, entries, onFoodAdded, isCustom, selected
             </IconButton>
           </HStack>
 
-          {/* Food Entries List */}
           <VStack align="stretch" gap={2}>
             <AnimatePresence>
-              {/* Render recipe groups first */}
               {recipeGroups.map((group) => renderRecipeGroup(group))}
-
-              {/* Then render standalone entries */}
               {standaloneEntries.map((entry) => (
                 <MotionBox
                   key={entry.id}
@@ -569,7 +520,6 @@ export function MealSection({ mealName, entries, onFoodAdded, isCustom, selected
             </AnimatePresence>
           </VStack>
 
-          {/* Empty State */}
           {entries.length === 0 && (
             <Box
               py={8}
@@ -589,7 +539,6 @@ export function MealSection({ mealName, entries, onFoodAdded, isCustom, selected
         </VStack>
       </Box>
 
-      {/* Food Search Dialog */}
       {isSearchOpen && (
         <FoodSearchDialog
           isOpen={isSearchOpen}
@@ -600,7 +549,6 @@ export function MealSection({ mealName, entries, onFoodAdded, isCustom, selected
         />
       )}
 
-      {/* Edit Nutrition Facts Drawer */}
       {isLoadingEditData ? (
         <>
           <Box position="fixed" top={0} left={0} right={0} bottom={0} bg="blackAlpha.700" zIndex={999} />
@@ -628,33 +576,6 @@ export function MealSection({ mealName, entries, onFoodAdded, isCustom, selected
         )
       )}
 
-      {/* Edit Recipe Servings Drawer */}
-      {editingRecipeGroup && (
-        <RecipeNutritionDrawer
-          isOpen={!!editingRecipeGroup}
-          onClose={() => setEditingRecipeGroup(null)}
-          mealName={mealName}
-          nutritionData={{
-            recipeName: editingRecipeGroup.recipeName,
-            servings: 1, // The entries are already per-serving
-            calories: editingRecipeGroup.entries.reduce((sum, e) => sum + e.calories, 0),
-            protein: { name: "Protein", amount: editingRecipeGroup.entries.reduce((sum, e) => sum + (e.protein || 0), 0), unit: "g" },
-            carbohydrates: { name: "Carbohydrates", amount: editingRecipeGroup.entries.reduce((sum, e) => sum + (e.carbohydrates || 0), 0), unit: "g" },
-            totalFat: { name: "Total Fat", amount: editingRecipeGroup.entries.reduce((sum, e) => sum + (e.total_fat || 0), 0), unit: "g" },
-            fiber: null,
-            sugars: null,
-            sodium: null,
-            potassium: null,
-            calcium: null,
-            iron: null,
-            vitaminC: null,
-            vitaminA: null,
-          }}
-          onAddToMeal={handleUpdateRecipeServings}
-          isEditMode
-          initialServingsConsumed={editingRecipeGroup.entries[0]?.servings_consumed || 1}
-        />
-      )}
     </>
   );
 }

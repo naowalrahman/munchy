@@ -2,7 +2,7 @@
 
 import { Box, HStack, Heading, Tabs, Text, VStack } from "@chakra-ui/react";
 import { motion } from "framer-motion";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { IoCalculator, IoCreate } from "react-icons/io5";
 
 import { getUserGoals, updateUserGoals } from "@/app/actions/userGoals";
@@ -58,7 +58,7 @@ export function GoalSettings({ onGoalsUpdated }: GoalSettingsProps) {
   const [calculatedCalories, setCalculatedCalories] = useState<number | null>(null);
   const [calculatedMacros, setCalculatedMacros] = useState<MacroBreakdown | null>(null);
 
-  const getMetricInputs = (): MetricInputs | null => {
+  const getMetricInputs = useCallback((): MetricInputs | null => {
     const ageNumber = parseInt(age);
     const weightKg = weightUnit === "kg" ? parseFloat(weight) : parseFloat(weightLbs) / 2.20462;
 
@@ -86,14 +86,12 @@ export function GoalSettings({ onGoalsUpdated }: GoalSettingsProps) {
       heightCm: heightCmValue,
       age: ageNumber,
     };
-  };
+  }, [age, weight, weightUnit, weightLbs, height, heightUnit, heightFeet, heightInches]);
 
   useEffect(() => {
     loadGoals();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Recalculate when calculator inputs change
   useEffect(() => {
     const metricInputs = getMetricInputs();
 
@@ -114,19 +112,7 @@ export function GoalSettings({ onGoalsUpdated }: GoalSettingsProps) {
       setCalculatedCalories(null);
       setCalculatedMacros(null);
     }
-  }, [
-    weight,
-    weightLbs,
-    weightUnit,
-    height,
-    heightFeet,
-    heightInches,
-    heightUnit,
-    age,
-    sex,
-    activityLevel,
-    weightGoal,
-  ]);
+  }, [getMetricInputs, sex, activityLevel, weightGoal]);
 
   const loadGoals = async () => {
     setLoading(true);

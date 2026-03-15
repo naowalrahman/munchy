@@ -7,9 +7,9 @@ import { IoBarcodeOutline, IoClose, IoHeart, IoRestaurant, IoSearch } from "reac
 import type { FoodSearchResult, NutritionalData } from "@/app/actions/food";
 import { getFoodNutrition, lookupBarcode } from "@/app/actions/food";
 import { logFoodEntry } from "@/app/actions/foodLog";
+import { getNutritionMultiplier } from "@/utils/nutritionMultiplier";
 import { toaster } from "@/components/ui/toaster";
 import { NutritionFactsDrawer } from "../dashboard/NutritionFactsDrawer";
-import { RecipeNutritionDrawer, RecipeNutritionData } from "../dashboard/RecipeNutritionDrawer";
 import { Recipe } from "@/app/actions/recipes";
 import { FavoritesSection } from "./FavoritesSection";
 import { RecipesSection } from "./RecipesSection";
@@ -22,38 +22,6 @@ import { useFoodSearch } from "./useFoodSearch";
 import type { FavoritedFood, FoodSearchDialogProps, InputMode, StagedFood } from "./types";
 
 const MotionBox = motion.create(Box);
-
-const normalizeUnit = (unit: string): string => {
-  const unitMap: Record<string, string> = {
-    g: "g",
-    gram: "g",
-    grams: "g",
-    oz: "oz",
-    ounce: "oz",
-    ounces: "oz",
-    lb: "lb",
-    pound: "lb",
-    pounds: "lb",
-    ml: "ml",
-    milliliter: "ml",
-    milliliters: "ml",
-    cup: "cup",
-    cups: "cup",
-    tbsp: "tbsp",
-    tablespoon: "tbsp",
-    tablespoons: "tbsp",
-    tsp: "tsp",
-    teaspoon: "tsp",
-    teaspoons: "tsp",
-    piece: "piece",
-    pieces: "piece",
-    slice: "slice",
-    slices: "slice",
-  };
-
-  const normalized = unit.toLowerCase().trim();
-  return unitMap[normalized] || normalized;
-};
 
 export function FoodSearchDialog({
   isOpen,
@@ -74,8 +42,6 @@ export function FoodSearchDialog({
   const [selectedRecipeGroupId, setSelectedRecipeGroupId] = useState<string | null>(null);
   const [selectedRecipeName, setSelectedRecipeName] = useState<string | null>(null);
   const [selectedRecipe, setSelectedRecipe] = useState<Recipe | null>(null);
-  const [selectedRecipeNutrition, setSelectedRecipeNutrition] = useState<RecipeNutritionData | null>(null);
-  const [isRecipeDrawerOpen, setIsRecipeDrawerOpen] = useState(false);
 
   const { searchQuery, setSearchQuery, searchResults, isSearching, resetSearch } = useFoodSearch(inputMode);
   const { favorites, isFavorited, toggleFavorite, getFavorite, updateFavoriteCache } = useFavorites();
@@ -208,18 +174,7 @@ export function FoodSearchDialog({
 
     try {
       for (const item of stagedItems) {
-        let multiplier = item.servingAmount;
-        const servingSizeForCalc = item.nutritionData.servingSize || 100;
-        const servingSizeUnitNormalized = normalizeUnit(item.nutritionData.servingSizeUnit || "g");
-        const currentUnitNormalized = normalizeUnit(item.servingUnit);
-
-        if (servingSizeForCalc > 0) {
-          if (currentUnitNormalized === "serving") {
-            multiplier = item.servingAmount;
-          } else if (currentUnitNormalized === servingSizeUnitNormalized) {
-            multiplier = item.servingAmount / servingSizeForCalc;
-          }
-        }
+        const m = getNutritionMultiplier(item.servingAmount, item.servingUnit, item.nutritionData.servingSize, item.nutritionData.servingSizeUnit);
 
         const response = await logFoodEntry({
           meal_name: mealName,
@@ -227,11 +182,11 @@ export function FoodSearchDialog({
           food_description: item.nutritionData.description,
           serving_amount: item.servingAmount,
           serving_unit: item.servingUnit,
-          calories: item.nutritionData.calories * multiplier,
-          protein: item.nutritionData.protein ? item.nutritionData.protein.amount * multiplier : null,
-          carbohydrates: item.nutritionData.carbohydrates ? item.nutritionData.carbohydrates.amount * multiplier : null,
+          calories: item.nutritionData.calories * m,
+          protein: item.nutritionData.protein ? item.nutritionData.protein.amount * m : null,
+          carbohydrates: item.nutritionData.carbohydrates ? item.nutritionData.carbohydrates.amount * m : null,
           date: selectedDate,
-          total_fat: item.nutritionData.totalFat ? item.nutritionData.totalFat.amount * multiplier : null,
+          total_fat: item.nutritionData.totalFat ? item.nutritionData.totalFat.amount * m : null,
           barcode: item.barcode,
           recipe_group_id: recipeGroupId,
           recipe_name: recipeName,
@@ -298,8 +253,6 @@ export function FoodSearchDialog({
     setSelectedRecipeGroupId(null);
     setSelectedRecipeName(null);
     setSelectedRecipe(null);
-    setSelectedRecipeNutrition(null);
-    setIsRecipeDrawerOpen(false);
     onClose();
   };
 
@@ -318,13 +271,12 @@ export function FoodSearchDialog({
           ? "Favorites"
           : "Recipes";
 
-  const handleRecipeServingsConfirm = (servingsConsumed: number) => {
+  const handleRecipeServingsConfirm: typeof stageFood = (servingAmount) => {
     if (!selectedRecipe) return;
 
-    const scaleFactor = servingsConsumed / (selectedRecipe.servings || 1);
+    const scaleFactor = servingAmount / (selectedRecipe.servings || 1);
     const items = selectedRecipe.items || [];
 
-    // Create staged items with scaled nutrition
     const stagedFromRecipe: StagedFood[] = items.map((item) => ({
       id: crypto.randomUUID(),
       nutritionData: {
@@ -342,14 +294,14 @@ export function FoodSearchDialog({
         totalFat: item.total_fat
           ? { name: "Total Fat", amount: item.total_fat * scaleFactor, unit: "g" }
           : null,
-        fiber: null,
-        sugars: null,
-        sodium: null,
-        potassium: null,
-        calcium: null,
-        iron: null,
-        vitaminC: null,
-        vitaminA: null,
+        fiber: item.fiber ? { name: "Fiber", amount: item.fiber * scaleFactor, unit: "g" } : null,
+        sugars: item.sugars ? { name: "Sugars", amount: item.sugars * scaleFactor, unit: "g" } : null,
+        sodium: item.sodium ? { name: "Sodium", amount: item.sodium * scaleFactor, unit: "mg" } : null,
+        potassium: item.potassium ? { name: "Potassium", amount: item.potassium * scaleFactor, unit: "mg" } : null,
+        calcium: item.calcium ? { name: "Calcium", amount: item.calcium * scaleFactor, unit: "mg" } : null,
+        iron: item.iron ? { name: "Iron", amount: item.iron * scaleFactor, unit: "mg" } : null,
+        vitaminC: item.vitamin_c ? { name: "Vitamin C", amount: item.vitamin_c * scaleFactor, unit: "mg" } : null,
+        vitaminA: item.vitamin_a ? { name: "Vitamin A", amount: item.vitamin_a * scaleFactor, unit: "µg" } : null,
       } as NutritionalData,
       servingAmount: item.serving_amount * scaleFactor,
       servingUnit: item.serving_unit,
@@ -357,11 +309,9 @@ export function FoodSearchDialog({
     }));
 
     if (recipeMode && onRecipeItemsAdded) {
-      // In recipe mode (editing a recipe), pass items directly
       onRecipeItemsAdded(stagedFromRecipe);
       onClose();
     } else {
-      // In meal mode, stage items with recipe tracking
       setStagedItems((prev) => [...prev, ...stagedFromRecipe]);
       setSelectedRecipeGroupId(crypto.randomUUID());
       setSelectedRecipeName(selectedRecipe.name);
@@ -372,10 +322,9 @@ export function FoodSearchDialog({
       });
     }
 
-    // Close recipe drawer
-    setIsRecipeDrawerOpen(false);
+    setIsNutritionDrawerOpen(false);
+    setSelectedFood(null);
     setSelectedRecipe(null);
-    setSelectedRecipeNutrition(null);
   };
 
   if (!isOpen) return null;
@@ -513,45 +462,37 @@ export function FoodSearchDialog({
               ) : (
                 <RecipesSection
                   onRecipeSelect={(recipe) => {
-                    // Open RecipeNutritionDrawer so user can select servings
                     setSelectedRecipe(recipe);
 
-                    // Aggregate per-serving nutrition from recipe items
-                    const scaleFactor = 1 / (recipe.servings || 1);
+                    const ps = 1 / (recipe.servings || 1);
                     const items = recipe.items || [];
 
-                    const nutrition: RecipeNutritionData = {
-                      recipeName: recipe.name,
-                      servings: recipe.servings,
-                      calories: items.reduce((sum, i) => sum + i.calories * scaleFactor, 0),
-                      protein: {
-                        name: "Protein",
-                        amount: items.reduce((sum, i) => sum + (i.protein || 0) * scaleFactor, 0),
-                        unit: "g",
-                      },
-                      carbohydrates: {
-                        name: "Carbohydrates",
-                        amount: items.reduce((sum, i) => sum + (i.carbohydrates || 0) * scaleFactor, 0),
-                        unit: "g",
-                      },
-                      totalFat: {
-                        name: "Total Fat",
-                        amount: items.reduce((sum, i) => sum + (i.total_fat || 0) * scaleFactor, 0),
-                        unit: "g",
-                      },
-                      // Recipe items don't have micronutrient data
-                      fiber: null,
-                      sugars: null,
-                      sodium: null,
-                      potassium: null,
-                      calcium: null,
-                      iron: null,
-                      vitaminC: null,
-                      vitaminA: null,
+                    const agg = (field: keyof typeof items[0], name: string, unit: string) => {
+                      const total = items.reduce((s, i) => s + ((i[field] as number | null) || 0) * ps, 0);
+                      return items.some((i) => i[field] != null) ? { name, amount: total, unit } : null;
                     };
 
-                    setSelectedRecipeNutrition(nutrition);
-                    setIsRecipeDrawerOpen(true);
+                    const aggregated: NutritionalData = {
+                      fdcId: 0,
+                      description: recipe.name,
+                      servingSize: 1,
+                      servingSizeUnit: "serving",
+                      calories: items.reduce((s, i) => s + i.calories * ps, 0),
+                      protein: { name: "Protein", amount: items.reduce((s, i) => s + (i.protein || 0) * ps, 0), unit: "g" },
+                      carbohydrates: { name: "Carbohydrates", amount: items.reduce((s, i) => s + (i.carbohydrates || 0) * ps, 0), unit: "g" },
+                      totalFat: { name: "Total Fat", amount: items.reduce((s, i) => s + (i.total_fat || 0) * ps, 0), unit: "g" },
+                      fiber: agg("fiber", "Fiber", "g"),
+                      sugars: agg("sugars", "Sugars", "g"),
+                      sodium: agg("sodium", "Sodium", "mg"),
+                      potassium: agg("potassium", "Potassium", "mg"),
+                      calcium: agg("calcium", "Calcium", "mg"),
+                      iron: agg("iron", "Iron", "mg"),
+                      vitaminC: agg("vitamin_c", "Vitamin C", "mg"),
+                      vitaminA: agg("vitamin_a", "Vitamin A", "µg"),
+                    };
+
+                    setSelectedFood(aggregated);
+                    setIsNutritionDrawerOpen(true);
                   }}
                 />
               )}
@@ -601,31 +542,24 @@ export function FoodSearchDialog({
         isNutritionDrawerOpen &&
         selectedFood && (
           <NutritionFactsDrawer
-            key={selectedFood.fdcId}
+            key={`${selectedFood.fdcId}-${selectedRecipe?.id ?? "food"}`}
             nutritionData={selectedFood}
             mealName={mealName}
             isOpen={isNutritionDrawerOpen}
-            onClose={handleDrawerClose}
-            onAddToMeal={stageFood}
-            isFavorited={isFavorited(selectedFood.fdcId)}
-            onToggleFavorite={handleToggleFavoriteFromDrawer}
+            onClose={() => {
+              handleDrawerClose();
+              setSelectedRecipe(null);
+            }}
+            onAddToMeal={selectedRecipe ? handleRecipeServingsConfirm : stageFood}
+            isFavorited={selectedRecipe ? undefined : isFavorited(selectedFood.fdcId)}
+            onToggleFavorite={selectedRecipe ? undefined : handleToggleFavoriteFromDrawer}
+            subtitle={
+              selectedRecipe
+                ? `Recipe · ${selectedRecipe.servings} ${selectedRecipe.servings === 1 ? "serving" : "servings"} total`
+                : undefined
+            }
           />
         )
-      )}
-
-      {/* Recipe Nutrition Drawer */}
-      {isRecipeDrawerOpen && selectedRecipeNutrition && (
-        <RecipeNutritionDrawer
-          isOpen={isRecipeDrawerOpen}
-          onClose={() => {
-            setIsRecipeDrawerOpen(false);
-            setSelectedRecipe(null);
-            setSelectedRecipeNutrition(null);
-          }}
-          nutritionData={selectedRecipeNutrition}
-          mealName={mealName}
-          onAddToMeal={handleRecipeServingsConfirm}
-        />
       )}
     </>
   );

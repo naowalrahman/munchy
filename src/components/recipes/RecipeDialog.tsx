@@ -17,7 +17,7 @@ import { IoAdd, IoClose, IoTrash } from "react-icons/io5";
 import { toaster } from "@/components/ui/toaster";
 import {
   Recipe,
-  RecipeItem,
+  AddRecipeItemInput,
   createRecipe,
   updateRecipe,
   addRecipeItem,
@@ -25,8 +25,32 @@ import {
   getRecipe,
 } from "@/app/actions/recipes";
 import { FoodSearchDialog } from "@/components/food-search/FoodSearchDialog";
-import type { NutritionalData } from "@/app/actions/food";
+import { getNutritionMultiplier } from "@/utils/nutritionMultiplier";
 import type { StagedFood } from "@/components/food-search/types";
+
+function buildRecipeItemInput(item: StagedFood): AddRecipeItemInput {
+  const m = getNutritionMultiplier(item.servingAmount, item.servingUnit, item.nutritionData.servingSize, item.nutritionData.servingSizeUnit);
+  const n = item.nutritionData;
+  return {
+    food_fdc_id: n.fdcId,
+    food_description: n.description,
+    serving_amount: item.servingAmount,
+    serving_unit: item.servingUnit,
+    calories: n.calories * m,
+    protein: n.protein ? n.protein.amount * m : null,
+    carbohydrates: n.carbohydrates ? n.carbohydrates.amount * m : null,
+    total_fat: n.totalFat ? n.totalFat.amount * m : null,
+    fiber: n.fiber ? n.fiber.amount * m : null,
+    sugars: n.sugars ? n.sugars.amount * m : null,
+    sodium: n.sodium ? n.sodium.amount * m : null,
+    potassium: n.potassium ? n.potassium.amount * m : null,
+    calcium: n.calcium ? n.calcium.amount * m : null,
+    iron: n.iron ? n.iron.amount * m : null,
+    vitamin_c: n.vitaminC ? n.vitaminC.amount * m : null,
+    vitamin_a: n.vitaminA ? n.vitaminA.amount * m : null,
+    barcode: item.barcode,
+  };
+}
 
 const MotionBox = motion.create(Box);
 
@@ -61,14 +85,14 @@ export function RecipeDialog({
           ? { name: "Carbohydrates", amount: item.carbohydrates, unit: "g" }
           : null,
         totalFat: item.total_fat ? { name: "Total Fat", amount: item.total_fat, unit: "g" } : null,
-        fiber: null,
-        sugars: null,
-        sodium: null,
-        potassium: null,
-        calcium: null,
-        iron: null,
-        vitaminC: null,
-        vitaminA: null,
+        fiber: item.fiber ? { name: "Fiber", amount: item.fiber, unit: "g" } : null,
+        sugars: item.sugars ? { name: "Sugars", amount: item.sugars, unit: "g" } : null,
+        sodium: item.sodium ? { name: "Sodium", amount: item.sodium, unit: "mg" } : null,
+        potassium: item.potassium ? { name: "Potassium", amount: item.potassium, unit: "mg" } : null,
+        calcium: item.calcium ? { name: "Calcium", amount: item.calcium, unit: "mg" } : null,
+        iron: item.iron ? { name: "Iron", amount: item.iron, unit: "mg" } : null,
+        vitaminC: item.vitamin_c ? { name: "Vitamin C", amount: item.vitamin_c, unit: "mg" } : null,
+        vitaminA: item.vitamin_a ? { name: "Vitamin A", amount: item.vitamin_a, unit: "µg" } : null,
       },
       servingAmount: item.serving_amount,
       servingUnit: item.serving_unit,
@@ -78,21 +102,6 @@ export function RecipeDialog({
   const [servings, setServings] = useState(existingRecipe?.servings || 1);
   const [isSaving, setIsSaving] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
-
-  const normalizeUnit = (unit: string): string => {
-    const unitMap: Record<string, string> = {
-      g: "g", gram: "g", grams: "g",
-      oz: "oz", ounce: "oz", ounces: "oz",
-      lb: "lb", pound: "lb", pounds: "lb",
-      ml: "ml", milliliter: "ml", milliliters: "ml",
-      cup: "cup", cups: "cup",
-      tbsp: "tbsp", tablespoon: "tbsp", tablespoons: "tbsp",
-      tsp: "tsp", teaspoon: "tsp", teaspoons: "tsp",
-      piece: "piece", pieces: "piece",
-      slice: "slice", slices: "slice",
-    };
-    return unitMap[unit.toLowerCase().trim()] || unit.toLowerCase().trim();
-  };
 
   const handleAddItems = (stagedItems: StagedFood[]) => {
     setItems((prev) => [...prev, ...stagedItems]);
@@ -147,35 +156,9 @@ export function RecipeDialog({
           }
         }
 
-        // Add new items
         for (const item of items) {
           if (!existingItemIds.has(item.id)) {
-            let multiplier = item.servingAmount;
-            const servingSizeForCalc = item.nutritionData.servingSize || 100;
-            const servingSizeUnitNormalized = normalizeUnit(item.nutritionData.servingSizeUnit || "g");
-            const currentUnitNormalized = normalizeUnit(item.servingUnit);
-
-            if (servingSizeForCalc > 0) {
-              if (currentUnitNormalized === "serving") {
-                multiplier = item.servingAmount;
-              } else if (currentUnitNormalized === servingSizeUnitNormalized) {
-                multiplier = item.servingAmount / servingSizeForCalc;
-              }
-            }
-
-            await addRecipeItem(existingRecipe.id, {
-              food_fdc_id: item.nutritionData.fdcId,
-              food_description: item.nutritionData.description,
-              serving_amount: item.servingAmount,
-              serving_unit: item.servingUnit,
-              calories: item.nutritionData.calories * multiplier,
-              protein: item.nutritionData.protein ? item.nutritionData.protein.amount * multiplier : null,
-              carbohydrates: item.nutritionData.carbohydrates
-                ? item.nutritionData.carbohydrates.amount * multiplier
-                : null,
-              total_fat: item.nutritionData.totalFat ? item.nutritionData.totalFat.amount * multiplier : null,
-              barcode: item.barcode,
-            });
+            await addRecipeItem(existingRecipe.id, buildRecipeItemInput(item));
           }
         }
 
@@ -204,34 +187,8 @@ export function RecipeDialog({
 
         const recipe = response.data as Recipe;
 
-        // Add all items
         for (const item of items) {
-          let multiplier = item.servingAmount;
-          const servingSizeForCalc = item.nutritionData.servingSize || 100;
-          const servingSizeUnitNormalized = normalizeUnit(item.nutritionData.servingSizeUnit || "g");
-          const currentUnitNormalized = normalizeUnit(item.servingUnit);
-
-          if (servingSizeForCalc > 0) {
-            if (currentUnitNormalized === "serving") {
-              multiplier = item.servingAmount;
-            } else if (currentUnitNormalized === servingSizeUnitNormalized) {
-              multiplier = item.servingAmount / servingSizeForCalc;
-            }
-          }
-
-          await addRecipeItem(recipe.id, {
-            food_fdc_id: item.nutritionData.fdcId,
-            food_description: item.nutritionData.description,
-            serving_amount: item.servingAmount,
-            serving_unit: item.servingUnit,
-            calories: item.nutritionData.calories * multiplier,
-            protein: item.nutritionData.protein ? item.nutritionData.protein.amount * multiplier : null,
-            carbohydrates: item.nutritionData.carbohydrates
-              ? item.nutritionData.carbohydrates.amount * multiplier
-              : null,
-            total_fat: item.nutritionData.totalFat ? item.nutritionData.totalFat.amount * multiplier : null,
-            barcode: item.barcode,
-          });
+          await addRecipeItem(recipe.id, buildRecipeItemInput(item));
         }
 
         // Fetch created recipe with items
@@ -261,20 +218,8 @@ export function RecipeDialog({
   };
 
   const totalCalories = items.reduce((sum, item) => {
-    let multiplier = item.servingAmount;
-    const servingSizeForCalc = item.nutritionData.servingSize || 100;
-    const servingSizeUnitNormalized = normalizeUnit(item.nutritionData.servingSizeUnit || "g");
-    const currentUnitNormalized = normalizeUnit(item.servingUnit);
-
-    if (servingSizeForCalc > 0) {
-      if (currentUnitNormalized === "serving") {
-        multiplier = item.servingAmount;
-      } else if (currentUnitNormalized === servingSizeUnitNormalized) {
-        multiplier = item.servingAmount / servingSizeForCalc;
-      }
-    }
-
-    return sum + item.nutritionData.calories * multiplier;
+    const m = getNutritionMultiplier(item.servingAmount, item.servingUnit, item.nutritionData.servingSize, item.nutritionData.servingSizeUnit);
+    return sum + item.nutritionData.calories * m;
   }, 0);
 
   if (!isOpen) return null;
@@ -429,20 +374,7 @@ export function RecipeDialog({
 
             <AnimatePresence>
               {items.map((item) => {
-                let multiplier = item.servingAmount;
-                const servingSizeForCalc = item.nutritionData.servingSize || 100;
-                const servingSizeUnitNormalized = normalizeUnit(item.nutritionData.servingSizeUnit || "g");
-                const currentUnitNormalized = normalizeUnit(item.servingUnit);
-
-                if (servingSizeForCalc > 0) {
-                  if (currentUnitNormalized === "serving") {
-                    multiplier = item.servingAmount;
-                  } else if (currentUnitNormalized === servingSizeUnitNormalized) {
-                    multiplier = item.servingAmount / servingSizeForCalc;
-                  }
-                }
-
-                const itemCalories = item.nutritionData.calories * multiplier;
+                const itemCalories = item.nutritionData.calories * getNutritionMultiplier(item.servingAmount, item.servingUnit, item.nutritionData.servingSize, item.nutritionData.servingSizeUnit);
 
                 return (
                   <MotionBox

@@ -4,6 +4,7 @@ import { Box, VStack, HStack, Text, Button, Heading, Separator, Grid, useBreakpo
 import { useState, useCallback } from "react";
 import { NutritionalData } from "@/app/actions/food";
 import { ServingSizeControl } from "./ServingSizeControl";
+import { getNutritionMultiplier } from "@/utils/nutritionMultiplier";
 import { motion, AnimatePresence } from "framer-motion";
 import { IoClose, IoHeart, IoHeartOutline } from "react-icons/io5";
 
@@ -15,11 +16,10 @@ export interface NutritionFactsDrawerProps {
   onAddToMeal: (servingAmount: number, servingUnit: string, nutritionData: NutritionalData) => void;
   isFavorited?: boolean;
   onToggleFavorite?: () => void;
-  // Edit mode props
+  subtitle?: string;
   isEditMode?: boolean;
   initialServingAmount?: number;
   initialServingUnit?: string;
-  editEntryId?: string;
 }
 
 const MotionBox = motion.create(Box);
@@ -32,6 +32,7 @@ export function NutritionFactsDrawer({
   onAddToMeal,
   isFavorited,
   onToggleFavorite,
+  subtitle,
   isEditMode = false,
   initialServingAmount = 1,
   initialServingUnit = "serving",
@@ -39,46 +40,12 @@ export function NutritionFactsDrawer({
   const [servingAmount, setServingAmount] = useState(isEditMode ? initialServingAmount : 1);
   const [servingUnit, setServingUnit] = useState(isEditMode ? initialServingUnit : "serving");
 
-  // Used for motion animations only
   const isMobile = useBreakpointValue({ base: true, md: false }) ?? false;
 
   const handleServingChange = useCallback((amount: number, unit: string) => {
     setServingAmount(amount);
     setServingUnit(unit);
   }, []);
-
-  // Helper function to normalize unit names for comparison
-  const normalizeUnit = (unit: string): string => {
-    const unitMap: Record<string, string> = {
-      g: "g",
-      gram: "g",
-      grams: "g",
-      oz: "oz",
-      ounce: "oz",
-      ounces: "oz",
-      lb: "lb",
-      pound: "lb",
-      pounds: "lb",
-      ml: "ml",
-      milliliter: "ml",
-      milliliters: "ml",
-      cup: "cup",
-      cups: "cup",
-      tbsp: "tbsp",
-      tablespoon: "tbsp",
-      tablespoons: "tbsp",
-      tsp: "tsp",
-      teaspoon: "tsp",
-      teaspoons: "tsp",
-      piece: "piece",
-      pieces: "piece",
-      slice: "slice",
-      slices: "slice",
-    };
-
-    const normalized = unit.toLowerCase().trim();
-    return unitMap[normalized] || normalized;
-  };
 
   if (!isOpen || !nutritionData) return null;
 
@@ -87,48 +54,19 @@ export function NutritionFactsDrawer({
     onClose();
   };
 
-  const calculateAdjustedValue = (value: number | null | undefined): number => {
-    if (value === null || value === undefined) return 0;
-
-    // Calculate multiplier based on unit
-    let multiplier = servingAmount;
-
-    const servingSizeForCalc = nutritionData.servingSize || 100;
-    const servingSizeUnitNormalized = normalizeUnit(nutritionData.servingSizeUnit || "g");
-    const currentUnitNormalized = normalizeUnit(servingUnit);
-
-    if (servingSizeForCalc > 0) {
-      if (currentUnitNormalized === "serving") {
-        // User selected "serving" - multiplier is just the amount
-        multiplier = servingAmount;
-      } else if (currentUnitNormalized === servingSizeUnitNormalized) {
-        // User selected the same unit as the serving size (e.g., "cup" when serving is "cup")
-        // Convert to servings: if 1 serving = 1 cup, then 2 cups = 2 servings
-        multiplier = servingAmount / servingSizeForCalc;
-      }
-      // If units don't match and it's not "serving", we can't convert (shouldn't happen with our UI)
-    }
-
-    return value * multiplier;
-  };
+  const multiplier = getNutritionMultiplier(servingAmount, servingUnit, nutritionData.servingSize, nutritionData.servingSizeUnit);
 
   const formatNutrientValue = (value: number | null | undefined): string => {
     if (value === null || value === undefined) return "0";
-    const adjusted = calculateAdjustedValue(value);
+    const adjusted = value * multiplier;
     return adjusted < 1 ? adjusted.toFixed(2) : adjusted.toFixed(1);
   };
 
-  // For initial display, we start with 1 serving (unless in edit mode)
   const defaultServingAmount = isEditMode ? initialServingAmount : 1;
   const defaultServingUnit = isEditMode ? initialServingUnit : "serving";
 
-  // Use provided serving size or default to 100g
-  const effectiveServingSize = nutritionData.servingSize || 100;
-  const effectiveServingSizeUnit = normalizeUnit(nutritionData.servingSizeUnit || "g");
-
   const content = (
     <VStack align="stretch" gap={{ base: 3, md: 4 }} h="full">
-      {/* Header */}
       <HStack justify="space-between" align="center">
         <Heading size={{ base: "md", md: "lg" }} color="text.default">
           Nutrition Facts
@@ -151,33 +89,30 @@ export function NutritionFactsDrawer({
         </HStack>
       </HStack>
 
-      {/* Food Description */}
       <Box>
         <Text fontSize={{ base: "lg", md: "xl" }} fontWeight="semibold" color="text.default">
           {nutritionData.description}
         </Text>
-        {nutritionData.brandName && (
+        {(subtitle || nutritionData.brandName) && (
           <Text fontSize="sm" color="text.muted" mt={1}>
-            {nutritionData.brandName}
+            {subtitle || nutritionData.brandName}
           </Text>
         )}
       </Box>
 
       <Separator />
 
-      {/* Serving Size Control */}
       <ServingSizeControl
         key={`${nutritionData.fdcId}-${defaultServingAmount}-${defaultServingUnit}`}
         defaultAmount={defaultServingAmount}
         defaultUnit={defaultServingUnit}
-        servingSize={effectiveServingSize}
-        servingSizeUnit={effectiveServingSizeUnit}
+        servingSize={nutritionData.servingSize}
+        servingSizeUnit={nutritionData.servingSizeUnit}
         onChange={handleServingChange}
       />
 
       <Separator />
 
-      {/* Nutrition Label */}
       <Box
         bg="background.subtle"
         borderRadius="lg"
@@ -188,7 +123,6 @@ export function NutritionFactsDrawer({
         overflowY="auto"
       >
         <VStack align="stretch" gap={3}>
-          {/* Calories */}
           <Box>
             <Text fontSize="sm" color="text.muted" fontWeight="medium">
               CALORIES
@@ -200,7 +134,6 @@ export function NutritionFactsDrawer({
 
           <Separator />
 
-          {/* Macronutrients */}
           <VStack align="stretch" gap={2}>
             <Text fontSize="sm" fontWeight="bold" color="text.muted">
               MACRONUTRIENTS
@@ -240,12 +173,11 @@ export function NutritionFactsDrawer({
 
           <Separator />
 
-          {/* Micronutrients */}
           <VStack align="stretch" gap={2} pt={2}>
             <Text fontSize="sm" fontWeight="bold" color="text.muted">
               VITAMINS & MINERALS
             </Text>
-            
+
             <Grid templateColumns="1fr auto" gap={2}>
               {nutritionData.sodium && (
                 <>
@@ -305,7 +237,6 @@ export function NutritionFactsDrawer({
         </VStack>
       </Box>
 
-      {/* Add/Update Button */}
       <Button
         colorPalette="brand"
         size={{ base: "md", md: "lg" }}
@@ -329,7 +260,6 @@ export function NutritionFactsDrawer({
     <AnimatePresence>
       {isOpen && (
         <>
-          {/* Backdrop */}
           <MotionBox
             position="fixed"
             top={0}
@@ -345,7 +275,6 @@ export function NutritionFactsDrawer({
             transition={{ duration: 0.2 }}
           />
 
-          {/* Drawer/Modal Content */}
           <MotionBox
             position="fixed"
             top={0}

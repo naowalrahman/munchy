@@ -10,11 +10,11 @@ import {
   Text,
   VStack,
 } from "@chakra-ui/react";
-import { useCallback, useState } from "react";
+import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { IoAdd, IoPencil, IoTrash } from "react-icons/io5";
 import { toaster } from "@/components/ui/toaster";
-import { Recipe, deleteRecipe, getRecipes } from "@/app/actions/recipes";
+import { Recipe, deleteRecipe } from "@/app/actions/recipes";
 import { RecipeDialog } from "@/components/recipes/RecipeDialog";
 import { RecipeDetailDialog } from "@/components/recipes/RecipeDetailDialog";
 
@@ -31,12 +31,6 @@ export default function RecipesClient({ initialRecipes }: RecipesClientProps) {
   const [viewingRecipe, setViewingRecipe] = useState<Recipe | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
-  const refreshRecipes = useCallback(async () => {
-    const response = await getRecipes();
-    if (response.success && response.data) {
-      setRecipes(response.data);
-    }
-  }, []);
 
   const handleDelete = async (recipe: Recipe) => {
     if (!confirm(`Delete "${recipe.name}"? This cannot be undone.`)) return;

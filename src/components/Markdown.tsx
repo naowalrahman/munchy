@@ -2,7 +2,6 @@ import { Box, Code, Heading, Link, List, Table, Text, Separator, Flex, Badge } f
 import { Streamdown } from "streamdown";
 import React from "react";
 import { liquidGlassStyles } from "@/utils/liquidGlassStyles";
-import { codeToHtml } from "shiki";
 
 const components = {
   h1: ({ children }: { children: React.ReactNode }) => (
@@ -150,7 +149,7 @@ const components = {
 
 export function Markdown({ children }: { children: string }) {
   return (
-    <Streamdown mode="static" components={components as any} shikiTheme={["github-light", "github-dark"]}>
+    <Streamdown mode="static" components={components as unknown as Record<string, React.ComponentType>} shikiTheme={["github-light", "github-dark"]}>
       {children}
     </Streamdown>
   );

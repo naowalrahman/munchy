@@ -40,7 +40,7 @@ export function ApiKeyMissing() {
             </Link>
 
             <Text fontSize="sm" color="text.muted">
-              Don't have an API key?{" "}
+              Don&apos;t have an API key?{" "}
               <ChakraLink
                 href="https://console.groq.com/keys"
                 target="_blank"

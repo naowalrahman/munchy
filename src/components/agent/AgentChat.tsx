@@ -5,7 +5,6 @@ import { DisplayMessage } from "@/utils/agent/model";
 import { Box, Button, Flex, Heading, HStack, IconButton, Input, Spinner, Text, VStack } from "@chakra-ui/react";
 import { AnimatePresence } from "framer-motion";
 import { useCallback, useRef, useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 import { AgentInputItem } from "@openai/agents";
 import { liquidGlassStyles } from "@/utils/liquidGlassStyles";
 import { MessageBubble } from "./MessageBubble";
@@ -14,7 +13,6 @@ import { FaRegEdit } from "react-icons/fa";
 import { LuSendHorizontal } from "react-icons/lu";
 
 export default function AgentChat() {
-  const router = useRouter();
   const [displayMessages, setDisplayMessages] = useState<DisplayMessage[]>(() => {
     if (typeof window !== "undefined") {
       const saved = localStorage.getItem("munchy-messages");
@@ -92,7 +90,7 @@ export default function AgentChat() {
         setDisplayMessages((prev) => [...prev, ...result.newDisplayMessages]);
         setHistory(result.history);
       }
-    } catch (error) {
+    } catch {
       setDisplayMessages((prev) => [
         ...prev,
         {
@@ -138,7 +136,7 @@ export default function AgentChat() {
                 👋
               </Text>
               <Heading size="lg" color="text.default" mb={2}>
-                Hi! I'm Munchy
+                Hi! I&apos;m Munchy
               </Heading>
               <Text color="text.muted" maxW="md" mx="auto">
                 I can help you search for foods, log your meals, check your daily nutrition, and answer questions about
