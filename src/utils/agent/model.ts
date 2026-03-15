@@ -18,7 +18,7 @@ export function createMunchyAgent(apiKey: string): Agent {
     baseURL: "https://api.groq.com/openai/v1",
   });
 
-  setDefaultOpenAIClient(groqClient);
+  setDefaultOpenAIClient(groqClient as unknown as Parameters<typeof setDefaultOpenAIClient>[0]);
 
   return new Agent({
     name: "Munchy",
