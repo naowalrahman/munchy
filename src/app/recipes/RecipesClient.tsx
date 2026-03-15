@@ -1,15 +1,6 @@
 "use client";
 
-import {
-  Box,
-  Button,
-  Container,
-  Heading,
-  HStack,
-  IconButton,
-  Text,
-  VStack,
-} from "@chakra-ui/react";
+import { Box, Button, Container, Heading, HStack, IconButton, Text, VStack } from "@chakra-ui/react";
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { IoAdd, IoPencil, IoTrash } from "react-icons/io5";
@@ -30,7 +21,6 @@ export default function RecipesClient({ initialRecipes }: RecipesClientProps) {
   const [editingRecipe, setEditingRecipe] = useState<Recipe | null>(null);
   const [viewingRecipe, setViewingRecipe] = useState<Recipe | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
-
 
   const handleDelete = async (recipe: Recipe) => {
     if (!confirm(`Delete "${recipe.name}"? This cannot be undone.`)) return;
@@ -203,10 +193,7 @@ export default function RecipesClient({ initialRecipes }: RecipesClientProps) {
                             )}
                           </HStack>
                         </VStack>
-                        <HStack
-                          gap={1}
-                          onClick={(e) => e.stopPropagation()}
-                        >
+                        <HStack gap={1} onClick={(e) => e.stopPropagation()}>
                           <IconButton
                             aria-label="Edit recipe"
                             size="sm"

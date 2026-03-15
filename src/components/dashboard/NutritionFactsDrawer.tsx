@@ -54,7 +54,12 @@ export function NutritionFactsDrawer({
     onClose();
   };
 
-  const multiplier = getNutritionMultiplier(servingAmount, servingUnit, nutritionData.servingSize, nutritionData.servingSizeUnit);
+  const multiplier = getNutritionMultiplier(
+    servingAmount,
+    servingUnit,
+    nutritionData.servingSize,
+    nutritionData.servingSizeUnit
+  );
 
   const formatNutrientValue = (value: number | null | undefined): string => {
     if (value === null || value === undefined) return "0";

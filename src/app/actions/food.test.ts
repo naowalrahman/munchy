@@ -16,7 +16,7 @@ describe("Enhanced USDA Nutrient Parser", () => {
         { nutrientId: 1092, amount: 107 }, // Potassium
         { nutrientId: 1162, amount: 4.6 }, // Vitamin C
         { nutrientId: 1106, amount: 3 }, // Vitamin A
-      ]
+      ],
     };
 
     global.fetch = () =>
@@ -30,7 +30,7 @@ describe("Enhanced USDA Nutrient Parser", () => {
 
     try {
       const data = await getFoodNutrition(12345);
-      
+
       expect(data.calories).toBe(52);
       expect(data.fiber?.amount).toBe(2.4);
       expect(data.sodium?.amount).toBe(1);

@@ -82,12 +82,12 @@ export function FoodSearchDialog({
         nutritionData = await getFoodNutrition(fdcId);
         setScannedBarcode(null);
       }
-      
+
       // Update cache if favorited
       if (favoritedItem) {
         updateFavoriteCache(fdcId, nutritionData);
       }
-      
+
       setSelectedFood(nutritionData);
       setIsNutritionDrawerOpen(true);
     } catch (error) {
@@ -174,7 +174,12 @@ export function FoodSearchDialog({
 
     try {
       for (const item of stagedItems) {
-        const m = getNutritionMultiplier(item.servingAmount, item.servingUnit, item.nutritionData.servingSize, item.nutritionData.servingSizeUnit);
+        const m = getNutritionMultiplier(
+          item.servingAmount,
+          item.servingUnit,
+          item.nutritionData.servingSize,
+          item.nutritionData.servingSizeUnit
+        );
 
         const response = await logFoodEntry({
           meal_name: mealName,
@@ -285,15 +290,11 @@ export function FoodSearchDialog({
         servingSize: 100,
         servingSizeUnit: item.serving_unit,
         calories: item.calories * scaleFactor,
-        protein: item.protein
-          ? { name: "Protein", amount: item.protein * scaleFactor, unit: "g" }
-          : null,
+        protein: item.protein ? { name: "Protein", amount: item.protein * scaleFactor, unit: "g" } : null,
         carbohydrates: item.carbohydrates
           ? { name: "Carbohydrates", amount: item.carbohydrates * scaleFactor, unit: "g" }
           : null,
-        totalFat: item.total_fat
-          ? { name: "Total Fat", amount: item.total_fat * scaleFactor, unit: "g" }
-          : null,
+        totalFat: item.total_fat ? { name: "Total Fat", amount: item.total_fat * scaleFactor, unit: "g" } : null,
         fiber: item.fiber ? { name: "Fiber", amount: item.fiber * scaleFactor, unit: "g" } : null,
         sugars: item.sugars ? { name: "Sugars", amount: item.sugars * scaleFactor, unit: "g" } : null,
         sodium: item.sodium ? { name: "Sodium", amount: item.sodium * scaleFactor, unit: "mg" } : null,
@@ -467,7 +468,7 @@ export function FoodSearchDialog({
                     const ps = 1 / (recipe.servings || 1);
                     const items = recipe.items || [];
 
-                    const agg = (field: keyof typeof items[0], name: string, unit: string) => {
+                    const agg = (field: keyof (typeof items)[0], name: string, unit: string) => {
                       const total = items.reduce((s, i) => s + ((i[field] as number | null) || 0) * ps, 0);
                       return items.some((i) => i[field] != null) ? { name, amount: total, unit } : null;
                     };
@@ -478,9 +479,21 @@ export function FoodSearchDialog({
                       servingSize: 1,
                       servingSizeUnit: "serving",
                       calories: items.reduce((s, i) => s + i.calories * ps, 0),
-                      protein: { name: "Protein", amount: items.reduce((s, i) => s + (i.protein || 0) * ps, 0), unit: "g" },
-                      carbohydrates: { name: "Carbohydrates", amount: items.reduce((s, i) => s + (i.carbohydrates || 0) * ps, 0), unit: "g" },
-                      totalFat: { name: "Total Fat", amount: items.reduce((s, i) => s + (i.total_fat || 0) * ps, 0), unit: "g" },
+                      protein: {
+                        name: "Protein",
+                        amount: items.reduce((s, i) => s + (i.protein || 0) * ps, 0),
+                        unit: "g",
+                      },
+                      carbohydrates: {
+                        name: "Carbohydrates",
+                        amount: items.reduce((s, i) => s + (i.carbohydrates || 0) * ps, 0),
+                        unit: "g",
+                      },
+                      totalFat: {
+                        name: "Total Fat",
+                        amount: items.reduce((s, i) => s + (i.total_fat || 0) * ps, 0),
+                        unit: "g",
+                      },
                       fiber: agg("fiber", "Fiber", "g"),
                       sugars: agg("sugars", "Sugars", "g"),
                       sodium: agg("sodium", "Sodium", "mg"),

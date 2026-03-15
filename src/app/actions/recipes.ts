@@ -90,10 +90,12 @@ export async function getRecipes(): Promise<RecipeResponse<Recipe[]>> {
 
     const { data, error } = await supabase
       .from("recipes")
-      .select(`
+      .select(
+        `
         *,
         recipe_items (*)
-      `)
+      `
+      )
       .eq("user_id", user.id)
       .order("updated_at", { ascending: false });
 
@@ -128,10 +130,12 @@ export async function getRecipe(id: string): Promise<RecipeResponse<Recipe>> {
 
     const { data, error } = await supabase
       .from("recipes")
-      .select(`
+      .select(
+        `
         *,
         recipe_items (*)
-      `)
+      `
+      )
       .eq("id", id)
       .eq("user_id", user.id)
       .single();
@@ -348,12 +352,7 @@ export async function updateRecipeItem(
       return { success: false, error: "Recipe item not found" };
     }
 
-    const { data, error } = await supabase
-      .from("recipe_items")
-      .update(input)
-      .eq("id", itemId)
-      .select()
-      .single();
+    const { data, error } = await supabase.from("recipe_items").update(input).eq("id", itemId).select().single();
 
     if (error) {
       console.error("Error updating recipe item:", error);

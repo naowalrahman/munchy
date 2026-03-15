@@ -1,14 +1,6 @@
 "use client";
 
-import {
-  Box,
-  Button,
-  Heading,
-  HStack,
-  IconButton,
-  Text,
-  VStack,
-} from "@chakra-ui/react";
+import { Box, Button, Heading, HStack, IconButton, Text, VStack } from "@chakra-ui/react";
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { IoClose, IoPencil, IoTrash } from "react-icons/io5";
@@ -25,12 +17,7 @@ interface RecipeDetailDialogProps {
   onRecipeUpdated: (recipe: Recipe) => void;
 }
 
-export function RecipeDetailDialog({
-  isOpen,
-  onClose,
-  recipe,
-  onRecipeUpdated,
-}: RecipeDetailDialogProps) {
+export function RecipeDetailDialog({ isOpen, onClose, recipe, onRecipeUpdated }: RecipeDetailDialogProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [deletingItemId, setDeletingItemId] = useState<string | null>(null);
   const [currentRecipe, setCurrentRecipe] = useState(recipe);
@@ -82,16 +69,7 @@ export function RecipeDetailDialog({
 
   return (
     <>
-      <Box
-        position="fixed"
-        top={0}
-        left={0}
-        right={0}
-        bottom={0}
-        bg="blackAlpha.700"
-        zIndex={998}
-        onClick={onClose}
-      />
+      <Box position="fixed" top={0} left={0} right={0} bottom={0} bg="blackAlpha.700" zIndex={998} onClick={onClose} />
       <Box
         position="fixed"
         top={{ base: 0, md: "5%" }}

@@ -1,16 +1,6 @@
 "use client";
 
-import {
-  Box,
-  Button,
-  Heading,
-  HStack,
-  IconButton,
-  Input,
-  Text,
-  Textarea,
-  VStack,
-} from "@chakra-ui/react";
+import { Box, Button, Heading, HStack, IconButton, Input, Text, Textarea, VStack } from "@chakra-ui/react";
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { IoAdd, IoClose, IoTrash } from "react-icons/io5";
@@ -29,7 +19,12 @@ import { getNutritionMultiplier } from "@/utils/nutritionMultiplier";
 import type { StagedFood } from "@/components/food-search/types";
 
 function buildRecipeItemInput(item: StagedFood): AddRecipeItemInput {
-  const m = getNutritionMultiplier(item.servingAmount, item.servingUnit, item.nutritionData.servingSize, item.nutritionData.servingSizeUnit);
+  const m = getNutritionMultiplier(
+    item.servingAmount,
+    item.servingUnit,
+    item.nutritionData.servingSize,
+    item.nutritionData.servingSizeUnit
+  );
   const n = item.nutritionData;
   return {
     food_fdc_id: n.fdcId,
@@ -62,13 +57,7 @@ interface RecipeDialogProps {
   existingRecipe?: Recipe;
 }
 
-export function RecipeDialog({
-  isOpen,
-  onClose,
-  onRecipeCreated,
-  onRecipeUpdated,
-  existingRecipe,
-}: RecipeDialogProps) {
+export function RecipeDialog({ isOpen, onClose, onRecipeCreated, onRecipeUpdated, existingRecipe }: RecipeDialogProps) {
   const [name, setName] = useState(existingRecipe?.name || "");
   const [description, setDescription] = useState(existingRecipe?.description || "");
   const [items, setItems] = useState<StagedFood[]>(
@@ -81,9 +70,7 @@ export function RecipeDialog({
         servingSizeUnit: item.serving_unit,
         calories: item.calories,
         protein: item.protein ? { name: "Protein", amount: item.protein, unit: "g" } : null,
-        carbohydrates: item.carbohydrates
-          ? { name: "Carbohydrates", amount: item.carbohydrates, unit: "g" }
-          : null,
+        carbohydrates: item.carbohydrates ? { name: "Carbohydrates", amount: item.carbohydrates, unit: "g" } : null,
         totalFat: item.total_fat ? { name: "Total Fat", amount: item.total_fat, unit: "g" } : null,
         fiber: item.fiber ? { name: "Fiber", amount: item.fiber, unit: "g" } : null,
         sugars: item.sugars ? { name: "Sugars", amount: item.sugars, unit: "g" } : null,
@@ -218,7 +205,12 @@ export function RecipeDialog({
   };
 
   const totalCalories = items.reduce((sum, item) => {
-    const m = getNutritionMultiplier(item.servingAmount, item.servingUnit, item.nutritionData.servingSize, item.nutritionData.servingSizeUnit);
+    const m = getNutritionMultiplier(
+      item.servingAmount,
+      item.servingUnit,
+      item.nutritionData.servingSize,
+      item.nutritionData.servingSizeUnit
+    );
     return sum + item.nutritionData.calories * m;
   }, 0);
 
@@ -226,16 +218,7 @@ export function RecipeDialog({
 
   return (
     <>
-      <Box
-        position="fixed"
-        top={0}
-        left={0}
-        right={0}
-        bottom={0}
-        bg="blackAlpha.700"
-        zIndex={998}
-        onClick={onClose}
-      />
+      <Box position="fixed" top={0} left={0} right={0} bottom={0} bg="blackAlpha.700" zIndex={998} onClick={onClose} />
       <Box
         position="fixed"
         top={{ base: 0, md: "5%" }}
@@ -374,7 +357,14 @@ export function RecipeDialog({
 
             <AnimatePresence>
               {items.map((item) => {
-                const itemCalories = item.nutritionData.calories * getNutritionMultiplier(item.servingAmount, item.servingUnit, item.nutritionData.servingSize, item.nutritionData.servingSizeUnit);
+                const itemCalories =
+                  item.nutritionData.calories *
+                  getNutritionMultiplier(
+                    item.servingAmount,
+                    item.servingUnit,
+                    item.nutritionData.servingSize,
+                    item.nutritionData.servingSizeUnit
+                  );
 
                 return (
                   <MotionBox

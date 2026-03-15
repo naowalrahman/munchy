@@ -2,7 +2,13 @@
 
 import { Box, VStack, HStack, Text, Heading, IconButton, Spinner } from "@chakra-ui/react";
 import { useState, useMemo } from "react";
-import { FoodLogEntry, deleteFoodEntry, updateFoodEntry, deleteRecipeGroup, expandRecipeGroup } from "@/app/actions/foodLog";
+import {
+  FoodLogEntry,
+  deleteFoodEntry,
+  updateFoodEntry,
+  deleteRecipeGroup,
+  expandRecipeGroup,
+} from "@/app/actions/foodLog";
 import { getFoodNutrition, lookupBarcode, NutritionalData } from "@/app/actions/food";
 import { getNutritionMultiplier } from "@/utils/nutritionMultiplier";
 import { motion, AnimatePresence } from "framer-motion";
@@ -219,7 +225,12 @@ export function MealSection({ mealName, entries, onFoodAdded, isCustom, selected
     if (!editingEntry) return;
 
     try {
-      const m = getNutritionMultiplier(servingAmount, servingUnit, nutritionData.servingSize, nutritionData.servingSizeUnit);
+      const m = getNutritionMultiplier(
+        servingAmount,
+        servingUnit,
+        nutritionData.servingSize,
+        nutritionData.servingSizeUnit
+      );
 
       const response = await updateFoodEntry(editingEntry.id, {
         serving_amount: servingAmount,
@@ -320,18 +331,8 @@ export function MealSection({ mealName, entries, onFoodAdded, isCustom, selected
         exit={{ opacity: 0, x: -100 }}
         transition={{ duration: 0.2 }}
       >
-        <Box
-          bg="background.subtle"
-          borderRadius="md"
-          borderWidth="1px"
-          borderColor="brand.500/30"
-          overflow="hidden"
-        >
-          <HStack
-            p={3}
-            _hover={{ bg: "background.canvas" }}
-            transition="all 0.2s"
-          >
+        <Box bg="background.subtle" borderRadius="md" borderWidth="1px" borderColor="brand.500/30" overflow="hidden">
+          <HStack p={3} _hover={{ bg: "background.canvas" }} transition="all 0.2s">
             <IconButton
               aria-label={isExpanded ? "Collapse" : "Expand"}
               size="xs"
@@ -364,8 +365,8 @@ export function MealSection({ mealName, entries, onFoodAdded, isCustom, selected
                 )}
               </HStack>
               <Text color="text.muted" fontSize="xs">
-                {group.entries.length} items · {groupCalories.toFixed(0)} cal · P{" "}
-                {groupProtein.toFixed(0)}g · C {groupCarbs.toFixed(0)}g · F {groupFat.toFixed(0)}g
+                {group.entries.length} items · {groupCalories.toFixed(0)} cal · P {groupProtein.toFixed(0)}g · C{" "}
+                {groupCarbs.toFixed(0)}g · F {groupFat.toFixed(0)}g
               </Text>
             </VStack>
             <HStack gap={1} onClick={(e) => e.stopPropagation()}>
@@ -575,7 +576,6 @@ export function MealSection({ mealName, entries, onFoodAdded, isCustom, selected
           />
         )
       )}
-
     </>
   );
 }
