@@ -17,6 +17,7 @@ import { IoAdd, IoClose, IoTrash } from "react-icons/io5";
 import { toaster } from "@/components/ui/toaster";
 import {
   Recipe,
+  AddRecipeItemInput,
   createRecipe,
   updateRecipe,
   addRecipeItem,
@@ -26,6 +27,30 @@ import {
 import { FoodSearchDialog } from "@/components/food-search/FoodSearchDialog";
 import { getNutritionMultiplier } from "@/utils/nutritionMultiplier";
 import type { StagedFood } from "@/components/food-search/types";
+
+function buildRecipeItemInput(item: StagedFood): AddRecipeItemInput {
+  const m = getNutritionMultiplier(item.servingAmount, item.servingUnit, item.nutritionData.servingSize, item.nutritionData.servingSizeUnit);
+  const n = item.nutritionData;
+  return {
+    food_fdc_id: n.fdcId,
+    food_description: n.description,
+    serving_amount: item.servingAmount,
+    serving_unit: item.servingUnit,
+    calories: n.calories * m,
+    protein: n.protein ? n.protein.amount * m : null,
+    carbohydrates: n.carbohydrates ? n.carbohydrates.amount * m : null,
+    total_fat: n.totalFat ? n.totalFat.amount * m : null,
+    fiber: n.fiber ? n.fiber.amount * m : null,
+    sugars: n.sugars ? n.sugars.amount * m : null,
+    sodium: n.sodium ? n.sodium.amount * m : null,
+    potassium: n.potassium ? n.potassium.amount * m : null,
+    calcium: n.calcium ? n.calcium.amount * m : null,
+    iron: n.iron ? n.iron.amount * m : null,
+    vitamin_c: n.vitaminC ? n.vitaminC.amount * m : null,
+    vitamin_a: n.vitaminA ? n.vitaminA.amount * m : null,
+    barcode: item.barcode,
+  };
+}
 
 const MotionBox = motion.create(Box);
 
@@ -60,14 +85,14 @@ export function RecipeDialog({
           ? { name: "Carbohydrates", amount: item.carbohydrates, unit: "g" }
           : null,
         totalFat: item.total_fat ? { name: "Total Fat", amount: item.total_fat, unit: "g" } : null,
-        fiber: null,
-        sugars: null,
-        sodium: null,
-        potassium: null,
-        calcium: null,
-        iron: null,
-        vitaminC: null,
-        vitaminA: null,
+        fiber: item.fiber ? { name: "Fiber", amount: item.fiber, unit: "g" } : null,
+        sugars: item.sugars ? { name: "Sugars", amount: item.sugars, unit: "g" } : null,
+        sodium: item.sodium ? { name: "Sodium", amount: item.sodium, unit: "mg" } : null,
+        potassium: item.potassium ? { name: "Potassium", amount: item.potassium, unit: "mg" } : null,
+        calcium: item.calcium ? { name: "Calcium", amount: item.calcium, unit: "mg" } : null,
+        iron: item.iron ? { name: "Iron", amount: item.iron, unit: "mg" } : null,
+        vitaminC: item.vitamin_c ? { name: "Vitamin C", amount: item.vitamin_c, unit: "mg" } : null,
+        vitaminA: item.vitamin_a ? { name: "Vitamin A", amount: item.vitamin_a, unit: "µg" } : null,
       },
       servingAmount: item.serving_amount,
       servingUnit: item.serving_unit,
@@ -133,18 +158,7 @@ export function RecipeDialog({
 
         for (const item of items) {
           if (!existingItemIds.has(item.id)) {
-            const m = getNutritionMultiplier(item.servingAmount, item.servingUnit, item.nutritionData.servingSize, item.nutritionData.servingSizeUnit);
-            await addRecipeItem(existingRecipe.id, {
-              food_fdc_id: item.nutritionData.fdcId,
-              food_description: item.nutritionData.description,
-              serving_amount: item.servingAmount,
-              serving_unit: item.servingUnit,
-              calories: item.nutritionData.calories * m,
-              protein: item.nutritionData.protein ? item.nutritionData.protein.amount * m : null,
-              carbohydrates: item.nutritionData.carbohydrates ? item.nutritionData.carbohydrates.amount * m : null,
-              total_fat: item.nutritionData.totalFat ? item.nutritionData.totalFat.amount * m : null,
-              barcode: item.barcode,
-            });
+            await addRecipeItem(existingRecipe.id, buildRecipeItemInput(item));
           }
         }
 
@@ -174,18 +188,7 @@ export function RecipeDialog({
         const recipe = response.data as Recipe;
 
         for (const item of items) {
-          const m = getNutritionMultiplier(item.servingAmount, item.servingUnit, item.nutritionData.servingSize, item.nutritionData.servingSizeUnit);
-          await addRecipeItem(recipe.id, {
-            food_fdc_id: item.nutritionData.fdcId,
-            food_description: item.nutritionData.description,
-            serving_amount: item.servingAmount,
-            serving_unit: item.servingUnit,
-            calories: item.nutritionData.calories * m,
-            protein: item.nutritionData.protein ? item.nutritionData.protein.amount * m : null,
-            carbohydrates: item.nutritionData.carbohydrates ? item.nutritionData.carbohydrates.amount * m : null,
-            total_fat: item.nutritionData.totalFat ? item.nutritionData.totalFat.amount * m : null,
-            barcode: item.barcode,
-          });
+          await addRecipeItem(recipe.id, buildRecipeItemInput(item));
         }
 
         // Fetch created recipe with items

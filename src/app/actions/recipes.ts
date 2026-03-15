@@ -25,6 +25,14 @@ export interface RecipeItem {
   protein: number | null;
   carbohydrates: number | null;
   total_fat: number | null;
+  fiber: number | null;
+  sugars: number | null;
+  sodium: number | null;
+  potassium: number | null;
+  calcium: number | null;
+  iron: number | null;
+  vitamin_c: number | null;
+  vitamin_a: number | null;
   barcode: string | null;
   sort_order: number;
   created_at: string;
@@ -51,6 +59,14 @@ export interface AddRecipeItemInput {
   protein: number | null;
   carbohydrates: number | null;
   total_fat: number | null;
+  fiber?: number | null;
+  sugars?: number | null;
+  sodium?: number | null;
+  potassium?: number | null;
+  calcium?: number | null;
+  iron?: number | null;
+  vitamin_c?: number | null;
+  vitamin_a?: number | null;
   barcode?: string | null;
 }
 
@@ -278,6 +294,14 @@ export async function addRecipeItem(recipeId: string, input: AddRecipeItemInput)
         protein: input.protein,
         carbohydrates: input.carbohydrates,
         total_fat: input.total_fat,
+        fiber: input.fiber ?? null,
+        sugars: input.sugars ?? null,
+        sodium: input.sodium ?? null,
+        potassium: input.potassium ?? null,
+        calcium: input.calcium ?? null,
+        iron: input.iron ?? null,
+        vitamin_c: input.vitamin_c ?? null,
+        vitamin_a: input.vitamin_a ?? null,
         barcode: input.barcode || null,
         sort_order: nextSortOrder,
       })

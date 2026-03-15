@@ -294,14 +294,14 @@ export function FoodSearchDialog({
         totalFat: item.total_fat
           ? { name: "Total Fat", amount: item.total_fat * scaleFactor, unit: "g" }
           : null,
-        fiber: null,
-        sugars: null,
-        sodium: null,
-        potassium: null,
-        calcium: null,
-        iron: null,
-        vitaminC: null,
-        vitaminA: null,
+        fiber: item.fiber ? { name: "Fiber", amount: item.fiber * scaleFactor, unit: "g" } : null,
+        sugars: item.sugars ? { name: "Sugars", amount: item.sugars * scaleFactor, unit: "g" } : null,
+        sodium: item.sodium ? { name: "Sodium", amount: item.sodium * scaleFactor, unit: "mg" } : null,
+        potassium: item.potassium ? { name: "Potassium", amount: item.potassium * scaleFactor, unit: "mg" } : null,
+        calcium: item.calcium ? { name: "Calcium", amount: item.calcium * scaleFactor, unit: "mg" } : null,
+        iron: item.iron ? { name: "Iron", amount: item.iron * scaleFactor, unit: "mg" } : null,
+        vitaminC: item.vitamin_c ? { name: "Vitamin C", amount: item.vitamin_c * scaleFactor, unit: "mg" } : null,
+        vitaminA: item.vitamin_a ? { name: "Vitamin A", amount: item.vitamin_a * scaleFactor, unit: "µg" } : null,
       } as NutritionalData,
       servingAmount: item.serving_amount * scaleFactor,
       servingUnit: item.serving_unit,
@@ -464,38 +464,31 @@ export function FoodSearchDialog({
                   onRecipeSelect={(recipe) => {
                     setSelectedRecipe(recipe);
 
-                    const perServing = 1 / (recipe.servings || 1);
+                    const ps = 1 / (recipe.servings || 1);
                     const items = recipe.items || [];
+
+                    const agg = (field: keyof typeof items[0], name: string, unit: string) => {
+                      const total = items.reduce((s, i) => s + ((i[field] as number | null) || 0) * ps, 0);
+                      return items.some((i) => i[field] != null) ? { name, amount: total, unit } : null;
+                    };
 
                     const aggregated: NutritionalData = {
                       fdcId: 0,
                       description: recipe.name,
                       servingSize: 1,
                       servingSizeUnit: "serving",
-                      calories: items.reduce((s, i) => s + i.calories * perServing, 0),
-                      protein: {
-                        name: "Protein",
-                        amount: items.reduce((s, i) => s + (i.protein || 0) * perServing, 0),
-                        unit: "g",
-                      },
-                      carbohydrates: {
-                        name: "Carbohydrates",
-                        amount: items.reduce((s, i) => s + (i.carbohydrates || 0) * perServing, 0),
-                        unit: "g",
-                      },
-                      totalFat: {
-                        name: "Total Fat",
-                        amount: items.reduce((s, i) => s + (i.total_fat || 0) * perServing, 0),
-                        unit: "g",
-                      },
-                      fiber: null,
-                      sugars: null,
-                      sodium: null,
-                      potassium: null,
-                      calcium: null,
-                      iron: null,
-                      vitaminC: null,
-                      vitaminA: null,
+                      calories: items.reduce((s, i) => s + i.calories * ps, 0),
+                      protein: { name: "Protein", amount: items.reduce((s, i) => s + (i.protein || 0) * ps, 0), unit: "g" },
+                      carbohydrates: { name: "Carbohydrates", amount: items.reduce((s, i) => s + (i.carbohydrates || 0) * ps, 0), unit: "g" },
+                      totalFat: { name: "Total Fat", amount: items.reduce((s, i) => s + (i.total_fat || 0) * ps, 0), unit: "g" },
+                      fiber: agg("fiber", "Fiber", "g"),
+                      sugars: agg("sugars", "Sugars", "g"),
+                      sodium: agg("sodium", "Sodium", "mg"),
+                      potassium: agg("potassium", "Potassium", "mg"),
+                      calcium: agg("calcium", "Calcium", "mg"),
+                      iron: agg("iron", "Iron", "mg"),
+                      vitaminC: agg("vitamin_c", "Vitamin C", "mg"),
+                      vitaminA: agg("vitamin_a", "Vitamin A", "µg"),
                     };
 
                     setSelectedFood(aggregated);

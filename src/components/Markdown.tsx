@@ -149,7 +149,7 @@ const components = {
 
 export function Markdown({ children }: { children: string }) {
   return (
-    <Streamdown mode="static" components={components as Record<string, React.ComponentType>} shikiTheme={["github-light", "github-dark"]}>
+    <Streamdown mode="static" components={components as unknown as Record<string, React.ComponentType>} shikiTheme={["github-light", "github-dark"]}>
       {children}
     </Streamdown>
   );
