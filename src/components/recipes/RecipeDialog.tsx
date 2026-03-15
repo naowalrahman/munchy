@@ -17,7 +17,6 @@ import { IoAdd, IoClose, IoTrash } from "react-icons/io5";
 import { toaster } from "@/components/ui/toaster";
 import {
   Recipe,
-  RecipeItem,
   createRecipe,
   updateRecipe,
   addRecipeItem,

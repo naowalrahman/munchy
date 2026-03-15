@@ -271,7 +271,7 @@ export function FoodSearchDialog({
           ? "Favorites"
           : "Recipes";
 
-  const handleRecipeServingsConfirm = (servingAmount: number, _servingUnit: string, _nutritionData: NutritionalData) => {
+  const handleRecipeServingsConfirm: typeof stageFood = (servingAmount) => {
     if (!selectedRecipe) return;
 
     const scaleFactor = servingAmount / (selectedRecipe.servings || 1);

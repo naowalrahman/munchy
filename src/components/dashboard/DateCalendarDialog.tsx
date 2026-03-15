@@ -22,10 +22,12 @@ interface DateCalendarDialogProps {
 const MotionBox = motion.create(Box);
 
 export function DateCalendarDialog({ isOpen, onClose, currentDate, onDateChange }: DateCalendarDialogProps) {
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
+  const today = useMemo(() => {
+    const d = new Date();
+    d.setHours(0, 0, 0, 0);
+    return d;
+  }, []);
 
-  // Used for motion animations only
   const isMobile = useBreakpointValue({ base: true, md: false }) ?? false;
 
   // State for the month being viewed in the calendar
