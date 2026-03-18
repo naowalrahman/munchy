@@ -3,7 +3,7 @@
 import { usePathname } from "next/navigation";
 import { HStack, Text, Button } from "@chakra-ui/react";
 import Link from "next/link";
-import { LuLayoutDashboard, LuBot, LuUser, LuChartColumn, LuUtensilsCrossed } from "react-icons/lu";
+import { LuLayoutDashboard, LuBot, LuUser, LuChartColumn } from "react-icons/lu";
 import { IconType } from "react-icons";
 
 type NavItem = {
@@ -14,7 +14,6 @@ type NavItem = {
 
 const navItems: NavItem[] = [
   { name: "Dashboard", href: "/dashboard", icon: LuLayoutDashboard },
-  { name: "Recipes", href: "/recipes", icon: LuUtensilsCrossed },
   { name: "Insights", href: "/insights", icon: LuChartColumn },
   { name: "Agent", href: "/agent", icon: LuBot },
   { name: "Profile", href: "/profile", icon: LuUser },

@@ -185,7 +185,7 @@ export async function createRecipe(input: CreateRecipeInput): Promise<RecipeResp
       return { success: false, error: error.message };
     }
 
-    revalidatePath("/recipes");
+    revalidatePath("/dashboard/recipes");
     return { success: true, data: { ...data, items: [] } };
   } catch (error) {
     console.error("Unexpected error creating recipe:", error);
@@ -218,7 +218,7 @@ export async function updateRecipe(id: string, input: UpdateRecipeInput): Promis
       return { success: false, error: error.message };
     }
 
-    revalidatePath("/recipes");
+    revalidatePath("/dashboard/recipes");
     return { success: true, data };
   } catch (error) {
     console.error("Unexpected error updating recipe:", error);
@@ -245,7 +245,7 @@ export async function deleteRecipe(id: string): Promise<RecipeResponse<void>> {
       return { success: false, error: error.message };
     }
 
-    revalidatePath("/recipes");
+    revalidatePath("/dashboard/recipes");
     return { success: true };
   } catch (error) {
     console.error("Unexpected error deleting recipe:", error);
@@ -319,7 +319,7 @@ export async function addRecipeItem(recipeId: string, input: AddRecipeItemInput)
 
     await supabase.from("recipes").update({ updated_at: new Date().toISOString() }).eq("id", recipeId);
 
-    revalidatePath("/recipes");
+    revalidatePath("/dashboard/recipes");
     return { success: true, data };
   } catch (error) {
     console.error("Unexpected error adding recipe item:", error);
@@ -361,7 +361,7 @@ export async function updateRecipeItem(
 
     await supabase.from("recipes").update({ updated_at: new Date().toISOString() }).eq("id", item.recipe_id);
 
-    revalidatePath("/recipes");
+    revalidatePath("/dashboard/recipes");
     return { success: true, data };
   } catch (error) {
     console.error("Unexpected error updating recipe item:", error);
@@ -400,7 +400,7 @@ export async function deleteRecipeItem(itemId: string): Promise<RecipeResponse<v
 
     await supabase.from("recipes").update({ updated_at: new Date().toISOString() }).eq("id", item.recipe_id);
 
-    revalidatePath("/recipes");
+    revalidatePath("/dashboard/recipes");
     return { success: true };
   } catch (error) {
     console.error("Unexpected error deleting recipe item:", error);
