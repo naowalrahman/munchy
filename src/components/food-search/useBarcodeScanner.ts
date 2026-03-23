@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { Html5Qrcode, Html5QrcodeScannerState } from "html5-qrcode";
 import { lookupBarcode, NutritionalData } from "@/app/actions/food";
 import { toaster } from "@/components/ui/toaster";
+import { isCapacitorNative } from "@/utils/platform";
 import { SCANNER_ELEMENT_ID } from "./types";
 
 interface UseBarcodeScannerParams {
@@ -92,7 +93,7 @@ export function useBarcodeScanner({
     hasProcessedBarcode.current = false;
 
     try {
-      if (!window.isSecureContext) {
+      if (!window.isSecureContext && !isCapacitorNative()) {
         throw new Error("Camera requires HTTPS. Please use a secure connection.");
       }
       if (!navigator.mediaDevices?.getUserMedia) {
