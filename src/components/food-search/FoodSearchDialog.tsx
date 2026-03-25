@@ -19,6 +19,7 @@ import { StagedItemsCard } from "./StagedItemsCard";
 import { useBarcodeScanner } from "./useBarcodeScanner";
 import { useFavorites } from "./useFavorites";
 import { useFoodSearch } from "./useFoodSearch";
+import { toFavoritedFoodFromNutrition } from "./favoritesUtils";
 import type { FavoritedFood, FoodSearchDialogProps, InputMode, StagedFood } from "./types";
 
 const MotionBox = motion.create(Box);
@@ -122,15 +123,7 @@ export function FoodSearchDialog({
 
   const handleToggleFavoriteFromDrawer = () => {
     if (!selectedFood) return;
-    toggleFavorite({
-      fdcId: selectedFood.fdcId,
-      description: selectedFood.description,
-      brandName: selectedFood.brandName,
-      servingSize: selectedFood.servingSize,
-      servingSizeUnit: selectedFood.servingSizeUnit,
-      barcode: scannedBarcode ?? undefined,
-      nutrientCache: selectedFood,
-    });
+    toggleFavorite(toFavoritedFoodFromNutrition(selectedFood, scannedBarcode));
   };
 
   const stageFood = (servingAmount: number, servingUnit: string, nutritionData: NutritionalData) => {

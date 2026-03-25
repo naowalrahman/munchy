@@ -16,6 +16,7 @@ import { IoAdd, IoTrash, IoPencil, IoChevronDown, IoChevronForward, IoGitBranch 
 import { toaster } from "@/components/ui/toaster";
 import { FoodSearchDialog } from "@/components/food-search/FoodSearchDialog";
 import { NutritionFactsDrawer } from "./NutritionFactsDrawer";
+import { toFavoritedFoodFromNutrition } from "@/components/food-search/favoritesUtils";
 import { useFavorites } from "@/components/food-search/useFavorites";
 
 interface MealSectionProps {
@@ -44,7 +45,7 @@ export function MealSection({ mealName, entries, onFoodAdded, isCustom, selected
   const [deletingRecipeGroupId, setDeletingRecipeGroupId] = useState<string | null>(null);
   const [expandingRecipeGroupId, setExpandingRecipeGroupId] = useState<string | null>(null);
 
-  const { getFavorite } = useFavorites();
+  const { getFavorite, isFavorited, toggleFavorite } = useFavorites();
 
   // Group entries by recipe_group_id
   const { recipeGroups, standaloneEntries } = useMemo(() => {
@@ -573,6 +574,10 @@ export function MealSection({ mealName, entries, onFoodAdded, isCustom, selected
             isEditMode={true}
             initialServingAmount={editingEntry.serving_amount}
             initialServingUnit={editingEntry.serving_unit}
+            isFavorited={isFavorited(editNutritionData.fdcId)}
+            onToggleFavorite={() =>
+              toggleFavorite(toFavoritedFoodFromNutrition(editNutritionData, editingEntry.barcode))
+            }
           />
         )
       )}
