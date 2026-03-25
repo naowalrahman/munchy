@@ -7,7 +7,7 @@ import { IoBarcodeOutline, IoClose, IoHeart, IoRestaurant, IoSearch } from "reac
 import type { FoodSearchResult, NutritionalData } from "@/app/actions/food";
 import { getFoodNutrition, lookupBarcode } from "@/app/actions/food";
 import { logFoodEntry } from "@/app/actions/foodLog";
-import { getNutritionMultiplier } from "@/utils/nutritionMultiplier";
+import { getNutritionMultiplier, toFavoritedFoodFromNutrition } from "@/utils/nutrition";
 import { toaster } from "@/components/ui/toaster";
 import { NutritionFactsDrawer } from "../dashboard/NutritionFactsDrawer";
 import { Recipe } from "@/app/actions/recipes";
@@ -122,15 +122,7 @@ export function FoodSearchDialog({
 
   const handleToggleFavoriteFromDrawer = () => {
     if (!selectedFood) return;
-    toggleFavorite({
-      fdcId: selectedFood.fdcId,
-      description: selectedFood.description,
-      brandName: selectedFood.brandName,
-      servingSize: selectedFood.servingSize,
-      servingSizeUnit: selectedFood.servingSizeUnit,
-      barcode: scannedBarcode ?? undefined,
-      nutrientCache: selectedFood,
-    });
+    toggleFavorite(toFavoritedFoodFromNutrition(selectedFood, scannedBarcode));
   };
 
   const stageFood = (servingAmount: number, servingUnit: string, nutritionData: NutritionalData) => {

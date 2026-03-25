@@ -15,7 +15,7 @@ import {
   getRecipe,
 } from "@/app/actions/recipes";
 import { FoodSearchDialog } from "@/components/food-search/FoodSearchDialog";
-import { getNutritionMultiplier } from "@/utils/nutritionMultiplier";
+import { getNutritionMultiplier } from "@/utils/nutrition";
 import type { StagedFood } from "@/components/food-search/types";
 
 function buildRecipeItemInput(item: StagedFood): AddRecipeItemInput {

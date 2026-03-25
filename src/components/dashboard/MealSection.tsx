@@ -10,7 +10,7 @@ import {
   expandRecipeGroup,
 } from "@/app/actions/foodLog";
 import { getFoodNutrition, lookupBarcode, NutritionalData } from "@/app/actions/food";
-import { getNutritionMultiplier } from "@/utils/nutritionMultiplier";
+import { getNutritionMultiplier, toFavoritedFoodFromNutrition } from "@/utils/nutrition";
 import { motion, AnimatePresence } from "framer-motion";
 import { IoAdd, IoTrash, IoPencil, IoChevronDown, IoChevronForward, IoGitBranch } from "react-icons/io5";
 import { toaster } from "@/components/ui/toaster";
@@ -44,7 +44,7 @@ export function MealSection({ mealName, entries, onFoodAdded, isCustom, selected
   const [deletingRecipeGroupId, setDeletingRecipeGroupId] = useState<string | null>(null);
   const [expandingRecipeGroupId, setExpandingRecipeGroupId] = useState<string | null>(null);
 
-  const { getFavorite } = useFavorites();
+  const { getFavorite, isFavorited, toggleFavorite } = useFavorites();
 
   // Group entries by recipe_group_id
   const { recipeGroups, standaloneEntries } = useMemo(() => {
@@ -573,6 +573,10 @@ export function MealSection({ mealName, entries, onFoodAdded, isCustom, selected
             isEditMode={true}
             initialServingAmount={editingEntry.serving_amount}
             initialServingUnit={editingEntry.serving_unit}
+            isFavorited={isFavorited(editNutritionData.fdcId)}
+            onToggleFavorite={() =>
+              toggleFavorite(toFavoritedFoodFromNutrition(editNutritionData, editingEntry.barcode))
+            }
           />
         )
       )}
