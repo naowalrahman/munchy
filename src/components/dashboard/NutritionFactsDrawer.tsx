@@ -4,7 +4,7 @@ import { Box, VStack, HStack, Text, Button, Heading, Separator, Grid, useBreakpo
 import { useState, useCallback } from "react";
 import { NutritionalData } from "@/app/actions/food";
 import { ServingSizeControl } from "./ServingSizeControl";
-import { getNutritionMultiplier } from "@/utils/nutritionMultiplier";
+import { getNutritionMultiplier } from "@/utils/nutrition";
 import { motion, AnimatePresence } from "framer-motion";
 import { IoClose, IoHeart, IoHeartOutline } from "react-icons/io5";
 

@@ -10,13 +10,12 @@ import {
   expandRecipeGroup,
 } from "@/app/actions/foodLog";
 import { getFoodNutrition, lookupBarcode, NutritionalData } from "@/app/actions/food";
-import { getNutritionMultiplier } from "@/utils/nutritionMultiplier";
+import { getNutritionMultiplier, toFavoritedFoodFromNutrition } from "@/utils/nutrition";
 import { motion, AnimatePresence } from "framer-motion";
 import { IoAdd, IoTrash, IoPencil, IoChevronDown, IoChevronForward, IoGitBranch } from "react-icons/io5";
 import { toaster } from "@/components/ui/toaster";
 import { FoodSearchDialog } from "@/components/food-search/FoodSearchDialog";
 import { NutritionFactsDrawer } from "./NutritionFactsDrawer";
-import { toFavoritedFoodFromNutrition } from "@/components/food-search/favoritesUtils";
 import { useFavorites } from "@/components/food-search/useFavorites";
 
 interface MealSectionProps {

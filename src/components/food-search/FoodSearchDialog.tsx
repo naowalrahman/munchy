@@ -7,7 +7,7 @@ import { IoBarcodeOutline, IoClose, IoHeart, IoRestaurant, IoSearch } from "reac
 import type { FoodSearchResult, NutritionalData } from "@/app/actions/food";
 import { getFoodNutrition, lookupBarcode } from "@/app/actions/food";
 import { logFoodEntry } from "@/app/actions/foodLog";
-import { getNutritionMultiplier } from "@/utils/nutritionMultiplier";
+import { getNutritionMultiplier, toFavoritedFoodFromNutrition } from "@/utils/nutrition";
 import { toaster } from "@/components/ui/toaster";
 import { NutritionFactsDrawer } from "../dashboard/NutritionFactsDrawer";
 import { Recipe } from "@/app/actions/recipes";
@@ -19,7 +19,6 @@ import { StagedItemsCard } from "./StagedItemsCard";
 import { useBarcodeScanner } from "./useBarcodeScanner";
 import { useFavorites } from "./useFavorites";
 import { useFoodSearch } from "./useFoodSearch";
-import { toFavoritedFoodFromNutrition } from "./favoritesUtils";
 import type { FavoritedFood, FoodSearchDialogProps, InputMode, StagedFood } from "./types";
 
 const MotionBox = motion.create(Box);

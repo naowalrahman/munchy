@@ -2,7 +2,7 @@
 
 import { Input, HStack, Text, VStack, Button } from "@chakra-ui/react";
 import { useMemo, useState, useEffect } from "react";
-import { normalizeUnit } from "@/utils/normalizeUnit";
+import { normalizeUnit } from "@/utils/nutrition";
 
 interface ServingSizeControlProps {
   defaultAmount: number;
