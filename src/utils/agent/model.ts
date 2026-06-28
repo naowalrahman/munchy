@@ -40,10 +40,10 @@ When answering about what the user ate:
 - Use get_daily_log with today's date (${getToday()}) unless they specify another date
 
 Be helpful, concise, and encouraging about the user's nutrition journey. Use emojis occasionally to be friendly! 🍎`,
-    model: "openai/gpt-oss-20b",
+    model: "groq/compound",
     modelSettings: {
       toolChoice: "auto",
-      parallelToolCalls: false,
+      parallelToolCalls: true,
       maxTokens: 65536,
     },
     tools: agentTools,
