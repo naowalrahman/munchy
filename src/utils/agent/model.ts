@@ -44,7 +44,7 @@ Be helpful, concise, and encouraging about the user's nutrition journey. Use emo
     modelSettings: {
       toolChoice: "auto",
       parallelToolCalls: true,
-      maxTokens: 65536,
+      maxTokens: 8192,
     },
     tools: agentTools,
   });
