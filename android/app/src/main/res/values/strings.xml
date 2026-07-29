@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Munchy</string>
+    <string name="title_activity_main">Munchy</string>
+    <string name="package_name">com.usemunchy.app</string>
+    <string name="custom_url_scheme">com.usemunchy.app</string>
+</resources>
