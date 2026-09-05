@@ -1,0 +1,271 @@
+@media (min-width: 1500px) {
+  .workspace {
+    padding-top: 50px;
+  }
+  .app-header {
+    padding-inline: calc((100vw - 1274px) / 2);
+  }
+}
+@media (max-width: 1100px) {
+  .app-header {
+    gap: 25px;
+    padding: 0 25px;
+  }
+  .device-status {
+    display: none;
+  }
+  .workspace {
+    padding: 30px 25px;
+  }
+  .diary-layout {
+    gap: 22px;
+    grid-template-columns: minmax(0, 1fr) 290px;
+  }
+  .entry {
+    gap: 6px;
+    padding: 10px 5px;
+  }
+  .entry-protein {
+    display: none;
+  }
+  .local-label {
+    display: none;
+  }
+  .app-footer {
+    padding: 20px 25px;
+  }
+  .insights-layout {
+    gap: 24px;
+    grid-template-columns: minmax(0, 1fr) 300px;
+  }
+  .page-heading {
+    align-items: flex-start;
+  }
+  .insight-controls {
+    flex-wrap: wrap;
+    gap: 14px;
+  }
+  .recipe-actions {
+    max-width: 150px;
+  }
+  .inline-actions {
+    gap: 9px;
+  }
+}
+@media (max-width: 760px) {
+  body {
+    font-size: 14px;
+  }
+  .app-header {
+    height: 70px;
+    padding: 0 20px;
+  }
+  .brand {
+    font-size: 29px;
+  }
+  .app-header nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: #fff;
+    z-index: 40;
+    border-top: 1px solid var(--line);
+    height: calc(66px + env(safe-area-inset-bottom));
+    padding-bottom: env(safe-area-inset-bottom);
+    justify-content: space-around;
+    gap: 0;
+  }
+  .app-header nav button {
+    flex-direction: column;
+    gap: 3px;
+    font-size: 10px;
+    height: 54px;
+    border-radius: 6px;
+    min-width: 66px;
+    padding: 7px;
+  }
+  .app-header nav svg {
+    width: 20px;
+    height: 20px;
+  }
+  .workspace {
+    padding: 25px 16px 30px;
+  }
+  .page-heading {
+    flex-direction: column;
+    gap: 17px;
+    margin-bottom: 23px;
+  }
+  h1 {
+    font-size: 29px;
+  }
+  .page-heading p {
+    font-size: 13px;
+  }
+  .date-controls {
+    width: 100%;
+  }
+  .date-controls input {
+    max-width: none;
+    flex: 1;
+  }
+  .quick-search {
+    font-size: 15px;
+    padding: 17px 15px;
+    margin-bottom: 26px;
+  }
+  .quick-search kbd {
+    display: none;
+  }
+  .diary-layout,
+  .insights-layout,
+  .settings-layout {
+    grid-template-columns: 1fr;
+    gap: 32px;
+  }
+  .section-head {
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .section-head h2 {
+    font-size: 18px;
+  }
+  .inline-actions button {
+    font-size: 11px;
+  }
+  .welcome-note {
+    padding: 18px;
+  }
+  .meal-header h3 {
+    font-size: 18px;
+  }
+  .entry {
+    gap: 6px;
+    padding: 12px 4px;
+  }
+  .entry-main strong {
+    font-size: 14px;
+  }
+  .entry-main small {
+    font-size: 11px;
+  }
+  .entry > b {
+    font-size: 13px;
+  }
+  .entry > b small {
+    display: block;
+    text-align: right;
+  }
+  .entry .icon-button {
+    min-width: 27px;
+    padding: 5px;
+  }
+  .entry .icon-button svg {
+    width: 14px;
+    height: 14px;
+  }
+  .day-notes .section-head {
+    align-items: center;
+    gap: 15px;
+  }
+  .daily-totals {
+    padding: 22px;
+  }
+  .nutrient-row {
+    padding: 9px 0;
+    font-size: 14px;
+  }
+  .app-footer {
+    padding: 15px 20px 100px;
+    font-size: 10px;
+    gap: 20px;
+  }
+  .toast {
+    bottom: 85px;
+    width: calc(100% - 26px);
+    font-size: 13px;
+  }
+  .modal {
+    max-height: 94dvh;
+    border-radius: 12px;
+  }
+  .modal-inner {
+    padding: 20px;
+  }
+  .modal header {
+    top: -20px;
+  }
+  .portion-fields {
+    gap: 10px;
+  }
+  .recipe-card {
+    padding: 18px;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  .recipe-symbol {
+    width: 50px;
+    height: 65px;
+    font-size: 43px;
+  }
+  .recipe-title {
+    font-size: 20px;
+  }
+  .recipe-content {
+    min-width: 190px;
+  }
+  .recipe-actions {
+    max-width: none;
+    width: 100%;
+    justify-content: flex-end;
+  }
+  .recipe-actions button {
+    font-size: 12px;
+  }
+  .empty-state {
+    padding: 28px;
+    margin: 20px 0;
+  }
+  .empty-state h2 {
+    font-size: 24px;
+  }
+  .range-controls {
+    width: 100%;
+  }
+  .range-controls label {
+    flex: 1;
+  }
+  .insight-strip {
+    grid-template-columns: 1fr 1fr;
+    padding: 20px;
+    gap: 20px;
+  }
+  .insight-strip > div:nth-child(2) {
+    border: 0;
+  }
+  .insight-strip strong {
+    font-size: 27px;
+  }
+  .insight-controls select {
+    width: 100%;
+  }
+  .settings-section {
+    padding: 20px;
+  }
+  .nutrient-inputs {
+    gap: 12px;
+  }
+  .modal .nutrient-inputs label {
+    font-size: 11px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+}

@@ -1,0 +1,200 @@
+.modal {
+  margin: auto;
+  border: 0;
+  border-radius: 14px;
+  padding: 0;
+  width: min(580px, calc(100vw - 24px));
+  max-height: 90dvh;
+  color: var(--ink);
+  box-shadow: 0 20px 90px #25345a40;
+}
+.modal.wide {
+  width: min(760px, calc(100vw - 24px));
+}
+.modal::backdrop {
+  background: #25345a70;
+  backdrop-filter: blur(3px);
+}
+.modal-inner {
+  padding: 25px;
+  overflow: auto;
+}
+.modal header {
+  position: sticky;
+  top: -25px;
+  background: white;
+  z-index: 1;
+  padding: 8px 0;
+}
+.form-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+.form-stack h2 {
+  margin-top: 12px;
+}
+.portion-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 17px;
+}
+.portion-editor h3 {
+  font-size: 24px;
+  line-height: 1.25;
+}
+.portion-fields {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+.portion-presets {
+  display: flex;
+  gap: 8px;
+}
+.portion-presets button {
+  flex: 1;
+}
+.macro-line {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  font-size: 13px;
+  padding: 13px 0;
+}
+.macro-line b {
+  font-weight: 600;
+}
+.nutrient-inputs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+.nutrient-inputs label {
+  font-size: 12px;
+}
+.search-box {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+.food-results {
+  display: flex;
+  flex-direction: column;
+  max-height: 330px;
+  overflow: auto;
+  margin-bottom: 18px;
+}
+.food-result {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  text-align: left;
+  border: 0;
+  border-bottom: 1px solid var(--line);
+  border-radius: 0;
+  padding: 13px 5px;
+}
+.food-result strong {
+  font-weight: 500;
+}
+.food-result small {
+  display: block;
+  margin-top: 3px;
+}
+.food-result > span:last-child {
+  font-size: 21px;
+  color: var(--plum);
+}
+.empty-small {
+  color: var(--muted);
+  font-size: 14px;
+  padding: 20px 0;
+}
+.attribution {
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 20px;
+}
+.meal-name-row {
+  display: flex;
+  gap: 7px;
+}
+.wide-input {
+  max-width: 540px;
+  margin-bottom: 22px;
+}
+.recipe-list {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+.recipe-card {
+  display: flex;
+  gap: 24px;
+  border: 1px solid var(--line);
+  background: white;
+  padding: 25px;
+  border-radius: 10px;
+}
+.recipe-symbol {
+  font-size: 60px;
+  font-weight: 400;
+  line-height: 1;
+  background: #eee8f5;
+  color: var(--plum);
+  width: 85px;
+  height: 92px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 40px 40px 8px 8px;
+}
+.recipe-content {
+  flex: 1;
+}
+.recipe-title {
+  background: none;
+  border: 0;
+  padding: 0;
+  justify-content: flex-start;
+  text-align: left;
+  font-size: 23px;
+  font-weight: 500;
+}
+.recipe-content p {
+  font-size: 13px;
+  color: var(--muted);
+  margin-top: 6px;
+}
+.recipe-actions {
+  display: flex;
+  gap: 7px;
+  align-items: center;
+  flex-wrap: wrap;
+  max-width: 225px;
+}
+.recipe-actions button {
+  font-size: 13px;
+}
+.recipe-ingredient {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border-bottom: 1px solid var(--line);
+  padding-bottom: 10px;
+}
+.empty-state {
+  margin: 40px auto;
+  max-width: 620px;
+  padding: 50px;
+  background: white;
+  border-radius: 12px;
+}
+.empty-state h2 {
+  font-size: 27px;
+}
+.empty-state p {
+  margin: 18px 0;
+  color: var(--muted);
+}

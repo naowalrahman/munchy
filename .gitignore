@@ -41,3 +41,11 @@ yarn-error.log*
 next-env.d.ts
 
 certificates
+
+secrets/
+
+/secrets/
+/public/vendor/
+/proxy/data/
+
+!proxy/.env.example

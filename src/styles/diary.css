@@ -1,0 +1,372 @@
+.app-header {
+  height: 88px;
+  padding: 0 max(5vw, 24px);
+  display: flex;
+  align-items: center;
+  gap: 60px;
+  background: #fff;
+  border-bottom: 1px solid var(--line);
+}
+.brand {
+  font-size: 33px;
+  letter-spacing: -1.6px;
+  font-weight: 600;
+  text-decoration: none;
+  display: flex;
+  gap: 7px;
+  align-items: center;
+}
+.brand-mark {
+  color: var(--plum);
+  font-size: 31px;
+}
+.app-header nav {
+  display: flex;
+  gap: 12px;
+  height: 100%;
+  align-items: center;
+}
+.app-header nav button {
+  border: 0;
+  background: none;
+  color: var(--muted);
+  height: 46px;
+  padding: 10px 16px;
+}
+.app-header nav button[aria-current="page"] {
+  background: #eeeaf3;
+  color: var(--plum);
+}
+.device-status {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--muted);
+  font-size: 12px;
+}
+.device-status > span {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--green);
+}
+.workspace {
+  max-width: 1370px;
+  margin: auto;
+  padding: 38px 48px 60px;
+}
+.page-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+  margin-bottom: 26px;
+}
+.page-heading p {
+  color: var(--muted);
+  margin-top: 8px;
+}
+.local-label {
+  font-size: 12px;
+  margin-left: 20px;
+}
+.date-controls {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+}
+.date-controls input {
+  max-width: 158px;
+}
+.quick-search {
+  width: 100%;
+  padding: 19px 22px;
+  border-radius: 10px;
+  border-color: #c0cbdc;
+  box-shadow: 0 3px 0 #e0e6ef;
+  text-align: left;
+  margin-bottom: 32px;
+  font-size: 17px;
+  gap: 16px;
+}
+.quick-search > span {
+  flex: 1;
+}
+.quick-search kbd {
+  font-size: 12px;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  padding: 3px 6px;
+  color: var(--muted);
+}
+.diary-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 320px;
+  gap: 42px;
+}
+.section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  margin-bottom: 18px;
+}
+.inline-actions {
+  display: flex;
+  gap: 18px;
+}
+.inline-actions button {
+  font-size: 12px;
+}
+.welcome-note {
+  background: #e8eef8;
+  border-radius: 8px;
+  padding: 20px 22px;
+  margin: 20px 0;
+}
+.welcome-note h3 {
+  font-size: 19px;
+  font-weight: 500;
+}
+.welcome-note p {
+  font-size: 14px;
+  color: #586986;
+  margin-top: 7px;
+  max-width: 62ch;
+}
+.meal-section {
+  margin-top: 24px;
+}
+.meal-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 0 0 12px;
+  border-bottom: 2px solid #c5cfdf;
+}
+.meal-header h3 {
+  font-size: 19px;
+  font-weight: 500;
+}
+.meal-header > span {
+  color: var(--muted);
+  font-size: 13px;
+}
+.meal-header > button {
+  margin-left: auto;
+  font-size: 13px;
+}
+.empty-meal {
+  background: transparent;
+  border: 0;
+  color: var(--muted);
+  padding: 20px 0;
+  width: 100%;
+  justify-content: flex-start;
+  font-size: 14px;
+}
+.entry {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: #fff;
+  padding: 13px 12px;
+  border-bottom: 1px solid var(--line);
+}
+.entry-main {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  flex-direction: column;
+  text-align: left;
+  align-items: flex-start;
+  gap: 3px;
+  border: 0;
+  background: transparent;
+  padding: 4px;
+  line-height: 1.35;
+}
+.entry-main strong {
+  font-weight: 500;
+  font-size: 15px;
+}
+.entry-main small {
+  font-size: 12px;
+}
+.entry > b {
+  font-size: 15px;
+  white-space: nowrap;
+}
+.entry-protein {
+  text-align: right;
+  white-space: nowrap;
+  font-size: 13px;
+}
+.entry-protein small {
+  display: block;
+}
+.entry .icon-button {
+  padding: 6px;
+}
+.entry .icon-button svg {
+  width: 15px;
+  height: 15px;
+}
+.suggestions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding-top: 12px;
+}
+.suggestions > small {
+  margin-right: 5px;
+}
+.suggestions button {
+  font-size: 12px;
+  border-radius: 15px;
+  min-height: 30px;
+  padding: 4px 10px;
+}
+.daily-totals {
+  background: #fff;
+  border: 1px solid var(--line);
+  border-top: 4px solid var(--plum);
+  border-radius: 9px;
+  padding: 22px;
+  height: fit-content;
+}
+.daily-totals h2 {
+  font-size: 19px;
+}
+.energy-total {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin: 19px 0;
+}
+.energy-total strong {
+  font-size: 42px;
+  line-height: 1;
+  font-weight: 500;
+  letter-spacing: -1.5px;
+}
+.energy-total > span {
+  font-size: 13px;
+}
+.energy-total small {
+  display: block;
+}
+.macro-summary {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-bottom: 24px;
+}
+.macro-summary > div {
+  border-top: 3px solid;
+  padding-top: 9px;
+  display: flex;
+  flex-direction: column;
+}
+.macro-summary strong {
+  font-weight: 500;
+  font-size: 19px;
+}
+.macro-summary span {
+  font-size: 12px;
+  color: var(--muted);
+}
+.protein {
+  color: var(--plum);
+}
+.carbohydrate {
+  color: var(--orange);
+}
+.fat {
+  color: var(--green);
+}
+.water-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 14px 0;
+  border-block: 1px solid var(--line);
+  margin: 20px 0;
+}
+.water-row > div {
+  flex: 1;
+}
+.water-row small {
+  display: block;
+}
+.water-row button {
+  padding: 5px 9px;
+  font-size: 12px;
+}
+.nutrient-table h3 {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--plum);
+  margin: 22px 0 8px;
+}
+.nutrient-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 6px 0;
+  font-size: 13px;
+  border-bottom: 1px solid #edf0f5;
+}
+.nutrient-row > span:first-child > small {
+  display: block;
+  font-size: 10px;
+}
+.nutrient-value {
+  text-align: right;
+  white-space: nowrap;
+}
+.nutrient-row button.text-button {
+  font-size: 13px;
+  min-height: 0;
+  color: var(--ink);
+  font-weight: 400;
+}
+.nutrient-table progress {
+  height: 3px;
+  display: block;
+  width: 100%;
+  margin: 0;
+  accent-color: var(--plum);
+}
+.daily-totals .fine-print {
+  margin-top: 20px;
+}
+.day-notes {
+  margin-top: 36px;
+}
+.day-notes textarea {
+  margin: 12px 0;
+}
+.weight-input {
+  width: 110px;
+}
+.check-label {
+  flex-direction: row;
+  align-items: center;
+  font-size: 13px;
+  font-weight: 400;
+}
+.day-notes .section-head {
+  align-items: flex-end;
+}
+.undo-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 15px;
+  background: #eee8f5;
+  margin: 20px 0;
+  border-radius: 7px;
+}
