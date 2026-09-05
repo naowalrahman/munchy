@@ -1,6 +1,5 @@
 "use client";
 import { useEffect, useState } from "react";
-import { ChakraProvider, defaultSystem } from "@chakra-ui/react";
 import { LuNotebookPen, LuCookingPot, LuChartNoAxesCombined, LuSettings, LuCheck } from "react-icons/lu";
 import { LocalStore, useStore } from "./Store";
 import { Diary } from "../diary/Diary";
@@ -95,10 +94,8 @@ function Workspace() {
 }
 export default function App() {
   return (
-    <ChakraProvider value={defaultSystem}>
-      <LocalStore>
-        <Workspace />
-      </LocalStore>
-    </ChakraProvider>
+    <LocalStore>
+      <Workspace />
+    </LocalStore>
   );
 }

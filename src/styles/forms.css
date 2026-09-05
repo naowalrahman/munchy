@@ -70,6 +70,11 @@
   grid-template-columns: 1fr 1fr;
   gap: 12px;
 }
+/* A label that wraps to two lines must not push its field out of line with its neighbour. */
+.portion-fields > label > :last-child,
+.nutrient-inputs > label > :last-child {
+  margin-top: auto;
+}
 .portion-presets {
   display: flex;
   gap: 6px;

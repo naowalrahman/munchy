@@ -1,8 +1,11 @@
 ## Code Style
 
-- Default to Server Components; use `'use client'` only when needed (hooks, browser APIs)
-- Fetch data in Server Components or Server Actions, not `useEffect`
-- Use Server Actions for forms/mutations
+- The build is a static export, so there is no server runtime: no Server Components with data, no Server Actions, no route handlers
+- `src/app` is the static shell only (`layout.tsx`, `page.tsx`, `loading.tsx`); every interactive component below it is `'use client'`, because the diary lives in on-device SQLite that only the browser can reach
+- Read state from `useStore()` in `src/components/shell/Store.tsx`; never fetch app data in `useEffect`
+- Mutate by passing SQLite `Statement[]` to `run()`; the worker replies with a fresh `Snapshot` that replaces state, so don't hand-patch local copies
+- Validate anything crossing a boundary (worker rows, proxy responses, imported backups) with the Zod schemas in `src/utils/model.ts`
+- Style with plain CSS classes in `src/styles/*.css`, imported via `src/app/globals.css`; no CSS-in-JS and no component library
 - Keep files under 400 lines; split large components if it aids clarity
 - No `any`; prefer type inference where possible, otherwise define types with interfaces or Zod schemas
 - Comments only when high-value; don't narrate to the user
@@ -15,18 +18,11 @@
 ## Performance
 
 - Keep client bundle lean; avoid large client-side libraries
-- Use `loading.tsx` and Suspense for streaming
+- First paint is covered by `src/app/loading.tsx` and the boot state in `Store.tsx`; static export means there is no server streaming to lean on
 
 ## Stack
 
-- **Next.js/React** – use React Compiler + latest Server Action patterns
-- **Chakra UI v3** – follow latest styling/theming patterns
-- **Supabase** – use `@supabase/ssr` for auth and DB
-  - use `bun supabase` command to make any necessary changes to auth/DB config
+- **Next.js/React** – App Router with React Compiler; `output: "export"` in `next.config.ts`
+- **SQLite** – `sql.js` running in `public/db-worker.js`, persisted to IndexedDB; reach it through `src/utils/db/`
+- **FatSecret** – food search and details via the Bun proxy in `proxy/`; the client calls only that proxy, configured in Settings
 - **Bun** – runtime and package manager; use `bun run` for scripts
-
-## Cursor Cloud specific instructions
-
-- The hosted Supabase instance enforces email confirmation on sign-up. To test auth flows, use the pre-confirmed login
-  - Username: testuser@usemunchy.com
-  - Password: munchyisthebest
