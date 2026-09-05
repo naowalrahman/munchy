@@ -1,200 +1,348 @@
 .modal {
   margin: auto;
   border: 0;
-  border-radius: 14px;
+  border-radius: 8px;
   padding: 0;
-  width: min(580px, calc(100vw - 24px));
+  width: min(560px, calc(100vw - 24px));
   max-height: 90dvh;
   color: var(--ink);
-  box-shadow: 0 20px 90px #25345a40;
+  background: var(--paper);
+  box-shadow: 0 24px 80px var(--shadow);
 }
 .modal.wide {
   width: min(760px, calc(100vw - 24px));
 }
 .modal::backdrop {
-  background: #25345a70;
-  backdrop-filter: blur(3px);
+  background: var(--backdrop);
 }
 .modal-inner {
-  padding: 25px;
+  padding: 16px 20px 20px;
   overflow: auto;
+  max-height: inherit;
 }
 .modal header {
   position: sticky;
-  top: -25px;
-  background: white;
+  top: -16px;
+  background: var(--paper);
   z-index: 1;
-  padding: 8px 0;
+  padding: 6px 0 4px;
+  margin-bottom: 6px;
+}
+.modal header h2 {
+  font-size: var(--t-lg);
+}
+.modal header .icon-button {
+  font-size: 22px;
+  line-height: 1;
+  color: var(--ink);
+}
+.modal > .modal-inner > .text-button {
+  margin: 6px 0 4px;
 }
 .form-stack {
   display: flex;
   flex-direction: column;
-  gap: 18px;
+  gap: 14px;
 }
 .form-stack h2 {
-  margin-top: 12px;
+  margin-top: 6px;
+}
+.form-stack h3 {
+  margin-top: 4px;
 }
 .portion-editor {
   display: flex;
   flex-direction: column;
-  gap: 17px;
+  gap: 12px;
 }
 .portion-editor h3 {
-  font-size: 24px;
-  line-height: 1.25;
+  font-size: var(--t-xl);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+  margin-top: 4px;
+}
+.portion-editor h3 + .muted {
+  margin-top: -8px;
 }
 .portion-fields {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 14px;
+  gap: 12px;
 }
 .portion-presets {
   display: flex;
-  gap: 8px;
+  gap: 6px;
 }
 .portion-presets button {
   flex: 1;
+  border-color: var(--hair);
+}
+.portion-presets button:hover {
+  border-color: var(--ink);
 }
 .macro-line {
   display: flex;
   flex-wrap: wrap;
-  gap: 12px;
-  font-size: 13px;
-  padding: 13px 0;
+  gap: 4px 14px;
+  font-size: var(--t-sm);
+  padding: 8px 12px;
+  background: var(--wash);
+  border-radius: var(--radius);
 }
 .macro-line b {
-  font-weight: 600;
+  font-weight: 700;
+  font-size: var(--t-base);
 }
 .nutrient-inputs {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 14px;
+  gap: 10px 12px;
 }
 .nutrient-inputs label {
-  font-size: 12px;
+  font-size: var(--t-xs);
+}
+.nutrient-inputs input {
+  min-height: 36px;
+  padding: 6px 10px;
+}
+.entry-tools {
+  display: flex;
+  gap: 8px;
+  padding: 10px 0 4px;
+  margin-top: 4px;
+}
+.entry-tools button {
+  flex: 1;
 }
 .search-box {
   display: flex;
   gap: 8px;
-  margin-bottom: 20px;
+  margin: 10px 0 14px;
+}
+.search-box button {
+  flex-shrink: 0;
+}
+.result-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding-bottom: 2px;
+}
+.result-head h3 {
+  font-size: var(--t-sm);
+  font-weight: 700;
 }
 .food-results {
   display: flex;
   flex-direction: column;
-  max-height: 330px;
+  max-height: 340px;
   overflow: auto;
-  margin-bottom: 18px;
+  margin-bottom: 14px;
 }
 .food-result {
+  flex-shrink: 0;
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 10px;
   text-align: left;
   border: 0;
-  border-bottom: 1px solid var(--line);
-  border-radius: 0;
-  padding: 13px 5px;
+  border-radius: var(--radius);
+  padding: 7px 6px;
+  margin: 0 -6px;
+  font-weight: 400;
+  min-height: 0;
+}
+.food-result:hover {
+  background: var(--wash);
+  border-color: transparent;
+}
+.food-result > span:first-child {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  line-height: 1.3;
 }
 .food-result strong {
-  font-weight: 500;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .food-result small {
   display: block;
-  margin-top: 3px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .food-result > span:last-child {
-  font-size: 21px;
-  color: var(--plum);
+  font-size: var(--t-lg);
+  font-weight: 700;
+  color: var(--muted);
+}
+.food-result > span.star {
+  color: var(--yolk-deep);
+}
+.pager {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: var(--t-sm);
+  color: var(--muted);
+  margin-bottom: 10px;
 }
 .empty-small {
   color: var(--muted);
-  font-size: 14px;
-  padding: 20px 0;
+  font-size: var(--t-sm);
+  padding: 14px 0;
 }
 .attribution {
-  font-size: 12px;
+  font-size: var(--t-xs);
   color: var(--muted);
-  margin-top: 20px;
+  margin-top: 12px;
 }
 .meal-name-row {
   display: flex;
-  gap: 7px;
+  gap: 6px;
+}
+.meal-name-row button {
+  min-width: 40px;
+  padding: 0;
 }
 .wide-input {
-  max-width: 540px;
-  margin-bottom: 22px;
+  max-width: 480px;
+  margin-bottom: 14px;
 }
 .recipe-list {
   display: flex;
   flex-direction: column;
-  gap: 18px;
+  gap: 22px;
+  margin-top: 6px;
 }
-.recipe-card {
-  display: flex;
-  gap: 24px;
-  border: 1px solid var(--line);
-  background: white;
-  padding: 25px;
-  border-radius: 10px;
-}
-.recipe-symbol {
-  font-size: 60px;
-  font-weight: 400;
-  line-height: 1;
-  background: #eee8f5;
-  color: var(--plum);
-  width: 85px;
-  height: 92px;
-  display: flex;
+.recipe-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 6px 24px;
   align-items: center;
-  justify-content: center;
-  border-radius: 40px 40px 8px 8px;
-}
-.recipe-content {
-  flex: 1;
 }
 .recipe-title {
   background: none;
   border: 0;
+  border-radius: 0;
   padding: 0;
+  min-height: 0;
   justify-content: flex-start;
   text-align: left;
-  font-size: 23px;
-  font-weight: 500;
+  font-size: var(--t-lg);
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  line-height: 1.2;
 }
-.recipe-content p {
-  font-size: 13px;
+.recipe-title:hover {
+  background: none;
+  border-color: transparent;
+  text-decoration: underline;
+  text-decoration-color: var(--yolk);
+  text-decoration-thickness: 1.5px;
+  text-underline-offset: 3px;
+}
+.recipe-meta {
+  font-size: var(--t-sm);
   color: var(--muted);
+  margin-top: 3px;
+}
+.recipe-macros {
+  font-size: var(--t-sm);
   margin-top: 6px;
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.recipe-macros b {
+  font-weight: 700;
 }
 .recipe-actions {
   display: flex;
-  gap: 7px;
+  gap: 4px 12px;
   align-items: center;
   flex-wrap: wrap;
-  max-width: 225px;
-}
-.recipe-actions button {
-  font-size: 13px;
+  justify-content: flex-end;
 }
 .recipe-ingredient {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  border-bottom: 1px solid var(--line);
-  padding-bottom: 10px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  align-items: start;
+  margin-top: -6px;
+}
+.recipe-ingredient > .entry-main {
+  grid-column: 1;
+}
+.recipe-ingredient > span {
+  grid-column: 2;
+  font-size: var(--t-sm);
+  white-space: nowrap;
+  font-weight: 600;
+  padding-top: 3px;
+}
+.recipe-ingredient > button:last-child {
+  grid-column: 3;
+  min-width: 32px;
+  min-height: 32px;
+  padding: 0;
+  border: 0;
+  color: var(--muted);
+  margin: -4px 0 0 4px;
+}
+.ingredient-list {
+  padding: 0;
+  margin: 12px 0;
+  list-style: none;
+}
+.ingredient-list li {
+  display: grid;
+  grid-template-columns: auto minmax(14px, 1fr) auto;
+  align-items: baseline;
+  padding: 3px 0;
+  font-size: var(--t-sm);
+}
+.ingredient-list li::after {
+  content: "";
+  grid-column: 2;
+  grid-row: 1;
+  align-self: end;
+  height: 3px;
+  margin: 0 6px 4px;
+  background-image: var(--leader);
+  background-size: 5px 3px;
+  background-repeat: repeat-x;
+}
+.ingredient-list li span:first-child {
+  grid-column: 1;
+}
+.ingredient-list li span:last-child {
+  grid-column: 3;
+  color: var(--muted);
+  white-space: nowrap;
 }
 .empty-state {
-  margin: 40px auto;
-  max-width: 620px;
-  padding: 50px;
-  background: white;
-  border-radius: 12px;
+  margin: 8px 0;
+  max-width: 560px;
+  padding: 24px 0;
 }
 .empty-state h2 {
-  font-size: 27px;
+  font-size: var(--t-xl);
+  letter-spacing: -0.02em;
 }
 .empty-state p {
-  margin: 18px 0;
+  margin: 10px 0 16px;
   color: var(--muted);
+}
+.modal .portion-fields + .portion-editor {
+  margin-top: 14px;
+}
+.entry-tools + .nutrient-table {
+  margin-top: 10px;
 }

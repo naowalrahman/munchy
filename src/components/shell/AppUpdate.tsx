@@ -29,7 +29,7 @@ export function AppUpdate() {
         waiting.postMessage({ type: "ACTIVATE_UPDATE" });
       }}
     >
-      Update ready · reload app
+      Update ready, reload now
     </button>
   );
 }

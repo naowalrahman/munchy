@@ -58,6 +58,14 @@ bun run scripts/dev-proxy.ts
 
 This creates `secrets/app-access-token.txt` if absent. In Settings, use `http://localhost:8787` and that app token. FatSecret still requires whitelisting the outgoing address. Never put OAuth credentials in a public environment variable or the client app.
 
+Because FatSecret whitelists only the deployed reserved IP, a local proxy answers `/health` and `/v1/capabilities` but receives FatSecret code 21 for real lookups. For live search while developing, run:
+
+```sh
+bun run dev:full
+```
+
+This starts a loopback relay on `http://localhost:8787` that forwards `/v1/*` and `/health` to the deployed proxy, then runs `next dev`. The relay sends no browser `Origin` upstream, so the production origin allowlist stays unchanged, and it supplies the token from ignored `secrets/app-access-token.txt` when the app sends none. In Settings, save `http://localhost:8787`; the token field may stay empty. `MUNCHY_UPSTREAM`, `MUNCHY_RELAY_PORT`, `MUNCHY_APP_ORIGIN`, and `MUNCHY_APP_TOKEN` override the defaults. These requests consume the live daily budget.
+
 ## Storage and recovery
 
 The SQLite file is atomically persisted in IndexedDB after each transaction. A Web Lock serializes access across tabs; revision checks reject stale writes instead of silently overwriting another window. The previous saved database remains intact if a write fails. The worker performs version checks before opening a database from a newer app.

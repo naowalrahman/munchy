@@ -8,6 +8,7 @@ import { Recipes } from "../recipes/Recipes";
 import { Insights } from "../insights/Insights";
 import { Settings } from "../settings/Settings";
 import { AppUpdate } from "./AppUpdate";
+import { watchSystemTheme } from "@/utils/theme";
 type Page = "diary" | "recipes" | "insights" | "settings";
 const pages = [
   { id: "diary", label: "Diary", icon: LuNotebookPen },
@@ -19,6 +20,7 @@ function Workspace() {
   const [page, setPage] = useState<Page>("diary");
   const [offline, setOffline] = useState(false);
   const { notice, notify } = useStore();
+  useEffect(() => watchSystemTheme(), []);
   useEffect(() => {
     const change = () => setOffline(!navigator.onLine);
     change();
@@ -54,10 +56,12 @@ function Workspace() {
             </button>
           ))}
         </nav>
-        <span className="device-status">
-          <span />
-          {offline ? "Offline · local diary ready" : "Your everyday food diary"}
-        </span>
+        {offline && (
+          <span className="device-status">
+            <span />
+            Offline, diary still works
+          </span>
+        )}
       </header>
       <main className="workspace">
         {page === "diary" ? (
@@ -72,9 +76,9 @@ function Workspace() {
       </main>
       <footer className="app-footer">
         <AppUpdate />
-        <span>Made for the food you actually eat.</span>
+        <span>Your diary never leaves this device.</span>
         <a href="https://www.fatsecret.com" rel="noreferrer" target="_blank">
-          Powered by fatsecret
+          Food data by fatsecret
         </a>
       </footer>
       {notice && (

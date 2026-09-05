@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useStore } from "../shell/Store";
 import { settingsSchema, nutrientKeys } from "@/utils/model";
 import { nutrients, portionNutrition } from "@/utils/nutrition";
@@ -9,21 +9,47 @@ import { request } from "@/utils/food/api";
 import { today } from "@/utils/dates";
 import { z } from "zod";
 import { Modal } from "../ui/Modal";
+import { readThemeSetting, saveThemeSetting, type ThemeSetting } from "@/utils/theme";
+const themeOptions: { id: ThemeSetting; label: string }[] = [
+  { id: "system", label: "Match device" },
+  { id: "light", label: "Light" },
+  { id: "dark", label: "Dark" },
+];
 export function Settings() {
   const { data, run, notify } = useStore();
   const [status, setStatus] = useState("");
   const [backup, setBackup] = useState<unknown>();
   const [storage, setStorage] = useState("");
+  const [theme, setTheme] = useState<ThemeSetting>("system");
+  useEffect(() => setTheme(readThemeSetting()), []);
   return (
     <>
       <div className="page-heading">
         <div>
-          <h1>Make it yours</h1>
-          <p>Your meals, your targets, your data.</p>
+          <h1>Settings</h1>
+          <p>Meals, targets, food search, and backups.</p>
         </div>
       </div>
       <div className="settings-layout">
         <section>
+          <section className="settings-section">
+            <h2>Appearance</h2>
+            <div className="segmented" role="group" aria-label="Appearance">
+              {themeOptions.map((o) => (
+                <button
+                  key={o.id}
+                  aria-pressed={theme === o.id}
+                  onClick={() => {
+                    setTheme(o.id);
+                    saveThemeSetting(o.id);
+                  }}
+                >
+                  {o.label}
+                </button>
+              ))}
+            </div>
+            <p className="muted">Applies to this device only.</p>
+          </section>
           <form
             className="settings-section form-stack"
             onSubmit={async (e) => {
@@ -52,12 +78,9 @@ export function Settings() {
               One meal per line
               <textarea name="meals" rows={4} defaultValue={data.settings.defaultMeals.join("\n")} />
             </label>
-            <p className="muted">
-              These names apply when a new day is first saved. Existing diaries keep their meal names. Future food
-              logging is disabled.
-            </p>
-            <h2>Personal daily targets</h2>
-            <p className="muted">Optional. Set your own targets; blank fields have no target.</p>
+            <p className="muted">Used for each new day. Days you have already logged keep their own meals.</p>
+            <h2>Daily targets</h2>
+            <p className="muted">Optional. Leave a field blank to skip that target.</p>
             <div className="nutrient-inputs">
               {nutrientKeys.map((k) => (
                 <label key={k}>
@@ -66,7 +89,7 @@ export function Settings() {
                 </label>
               ))}
             </div>
-            <button className="primary">Save preferences</button>
+            <button className="primary">Save meals and targets</button>
           </form>
         </section>
         <aside>
@@ -98,9 +121,9 @@ export function Settings() {
               }
             }}
           >
-            <h2>Food search connection</h2>
+            <h2>Food search</h2>
             <p className="muted">
-              Only food queries go to this service. Your diary, recipes, and goals stay on this device.
+              Only search queries go to this service. Your diary, recipes, and targets stay on this device.
             </p>
             <label>
               Proxy address
@@ -115,71 +138,76 @@ export function Settings() {
               App access token
               <input name="token" type="password" defaultValue={data.settings.proxyToken} autoComplete="off" />
             </label>
-            <button className="primary">Save connection</button>
-            <button
-              type="button"
-              onClick={async () => {
-                setStatus("Testing…");
-                try {
-                  const result = z
-                    .object({ configured: z.boolean(), cacheSeconds: z.number() })
-                    .parse(await request(data.settings, "/v1/capabilities"));
-                  setStatus(
-                    result.configured
-                      ? result.cacheSeconds > 0
-                        ? "Proxy connected. Offline FatSecret logging is enabled; search also requires IP whitelisting."
-                        : "Proxy connected. Search requires IP whitelisting; persistent FatSecret logging needs storage permission on your account."
-                      : "Proxy reachable, but FatSecret credentials are missing."
-                  );
-                } catch (e) {
-                  setStatus(String(e));
-                }
-              }}
-            >
-              Test connection
-            </button>
-            {status && <p role="status">{status}</p>}
+            <div className="button-row">
+              <button className="primary">Save connection</button>
+              <button
+                type="button"
+                onClick={async () => {
+                  setStatus("Testing…");
+                  try {
+                    const result = z
+                      .object({ configured: z.boolean(), cacheSeconds: z.number() })
+                      .parse(await request(data.settings, "/v1/capabilities"));
+                    setStatus(
+                      result.configured
+                        ? result.cacheSeconds > 0
+                          ? "Proxy connected. Offline FatSecret logging is enabled; search also requires IP whitelisting."
+                          : "Proxy connected. Search requires IP whitelisting; persistent FatSecret logging needs storage permission on your account."
+                        : "Proxy reachable, but FatSecret credentials are missing."
+                    );
+                  } catch (e) {
+                    setStatus(String(e));
+                  }
+                }}
+              >
+                Test connection
+              </button>
+            </div>
+            {status && (
+              <p role="status" className="muted">
+                {status}
+              </p>
+            )}
             <p className="fine-print">
               FatSecret Basic is US-only and does not include caching. The proxy enables offline caching only with
               configured storage permission. Custom foods work offline without a connection.
             </p>
           </form>
           <section className="settings-section form-stack">
-            <h2>Keep your data</h2>
-            <p>
-              {data.entries.length} food entries · {data.recipes.length} recipes · {data.foods.length}/200 recent foods
-            </p>
+            <h2>Backups</h2>
             <p className="muted">
-              Each device has its own diary. Export a backup to transfer or protect it. Clearing site data removes this
-              device’s diary.
+              {data.entries.length} food entries, {data.recipes.length} recipes, and {data.foods.length} of 200 recent
+              foods on this device. Clearing site data removes them, so export a backup now and then.
             </p>
-            <button onClick={() => download(`munchy-${today()}.json`, exportBackup(data))}>Export full backup</button>
-            <button
-              onClick={() => {
-                const cell = (s: unknown) => {
-                  const text = String(s ?? "");
-                  return '"' + (/^[=+@\-]/.test(text) ? "'" : "") + text.replaceAll('"', '""') + '"';
-                };
-                const rows = [
-                  ["Date", "Meal", "Food", "Quantity", "Unit", ...nutrientKeys],
-                  ...data.entries.map((e) => [
-                    e.date,
-                    e.meal,
-                    e.food.name,
-                    e.quantity,
-                    e.unit,
-                    ...nutrientKeys.map((k) => portionNutrition(e)[k] ?? ""),
-                  ]),
-                ];
-                download(
-                  `munchy-nutrients-${today()}.csv`,
-                  rows.map((r) => r.map(cell).join(",")).join("\n"),
-                  "text/csv"
-                );
-              }}
-            >
-              Export nutrition CSV
-            </button>
+            <div className="button-row">
+              <button onClick={() => download(`munchy-${today()}.json`, exportBackup(data))}>Export backup</button>
+              <button
+                onClick={() => {
+                  const cell = (s: unknown) => {
+                    const text = String(s ?? "");
+                    return '"' + (/^[=+@\-]/.test(text) ? "'" : "") + text.replaceAll('"', '""') + '"';
+                  };
+                  const rows = [
+                    ["Date", "Meal", "Food", "Quantity", "Unit", ...nutrientKeys],
+                    ...data.entries.map((e) => [
+                      e.date,
+                      e.meal,
+                      e.food.name,
+                      e.quantity,
+                      e.unit,
+                      ...nutrientKeys.map((k) => portionNutrition(e)[k] ?? ""),
+                    ]),
+                  ];
+                  download(
+                    `munchy-nutrients-${today()}.csv`,
+                    rows.map((r) => r.map(cell).join(",")).join("\n"),
+                    "text/csv"
+                  );
+                }}
+              >
+                Export CSV
+              </button>
+            </div>
             <label className="file-label">
               Import backup
               <input
@@ -209,42 +237,43 @@ export function Settings() {
                 );
               }}
             >
-              Protect local storage
+              Ask the browser to keep this data
             </button>
-            {storage && <p role="status">{storage}</p>}
+            {storage && (
+              <p role="status" className="muted">
+                {storage}
+              </p>
+            )}
           </section>
           <section className="settings-section">
-            <h2>Install Munchy</h2>
-            <p>
-              <b>Android:</b> open this app in Chrome, then choose “Install app” or “Add to Home screen” from its menu.
-            </p>
-            <p>
-              <b>macOS:</b> in Safari, choose File → Add to Dock. Chrome also supports installing it as an app.
-            </p>
+            <h2>Install as an app</h2>
             <p className="muted">
-              Open once while online to download the app. Saved foods and your diary then work offline.
+              On Android, open this page in Chrome and choose Install app from the menu. On a Mac, use Add to Dock in
+              Safari or Install in Chrome. Open it once while online, and the diary works offline after that.
             </p>
           </section>
         </aside>
       </div>
       {backup !== undefined && (
         <Modal title="Import this backup?" onClose={() => setBackup(undefined)}>
-          <p>
-            Matching records will be replaced; other local records will remain. Your food proxy connection is preserved.
+          <p className="muted">
+            Matching records are replaced and everything else stays. Your food search connection is kept.
           </p>
-          <button onClick={() => download(`munchy-before-import-${today()}.json`, exportBackup(data))}>
-            Back up this device first
-          </button>
-          <button
-            className="primary"
-            onClick={() =>
-              void run(importBackup(backup, data), "Backup imported")
-                .then(() => setBackup(undefined))
-                .catch(() => {})
-            }
-          >
-            Import backup
-          </button>
+          <div className="button-row">
+            <button onClick={() => download(`munchy-before-import-${today()}.json`, exportBackup(data))}>
+              Export current data first
+            </button>
+            <button
+              className="primary"
+              onClick={() =>
+                void run(importBackup(backup, data), "Backup imported")
+                  .then(() => setBackup(undefined))
+                  .catch(() => {})
+              }
+            >
+              Import backup
+            </button>
+          </div>
         </Modal>
       )}
     </>

@@ -18,3 +18,11 @@ export function shiftDate(date: string, delta: number) {
 }
 export const dateLabel = (date: string) =>
   new Date(`${date}T12:00:00`).toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" });
+export const shortDateLabel = (date: string) =>
+  new Date(`${date}T12:00:00`).toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" });
+export function relativeDayLabel(date: string) {
+  const now = today();
+  if (date === now) return "Today";
+  if (date === shiftDate(now, -1)) return "Yesterday";
+  return new Date(`${date}T12:00:00`).toLocaleDateString(undefined, { weekday: "long" });
+}

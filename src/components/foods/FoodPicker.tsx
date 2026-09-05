@@ -71,9 +71,7 @@ export function FoodPicker({
   }
   return (
     <Modal
-      title={
-        selected ? "Choose your portion" : custom ? "Create a food" : meal ? `Add to ${meal}` : "Find an ingredient"
-      }
+      title={selected ? "How much?" : custom ? "New food" : meal ? `Add to ${meal}` : "Add an ingredient"}
       onClose={() => {
         abort.current?.abort();
         onClose();
@@ -86,8 +84,7 @@ export function FoodPicker({
           </button>
           {selected.source === "fatsecret" && selected.cacheUntil <= Date.now() && (
             <p className="error">
-              Your FatSecret account supports search, but has not enabled storage. Persistent logging requires storage
-              permission or Premier Free approval.
+              This food can be logged today but not kept for later. Your FatSecret plan allows search without storage.
             </p>
           )}
           <PortionEditor
@@ -129,7 +126,7 @@ export function FoodPicker({
             <input
               autoFocus
               aria-label="Search foods"
-              placeholder="Food, brand, or recipe"
+              placeholder="Search foods and brands"
               value={query}
               onChange={(e) => {
                 seq.current++;
@@ -144,10 +141,10 @@ export function FoodPicker({
               Search
             </button>
           </form>
-          <div className="section-head">
-            <p className="muted">Recent foods & your recipes</p>
+          <div className="result-head">
+            <h3>Recent foods and recipes</h3>
             <button className="text-button" onClick={() => setCustom(true)}>
-              Create food
+              New food from a label
             </button>
           </div>
           <div className="food-results">
@@ -157,16 +154,20 @@ export function FoodPicker({
                   <strong>{food.name}</strong>
                   <small>{food.brand || (food.source === "recipe" ? "Your recipe" : "Saved on this device")}</small>
                 </span>
-                <span>{data.favorites.includes(food.id) ? "★" : "+"}</span>
+                <span className={data.favorites.includes(food.id) ? "star" : ""}>
+                  {data.favorites.includes(food.id) ? "★" : "+"}
+                </span>
               </button>
             ))}
           </div>
           {!local.length && (
-            <p className="empty-small">
-              Search FatSecret or create a food from its nutrition label. Logged foods will appear here.
+            <p className="empty-small">Foods you log will show up here. Search above or add one from its label.</p>
+          )}
+          {busy && (
+            <p role="status" className="muted">
+              Searching…
             </p>
           )}
-          {busy && <p role="status">Looking up food…</p>}
           {error && (
             <p role="alert" className="error">
               {error}
@@ -174,7 +175,9 @@ export function FoodPicker({
           )}
           {!!results.length && (
             <>
-              <h3>FatSecret results</h3>
+              <div className="result-head">
+                <h3>Search results</h3>
+              </div>
               <div className="food-results">
                 {results.map((food) => (
                   <button disabled={busy} className="food-result" key={food.id} onClick={() => void select(food.id)}>
@@ -187,19 +190,23 @@ export function FoodPicker({
                   </button>
                 ))}
               </div>
-              <div className="section-head">
-                <button disabled={!page || busy} onClick={() => void search(page - 1)}>
+              <div className="pager">
+                <button className="small" disabled={!page || busy} onClick={() => void search(page - 1)}>
                   Previous
                 </button>
                 <span>Page {page + 1}</span>
-                <button disabled={(page + 1) * 20 >= total || busy} onClick={() => void search(page + 1)}>
+                <button
+                  className="small"
+                  disabled={(page + 1) * 20 >= total || busy}
+                  onClick={() => void search(page + 1)}
+                >
                   Next
                 </button>
               </div>
             </>
           )}
           <p className="attribution">
-            Food search powered by{" "}
+            Search results by{" "}
             <a href="https://www.fatsecret.com" target="_blank" rel="noreferrer">
               fatsecret
             </a>

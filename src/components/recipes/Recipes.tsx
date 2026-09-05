@@ -9,6 +9,7 @@ import { PortionEditor } from "../foods/PortionEditor";
 import { dayFor, logEntries } from "@/utils/db/operations";
 import { upsert } from "@/utils/db/client";
 import { today } from "@/utils/dates";
+import { portionLabel } from "../diary/MealSection";
 export function Recipes() {
   const { data, run } = useStore();
   const [query, setQuery] = useState("");
@@ -22,11 +23,11 @@ export function Recipes() {
     <>
       <div className="page-heading">
         <div>
-          <h1>Your recipe book</h1>
-          <p>Make it once. Log it in seconds.</p>
+          <h1>Recipes</h1>
+          <p>Build a dish once, then log a serving or a weighed amount.</p>
         </div>
         <button className="primary" onClick={() => setEditing(null)}>
-          + Create recipe
+          New recipe
         </button>
       </div>
       <input
@@ -47,29 +48,31 @@ export function Recipes() {
             const food = recipeFood(r);
             const n = food.servings[0].nutrients;
             return (
-              <article className="recipe-card" key={r.id}>
-                <div className="recipe-symbol">♧</div>
-                <div className="recipe-content">
+              <article className="recipe-row" key={r.id}>
+                <div>
                   <button className="recipe-title" onClick={() => setDetail(r)}>
                     {r.name}
                   </button>
-                  <p>
-                    {r.servings} servings{r.cookedGrams ? ` · ${r.cookedGrams} g prepared` : ""} ·{" "}
-                    {r.ingredients.length} ingredients
+                  <p className="recipe-meta">
+                    {r.servings} servings, {r.ingredients.length} ingredients
+                    {r.cookedGrams ? `, ${formatNumber(r.cookedGrams, 0)} g cooked` : ""}
+                    {r.tags ? `. ${r.tags}` : ""}
                   </p>
-                  <p>{r.tags}</p>
-                  <div className="macro-line">
+                  <div className="recipe-macros">
                     <b>{formatNumber(n.calories, 0)} kcal</b>
                     <span>{formatNumber(n.protein)} g protein</span>
-                    <span>per serving</span>
+                    <span className="muted">per serving</span>
                   </div>
                 </div>
                 <div className="recipe-actions">
-                  <button className="primary" onClick={() => setLogging(r)}>
-                    Log recipe
+                  <button className="primary small" onClick={() => setLogging(r)}>
+                    Log a serving
                   </button>
-                  <button onClick={() => setEditing(r)}>Edit</button>
+                  <button className="text-button" onClick={() => setEditing(r)}>
+                    Edit
+                  </button>
                   <button
+                    className="text-button"
                     onClick={() => {
                       const id = crypto.randomUUID();
                       void run(
@@ -81,6 +84,7 @@ export function Recipes() {
                     Duplicate
                   </button>
                   <button
+                    className="text-button"
                     onClick={() =>
                       void run([{ sql: "DELETE FROM recipes WHERE id=?", params: [r.id] }], "Recipe removed")
                         .then(() => setRemoved(r))
@@ -96,12 +100,14 @@ export function Recipes() {
       </div>
       {!data.recipes.length && (
         <div className="empty-state">
-          <h2>A recipe is your fastest repeat meal.</h2>
+          <h2>No recipes yet</h2>
           <p>
-            Add ingredients with their real portions, set your batch yield, and save the method. Log a serving or weigh
-            out exactly what you eat.
+            Add ingredients with their real portions and the number of servings. Munchy works out the nutrition per
+            serving, so logging a repeat meal takes one tap.
           </p>
-          <button onClick={() => setEditing(null)}>Create your first recipe</button>
+          <button className="primary" onClick={() => setEditing(null)}>
+            Create a recipe
+          </button>
         </div>
       )}
       {removed && (
@@ -120,7 +126,7 @@ export function Recipes() {
       )}
       {editing !== undefined && <RecipeEditor recipe={editing ?? undefined} onClose={() => setEditing(undefined)} />}
       {logging && (
-        <Modal title="Log recipe for today" onClose={() => setLogging(null)}>
+        <Modal title="Log to today" onClose={() => setLogging(null)}>
           <label>
             Meal
             <select value={meal} onChange={(e) => setMeal(e.target.value)}>
@@ -151,11 +157,12 @@ export function Recipes() {
       )}
       {detail && (
         <Modal title={detail.name} onClose={() => setDetail(null)}>
-          <p className="method">{detail.instructions || "No method added yet."}</p>
-          <ul>
+          <p className="method">{detail.instructions || "No method written yet."}</p>
+          <ul className="ingredient-list">
             {detail.ingredients.map((p, i) => (
               <li key={i}>
-                {p.quantity} {p.unit} — {p.food.name}
+                <span>{p.food.name}</span>
+                <span>{portionLabel(p)}</span>
               </li>
             ))}
           </ul>

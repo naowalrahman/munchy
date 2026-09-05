@@ -56,8 +56,10 @@ export function LocalStore({ children }: { children: ReactNode }) {
   if (!data)
     return (
       <main className="boot">
-        <span className="brand">munchy</span>
-        <p>Opening your diary on this device…</p>
+        <span className="brand">
+          munchy<span className="brand-mark">✳</span>
+        </span>
+        <p className="muted">Opening your diary on this device…</p>
       </main>
     );
   return <Context.Provider value={{ data, run, notice, notify, busy }}>{children}</Context.Provider>;

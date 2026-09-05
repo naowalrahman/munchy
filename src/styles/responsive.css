@@ -1,55 +1,20 @@
-@media (min-width: 1500px) {
-  .workspace {
-    padding-top: 50px;
-  }
-  .app-header {
-    padding-inline: calc((100vw - 1274px) / 2);
-  }
-}
 @media (max-width: 1100px) {
   .app-header {
-    gap: 25px;
-    padding: 0 25px;
-  }
-  .device-status {
-    display: none;
-  }
-  .workspace {
-    padding: 30px 25px;
+    gap: 20px;
   }
   .diary-layout {
-    gap: 22px;
+    gap: 24px;
     grid-template-columns: minmax(0, 1fr) 290px;
-  }
-  .entry {
-    gap: 6px;
-    padding: 10px 5px;
   }
   .entry-protein {
     display: none;
   }
-  .local-label {
-    display: none;
-  }
-  .app-footer {
-    padding: 20px 25px;
-  }
   .insights-layout {
     gap: 24px;
-    grid-template-columns: minmax(0, 1fr) 300px;
+    grid-template-columns: minmax(0, 1fr) 290px;
   }
-  .page-heading {
-    align-items: flex-start;
-  }
-  .insight-controls {
-    flex-wrap: wrap;
-    gap: 14px;
-  }
-  .recipe-actions {
-    max-width: 150px;
-  }
-  .inline-actions {
-    gap: 9px;
+  .settings-layout {
+    gap: 0 28px;
   }
 }
 @media (max-width: 760px) {
@@ -57,63 +22,85 @@
     font-size: 14px;
   }
   .app-header {
-    height: 70px;
-    padding: 0 20px;
+    height: 48px;
+    padding: 0 16px;
+    gap: 0;
   }
   .brand {
-    font-size: 29px;
+    font-size: 22px;
+  }
+  .device-status {
+    font-size: 11px;
   }
   .app-header nav {
     position: fixed;
     bottom: 0;
     left: 0;
     right: 0;
-    background: #fff;
+    background: var(--wash);
     z-index: 40;
-    border-top: 1px solid var(--line);
-    height: calc(66px + env(safe-area-inset-bottom));
+    height: calc(58px + env(safe-area-inset-bottom));
     padding-bottom: env(safe-area-inset-bottom);
     justify-content: space-around;
     gap: 0;
   }
   .app-header nav button {
+    flex: 1;
     flex-direction: column;
-    gap: 3px;
+    gap: 2px;
     font-size: 10px;
-    height: 54px;
-    border-radius: 6px;
-    min-width: 66px;
-    padding: 7px;
+    font-weight: 600;
+    padding: 6px 4px 4px;
+  }
+  .app-header nav button[aria-current="page"]::after {
+    top: 0;
+    bottom: auto;
+    left: 22%;
+    right: 22%;
+    height: 3px;
+    border-radius: 0 0 2px 2px;
   }
   .app-header nav svg {
-    width: 20px;
-    height: 20px;
+    width: 21px;
+    height: 21px;
   }
   .workspace {
-    padding: 25px 16px 30px;
+    padding: 12px 16px 24px;
   }
-  .page-heading {
-    flex-direction: column;
-    gap: 17px;
-    margin-bottom: 23px;
+  .day-head {
+    margin-bottom: 8px;
+    gap: 2px;
+  }
+  .day-head > button {
+    min-width: 34px;
+    min-height: 34px;
+    border: 0;
+  }
+  .day-title {
+    padding: 2px 4px;
+    gap: 8px;
+    flex: 1;
+    min-width: 0;
   }
   h1 {
-    font-size: 29px;
+    font-size: 26px;
+  }
+  .day-title small {
+    font-size: var(--t-xs);
+  }
+  .page-heading {
+    margin-bottom: 12px;
+  }
+  .page-heading h1 {
+    font-size: 26px;
   }
   .page-heading p {
-    font-size: 13px;
-  }
-  .date-controls {
-    width: 100%;
-  }
-  .date-controls input {
-    max-width: none;
-    flex: 1;
+    display: none;
   }
   .quick-search {
-    font-size: 15px;
-    padding: 17px 15px;
-    margin-bottom: 26px;
+    min-height: 42px;
+    margin-bottom: 8px;
+    font-size: var(--t-sm);
   }
   .quick-search kbd {
     display: none;
@@ -122,27 +109,34 @@
   .insights-layout,
   .settings-layout {
     grid-template-columns: 1fr;
-    gap: 32px;
+    gap: 20px;
   }
-  .section-head {
-    gap: 8px;
-    flex-wrap: wrap;
+  .empty-day {
+    margin-top: 8px;
   }
-  .section-head h2 {
-    font-size: 18px;
+  .meal-section {
+    margin-bottom: 16px;
   }
-  .inline-actions button {
-    font-size: 11px;
-  }
-  .welcome-note {
-    padding: 18px;
+  .meal-section:first-of-type {
+    margin-top: 6px;
   }
   .meal-header h3 {
-    font-size: 18px;
+    font-size: var(--t-base);
+  }
+  .meal-header > button {
+    min-height: 28px;
+    padding: 2px 8px;
+    font-size: var(--t-xs);
+    border-width: 1px;
   }
   .entry {
-    gap: 6px;
-    padding: 12px 4px;
+    padding: 3px 0;
+  }
+  .entry-main::after {
+    margin-top: 10px;
+  }
+  .entry-main {
+    padding: 2px 0;
   }
   .entry-main strong {
     font-size: 14px;
@@ -151,84 +145,75 @@
     font-size: 11px;
   }
   .entry > b {
-    font-size: 13px;
-  }
-  .entry > b small {
-    display: block;
-    text-align: right;
-  }
-  .entry .icon-button {
-    min-width: 27px;
-    padding: 5px;
-  }
-  .entry .icon-button svg {
-    width: 14px;
-    height: 14px;
-  }
-  .day-notes .section-head {
-    align-items: center;
-    gap: 15px;
-  }
-  .daily-totals {
-    padding: 22px;
-  }
-  .nutrient-row {
-    padding: 9px 0;
     font-size: 14px;
   }
+  .entry-actions {
+    display: none;
+  }
+  .suggestions {
+    padding-top: 6px;
+  }
+  .diary-tools {
+    justify-content: space-between;
+    gap: 10px;
+  }
+  .facts {
+    padding: 12px 14px 14px;
+  }
+  .facts > h2 {
+    font-size: 24px;
+  }
+  .facts-energy strong {
+    font-size: 30px;
+  }
   .app-footer {
-    padding: 15px 20px 100px;
-    font-size: 10px;
-    gap: 20px;
+    padding: 10px 16px calc(74px + env(safe-area-inset-bottom));
+    font-size: 11px;
   }
   .toast {
-    bottom: 85px;
-    width: calc(100% - 26px);
-    font-size: 13px;
+    bottom: calc(70px + env(safe-area-inset-bottom));
+    width: calc(100% - 24px);
   }
-  .modal {
-    max-height: 94dvh;
-    border-radius: 12px;
+  .modal,
+  .modal.wide {
+    width: 100vw;
+    max-width: 100vw;
+    max-height: calc(100dvh - 24px);
+    margin: auto 0 0;
+    border: 0;
+    border-radius: 12px 12px 0 0;
   }
   .modal-inner {
-    padding: 20px;
+    padding: 8px 16px calc(16px + env(safe-area-inset-bottom));
   }
   .modal header {
-    top: -20px;
+    top: -8px;
+  }
+  .modal header h2 {
+    font-size: var(--t-md);
+  }
+  .portion-editor h3 {
+    font-size: var(--t-lg);
   }
   .portion-fields {
     gap: 10px;
   }
-  .recipe-card {
-    padding: 18px;
-    gap: 16px;
-    flex-wrap: wrap;
-  }
-  .recipe-symbol {
-    width: 50px;
-    height: 65px;
-    font-size: 43px;
+  .recipe-row {
+    grid-template-columns: 1fr;
+    gap: 8px;
+    padding: 12px 0;
   }
   .recipe-title {
-    font-size: 20px;
-  }
-  .recipe-content {
-    min-width: 190px;
+    font-size: var(--t-md);
   }
   .recipe-actions {
-    max-width: none;
-    width: 100%;
-    justify-content: flex-end;
-  }
-  .recipe-actions button {
-    font-size: 12px;
+    justify-content: flex-start;
   }
   .empty-state {
-    padding: 28px;
-    margin: 20px 0;
+    padding: 16px 0;
   }
   .empty-state h2 {
-    font-size: 24px;
+    font-size: var(--t-lg);
   }
   .range-controls {
     width: 100%;
@@ -236,28 +221,46 @@
   .range-controls label {
     flex: 1;
   }
-  .insight-strip {
-    grid-template-columns: 1fr 1fr;
-    padding: 20px;
-    gap: 20px;
-  }
-  .insight-strip > div:nth-child(2) {
-    border: 0;
-  }
-  .insight-strip strong {
-    font-size: 27px;
+  .insight-controls {
+    gap: 10px 14px;
+    margin-bottom: 12px;
   }
   .insight-controls select {
     width: 100%;
   }
+  .insight-strip {
+    grid-template-columns: 1fr 1fr;
+    margin-bottom: 16px;
+  }
+  .insight-strip > div {
+    padding: 8px 10px 8px 0;
+    margin-right: 10px;
+  }
+  .insight-strip > div:nth-child(2) {
+    border: 0;
+  }
+  .insight-strip > div:nth-child(n + 3) {
+    border-top: var(--rule-hair);
+  }
+  .insight-strip strong {
+    font-size: var(--t-lg);
+  }
+  .trend {
+    min-height: 170px;
+    margin-bottom: 20px;
+  }
+  .spaced-heading {
+    margin-top: 20px;
+  }
+  th,
+  td {
+    padding: 7px 8px 7px 0;
+  }
   .settings-section {
-    padding: 20px;
+    margin-bottom: 22px;
   }
   .nutrient-inputs {
-    gap: 12px;
-  }
-  .modal .nutrient-inputs label {
-    font-size: 11px;
+    gap: 8px 10px;
   }
 }
 @media (prefers-reduced-motion: reduce) {

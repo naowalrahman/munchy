@@ -1,18 +1,28 @@
 "use client";
 import { useState } from "react";
+import { LuCopy, LuStar, LuTrash2 } from "react-icons/lu";
 import type { Entry } from "@/utils/model";
 import { useStore } from "../shell/Store";
 import { Modal } from "../ui/Modal";
 import { PortionEditor } from "../foods/PortionEditor";
 import { NutrientTable } from "./NutrientTable";
-import { dayFor, entryStatement } from "@/utils/db/operations";
+import { dayFor, entryStatement, logEntries, newEntry } from "@/utils/db/operations";
 import { today } from "@/utils/dates";
 import { upsert } from "@/utils/db/client";
-export function EntryEditor({ entry, onClose }: { entry: Entry; onClose: () => void }) {
-  const { data, run } = useStore();
+export function EntryEditor({
+  entry,
+  onClose,
+  onRemoved,
+}: {
+  entry: Entry;
+  onClose: () => void;
+  onRemoved?: (entry: Entry) => void;
+}) {
+  const { data, run, busy } = useStore();
   const [date, setDate] = useState(entry.date);
   const [meal, setMeal] = useState(entry.meal);
   const day = dayFor(data, date);
+  const favorite = data.favorites.includes(entry.food.id);
   return (
     <Modal title="Edit food" onClose={onClose}>
       <div className="portion-fields">
@@ -48,6 +58,50 @@ export function EntryEditor({ entry, onClose }: { entry: Entry; onClose: () => v
           onClose();
         }}
       />
+      <div className="entry-tools">
+        <button
+          className={`small ${favorite ? "favorited" : ""}`}
+          disabled={busy}
+          onClick={() =>
+            void run(
+              [
+                {
+                  sql: favorite ? "DELETE FROM favorites WHERE id=?" : "INSERT OR IGNORE INTO favorites(id) VALUES(?)",
+                  params: [entry.food.id],
+                },
+              ],
+              favorite ? "Removed from favorites" : "Added to favorites"
+            ).catch(() => {})
+          }
+        >
+          <LuStar /> {favorite ? "Favorited" : "Favorite"}
+        </button>
+        <button
+          className="small"
+          disabled={busy}
+          onClick={() =>
+            void run(logEntries(data, [newEntry(entry, entry.date, entry.meal)]), "Food duplicated")
+              .then(onClose)
+              .catch(() => {})
+          }
+        >
+          <LuCopy /> Duplicate
+        </button>
+        <button
+          className="small danger"
+          disabled={busy}
+          onClick={() =>
+            void run([{ sql: "DELETE FROM entries WHERE id=?", params: [entry.id] }], "Food removed")
+              .then(() => {
+                onRemoved?.(entry);
+                onClose();
+              })
+              .catch(() => {})
+          }
+        >
+          <LuTrash2 /> Remove
+        </button>
+      </div>
       <NutrientTable portions={[entry]} />
     </Modal>
   );

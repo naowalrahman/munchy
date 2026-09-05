@@ -49,8 +49,8 @@ export function Insights() {
     <>
       <div className="page-heading">
         <div>
-          <h1>See the whole picture</h1>
-          <p>Your food, nutrients, and patterns. All on this device.</p>
+          <h1>Insights</h1>
+          <p>Nutrients and patterns across a range of days.</p>
         </div>
         <div className="range-controls">
           <label>
@@ -83,6 +83,7 @@ export function Insights() {
           {[7, 30, 90].map((days) => (
             <button
               key={days}
+              aria-pressed={start === shiftDate(today(), 1 - days) && end === today()}
               onClick={() => {
                 setStart(shiftDate(today(), 1 - days));
                 setEnd(today());
@@ -101,8 +102,8 @@ export function Insights() {
           value={mode}
           onChange={(e) => setMode(e.target.value as "average" | "total")}
         >
-          <option value="average">Average per logged day</option>
-          <option value="total">Period totals</option>
+          <option value="average">Averages per logged day</option>
+          <option value="total">Totals for the range</option>
         </select>
       </div>
       <div className="insight-strip">
@@ -130,15 +131,15 @@ export function Insights() {
         </div>
       </div>
       {!entries.length && (
-        <p className="welcome-note">
-          No food entries in this range. Start logging or choose another date range. Unlogged days are never counted as
-          zero intake.
+        <p className="empty-day">
+          No foods logged in this range. Choose another range or start logging. Days without entries never count as
+          zero.
         </p>
       )}
       <div className="insights-layout">
         <section>
           <div className="section-head">
-            <h2>Nutrient trends</h2>
+            <h2>Per day</h2>
             <select
               aria-label="Chart nutrient"
               value={selected}
@@ -152,7 +153,7 @@ export function Insights() {
             </select>
           </div>
           <p className="muted">
-            {nutrients[selected].label} per logged day ({nutrients[selected].unit}). Bars include known values only.
+            {nutrients[selected].label} in {nutrients[selected].unit} for each logged day, from reported values only.
           </p>
           <div
             className="trend"
@@ -168,8 +169,8 @@ export function Insights() {
             ))}
           </div>
           <div className="section-head">
-            <h2>Where it comes from</h2>
-            <span>{nutrients[selected].label}</span>
+            <h2>Top sources</h2>
+            <span className="muted">{nutrients[selected].label}</span>
           </div>
           {top.map((food, i) => (
             <div className="contributor" key={food.name + i}>
@@ -177,7 +178,9 @@ export function Insights() {
               <b>
                 {formatNumber(food.value)} {nutrients[selected].unit}
               </b>
-              <progress max={top[0].value || 1} value={food.value} />
+              <div className="bar" aria-hidden="true">
+                <span style={{ width: `${(food.value / (top[0].value || 1)) * 100}%` }} />
+              </div>
             </div>
           ))}
           {!top.length && <p className="muted">No reported values for this nutrient yet.</p>}
@@ -211,8 +214,10 @@ export function Insights() {
               </tbody>
             </table>
           </div>
-          <p className="fine-print">Meal averages use days containing that meal. Renamed meals appear separately.</p>
-          <h2 className="spaced-heading">Water, weight & notes</h2>
+          <p className="fine-print">
+            Averages use only the days that contain that meal. Renamed meals appear separately.
+          </p>
+          <h2 className="spaced-heading">Water, weight, and notes</h2>
           <p>
             {weightDays.length > 1
               ? `Weight change: ${formatNumber(weightDays.at(-1)!.weight! - weightDays[0].weight!)} kg across ${weightDays.length} measurements.`
@@ -246,13 +251,13 @@ export function Insights() {
             </table>
           </div>
         </section>
-        <aside className="daily-totals">
-          <h2>{mode === "average" ? "Daily averages" : "Period totals"}</h2>
+        <aside className="facts">
+          <h2>Nutrition facts</h2>
           <p className="muted">
             {mode === "average"
-              ? `Across ${dates.length} days with food entries.`
-              : "All entries in your selected range."}{" "}
-            Tap a nutrient to inspect its sources.
+              ? `Average of ${dates.length} logged ${dates.length === 1 ? "day" : "days"}.`
+              : `Total across ${dates.length} logged ${dates.length === 1 ? "day" : "days"}.`}{" "}
+            Tap a nutrient to see its sources.
           </p>
           <NutrientTable
             portions={entries}
@@ -261,8 +266,8 @@ export function Insights() {
             onSelect={setSelected}
           />
           <p className="fine-print">
-            Coverage measures reported nutrient fields, not diet quality. Missing values can underestimate totals.
-            Personal targets are set in Settings.
+            Coverage counts reported nutrient fields, not diet quality. Missing values can understate totals. Targets
+            are set in Settings.
           </p>
         </aside>
       </div>

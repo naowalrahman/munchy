@@ -1,0 +1,165 @@
+/* Nutrition facts panel: a single quiet surface, rows tied together with dot leaders. */
+.facts {
+  background: var(--wash);
+  border-radius: 10px;
+  padding: 14px 16px 16px;
+  height: fit-content;
+}
+.facts > h2 {
+  font-size: var(--t-xl);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1;
+}
+.facts > .muted {
+  padding: 5px 0 8px;
+  font-size: var(--t-xs);
+}
+.facts-energy {
+  display: grid;
+  grid-template-columns: auto minmax(12px, 1fr) auto;
+  align-items: baseline;
+  padding: 6px 0 2px;
+}
+.facts-energy::after {
+  content: "";
+  grid-column: 2;
+  grid-row: 1;
+  align-self: end;
+  height: 3px;
+  margin: 0 8px 7px;
+  background-image: var(--leader);
+  background-size: 5px 3px;
+  background-repeat: repeat-x;
+}
+.facts-energy > span {
+  grid-column: 1;
+  font-weight: 700;
+  font-size: var(--t-md);
+}
+.facts-energy strong {
+  grid-column: 3;
+  font-size: 34px;
+  line-height: 1;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  white-space: nowrap;
+}
+.facts-energy strong small {
+  font-size: var(--t-sm);
+  font-weight: 600;
+  letter-spacing: 0;
+}
+.facts-energy + .bar {
+  height: 4px;
+  margin: 6px 0 4px;
+}
+.macro-summary {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  padding: 8px 0 4px;
+}
+.macro-summary > div {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.15;
+}
+.macro-summary strong {
+  font-weight: 700;
+  font-size: var(--t-md);
+}
+.macro-summary strong small {
+  font-weight: 500;
+}
+.macro-summary span {
+  font-size: var(--t-xs);
+  color: var(--muted);
+  font-weight: 600;
+}
+.water-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 10px 0 2px;
+}
+.water-row > div {
+  flex: 1;
+  line-height: 1.15;
+}
+.water-row strong {
+  font-size: var(--t-base);
+}
+.water-row small {
+  display: block;
+  font-weight: 600;
+}
+.water-row button {
+  min-height: 30px;
+  padding: 2px 9px;
+  font-size: var(--t-sm);
+}
+.nutrient-table h3 {
+  font-size: var(--t-sm);
+  font-weight: 700;
+  margin: 0;
+  padding: 14px 0 2px;
+}
+.nutrient-row {
+  display: grid;
+  grid-template-columns: auto minmax(12px, 1fr) auto;
+  align-items: start;
+  padding: 3px 0;
+  font-size: var(--t-sm);
+}
+.nutrient-row::after {
+  content: "";
+  grid-column: 2;
+  grid-row: 1;
+  height: 3px;
+  margin: 11px 6px 0;
+  background-image: var(--leader);
+  background-size: 5px 3px;
+  background-repeat: repeat-x;
+}
+.nutrient-name {
+  grid-column: 1;
+  grid-row: 1;
+  font-weight: 600;
+}
+.nutrient-note {
+  grid-column: 1 / -1;
+  grid-row: 2;
+  font-size: 10px;
+  font-weight: 400;
+  line-height: 1.2;
+}
+.nutrient-value {
+  grid-column: 3;
+  grid-row: 1;
+  text-align: right;
+  white-space: nowrap;
+  font-weight: 700;
+}
+.nutrient-value small {
+  font-weight: 400;
+}
+.nutrient-row button.text-button {
+  font-size: var(--t-sm);
+  min-height: 0;
+  padding: 0;
+  font-weight: 600;
+  text-decoration: none;
+  justify-content: flex-start;
+  align-self: flex-start;
+  text-align: left;
+}
+.nutrient-row button.text-button:hover {
+  text-decoration: underline;
+}
+.nutrient-table .bar {
+  height: 3px;
+  margin: 0 0 3px;
+}
+.facts .fine-print {
+  margin-top: 12px;
+}

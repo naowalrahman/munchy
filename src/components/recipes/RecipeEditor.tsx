@@ -78,7 +78,7 @@ export function RecipeEditor({ recipe, onClose }: { recipe?: Recipe; onClose: ()
         </p>
         <div className="section-head">
           <h3>Ingredients</h3>
-          <button type="button" onClick={() => setPicker(true)}>
+          <button type="button" className="small" onClick={() => setPicker(true)}>
             + Add ingredient
           </button>
         </div>
