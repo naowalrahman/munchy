@@ -13,7 +13,8 @@
     "assets": "bun run scripts/assets.ts",
     "test": "bun test tests",
     "typecheck": "tsc --noEmit",
-    "proxy": "bun run proxy/src/server.ts"
+    "proxy": "bun run proxy/src/server.ts",
+    "deploy": "bun run scripts/deploy.ts"
   },
   "dependencies": {
     "@fontsource-variable/libre-franklin": "^5.3.0",

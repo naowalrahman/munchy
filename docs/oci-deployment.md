@@ -46,6 +46,20 @@ sudo systemctl enable --now munchy-proxy
 sudo systemctl reload caddy
 ```
 
+## Updating a running deployment
+
+`bun run deploy` builds the static app and the ARM proxy binary, ships both over SSH, and checks the live URL:
+
+```sh
+bun run deploy              # app and proxy
+bun run deploy --app-only   # static app only, no service restart
+bun run deploy --proxy-only # proxy binary only
+```
+
+It uploads `out/` as a tar stream because the Minimal image has no `rsync`, unpacks into `/opt/munchy/out.new`, and swaps it into place, leaving the previous tree at `/opt/munchy/out.old` for rollback. The proxy binary lands as `munchy-proxy.new` and is renamed over the running one, so `systemctl restart munchy-proxy` picks it up without `ETXTBSY`. `MUNCHY_SSH_HOST`, `MUNCHY_REMOTE_ROOT`, and `MUNCHY_URL` override the defaults.
+
+Deploys need SSH, which the OCI security list and the guest firewall allow only from the operator's `/32`. Update both rules when that address changes; the script fails its preflight rather than hanging.
+
 ## Verify before calling it deployed
 
 - Console shows the VM running and its private IP attached to the intended reserved public IPv4.

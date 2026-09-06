@@ -41,7 +41,7 @@ Sources: [editions](https://platform.fatsecret.com/api-editions), [storable data
 
 ## Proxy
 
-Live app: [Open Munchy](https://munchy.129.80.164.67.sslip.io). In Settings, save the prefilled proxy address and the token from ignored `secrets/app-access-token.txt`. See [OCI deployment](docs/oci-deployment.md). The Bun proxy provides:
+Live app: [Open Munchy](https://munchy.129.80.164.67.sslip.io). In Settings, save the prefilled proxy address and the token from ignored `secrets/app-access-token.txt`. `bun run deploy` publishes the current build there; see [OCI deployment](docs/oci-deployment.md). The Bun proxy provides:
 
 - `/v1/search?q=oats&page=0`
 - `/v1/foods/123`
