@@ -1,5 +1,5 @@
 "use client";
-import { useRef, useState } from "react";
+import { useRef, useState, type KeyboardEvent } from "react";
 import { Modal } from "../ui/Modal";
 import { useStore } from "../shell/Store";
 import type { Food, Portion } from "@/utils/model";
@@ -26,15 +26,21 @@ export function FoodPicker({
   const [custom, setCustom] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const [suggesting, setSuggesting] = useState(false);
+  const [active, setActive] = useState(-1);
   const abort = useRef<AbortController | null>(null);
   const seq = useRef(0);
   const local = [
     ...data.recipes.map(recipeFood),
     ...data.foods.filter((f) => f.source !== "recipe" && (f.source !== "fatsecret" || f.cacheUntil > Date.now())),
-  ]
-    .filter((f) => `${f.name} ${f.brand ?? ""}`.toLowerCase().includes(query.toLowerCase()))
-    .sort((a, b) => Number(data.favorites.includes(b.id)) - Number(data.favorites.includes(a.id)));
+  ].sort((a, b) => Number(data.favorites.includes(b.id)) - Number(data.favorites.includes(a.id)));
+  const term = query.trim().toLowerCase();
+  const matches = term
+    ? local.filter((f) => `${f.name} ${f.brand ?? ""}`.toLowerCase().includes(term)).slice(0, 8)
+    : [];
+  const showSuggestions = suggesting && matches.length > 0;
   async function search(nextPage = 0) {
+    setSuggesting(false);
     if (query.trim().length < 2) {
       setError("Type at least two characters.");
       return;
@@ -56,6 +62,31 @@ export function FoodPicker({
         setError(e instanceof Error ? e.message : "Search failed.");
     } finally {
       if (generation === seq.current) setBusy(false);
+    }
+  }
+  function pick(food: Food) {
+    setSuggesting(false);
+    setSelected(food);
+  }
+  function onSearchKey(e: KeyboardEvent<HTMLInputElement>) {
+    if (e.key === "Escape" && showSuggestions) {
+      e.preventDefault();
+      e.stopPropagation();
+      setSuggesting(false);
+      return;
+    }
+    if (!matches.length) return;
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      setSuggesting(true);
+      setActive((i) => (i + 1) % matches.length);
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      setSuggesting(true);
+      setActive((i) => (i <= 0 ? matches.length : i) - 1);
+    } else if (e.key === "Enter" && showSuggestions && active >= 0) {
+      e.preventDefault();
+      pick(matches[active]);
     }
   }
   async function select(id: string) {
@@ -123,20 +154,59 @@ export function FoodPicker({
               void search();
             }}
           >
-            <input
-              autoFocus
-              aria-label="Search foods"
-              placeholder="Search foods and brands"
-              value={query}
-              onChange={(e) => {
-                seq.current++;
-                abort.current?.abort();
-                setBusy(false);
-                setQuery(e.target.value);
-                setResults([]);
-                setTotal(0);
-              }}
-            />
+            <div className="search-field">
+              <input
+                autoFocus
+                role="combobox"
+                aria-label="Search foods"
+                aria-autocomplete="list"
+                aria-expanded={showSuggestions}
+                aria-controls="recent-suggestions"
+                aria-activedescendant={showSuggestions && active >= 0 ? `recent-suggestion-${active}` : undefined}
+                placeholder="Search foods and brands"
+                value={query}
+                onChange={(e) => {
+                  seq.current++;
+                  abort.current?.abort();
+                  setBusy(false);
+                  setQuery(e.target.value);
+                  setResults([]);
+                  setTotal(0);
+                  setSuggesting(true);
+                  setActive(-1);
+                }}
+                onFocus={() => setSuggesting(true)}
+                onBlur={() => setSuggesting(false)}
+                onKeyDown={onSearchKey}
+              />
+              {showSuggestions && (
+                <div className="search-suggest" id="recent-suggestions" role="listbox" aria-label="Recent foods">
+                  {matches.map((food, i) => (
+                    <button
+                      type="button"
+                      role="option"
+                      id={`recent-suggestion-${i}`}
+                      aria-selected={i === active}
+                      className={i === active ? "food-result active" : "food-result"}
+                      key={food.id}
+                      onMouseDown={(e) => e.preventDefault()}
+                      onMouseEnter={() => setActive(i)}
+                      onClick={() => pick(food)}
+                    >
+                      <span>
+                        <strong>{food.name}</strong>
+                        <small>
+                          {food.brand || (food.source === "recipe" ? "Your recipe" : "Saved on this device")}
+                        </small>
+                      </span>
+                      <span className={data.favorites.includes(food.id) ? "star" : ""}>
+                        {data.favorites.includes(food.id) ? "★" : "+"}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
             <button className="primary" disabled={busy}>
               Search
             </button>
@@ -149,7 +219,7 @@ export function FoodPicker({
           </div>
           <div className="food-results">
             {local.slice(0, 30).map((food) => (
-              <button className="food-result" key={food.id} onClick={() => setSelected(food)}>
+              <button className="food-result" key={food.id} onClick={() => pick(food)}>
                 <span>
                   <strong>{food.name}</strong>
                   <small>{food.brand || (food.source === "recipe" ? "Your recipe" : "Saved on this device")}</small>

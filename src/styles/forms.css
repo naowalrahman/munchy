@@ -128,6 +128,35 @@
 .search-box button {
   flex-shrink: 0;
 }
+.search-field {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+}
+/* The autocomplete prints over the page like a slip of paper laid on the label. */
+.search-suggest {
+  position: absolute;
+  z-index: 2;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  display: flex;
+  flex-direction: column;
+  max-height: 264px;
+  overflow: auto;
+  padding: 4px 10px;
+  background: var(--paper);
+  border: 1px solid var(--ink);
+  border-radius: var(--radius);
+  box-shadow: 0 6px 18px var(--shadow);
+}
+.search-suggest .food-result {
+  margin: 0 -4px;
+  padding: 7px 4px;
+}
+.food-result.active {
+  background: var(--wash);
+}
 .result-head {
   display: flex;
   align-items: center;
