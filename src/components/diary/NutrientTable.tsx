@@ -49,7 +49,7 @@ export function NutrientTable({
                 {formatNumber(value)} <small>{meta.unit}</small>
                 {goals[k] && <small> of {formatNumber(goals[k])}</small>}
               </span>
-              {count > 0 && coverage[k] < count && (
+              {count > 1 && coverage[k] < count && (
                 <small className="nutrient-note">
                   {coverage[k]} of {count} foods report this
                 </small>

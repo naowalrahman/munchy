@@ -5,7 +5,6 @@ import type { Entry } from "@/utils/model";
 import { useStore } from "../shell/Store";
 import { Modal } from "../ui/Modal";
 import { PortionEditor } from "../foods/PortionEditor";
-import { NutrientTable } from "./NutrientTable";
 import { dayFor, entryStatement, logEntries, newEntry } from "@/utils/db/operations";
 import { today } from "@/utils/dates";
 import { upsert } from "@/utils/db/client";
@@ -102,7 +101,6 @@ export function EntryEditor({
           <LuTrash2 /> Remove
         </button>
       </div>
-      <NutrientTable portions={[entry]} />
     </Modal>
   );
 }

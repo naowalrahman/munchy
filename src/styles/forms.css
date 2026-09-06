@@ -99,6 +99,59 @@
   font-weight: 700;
   font-size: var(--t-base);
 }
+/* The whole panel below the log button, folded away like the back of a carton. */
+.portion-facts {
+  background: var(--wash);
+  border-radius: 10px;
+  padding: 0 14px 4px;
+  margin-top: -2px;
+}
+.portion-facts summary {
+  cursor: pointer;
+  list-style: none;
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  padding: 11px 0;
+  font-weight: 700;
+  font-size: var(--t-sm);
+}
+.portion-facts summary::-webkit-details-marker {
+  display: none;
+}
+.portion-facts summary::before {
+  content: "+";
+  font-weight: 700;
+  width: 12px;
+  color: var(--muted);
+}
+.portion-facts[open] summary::before {
+  content: "\2013";
+}
+.portion-facts summary span {
+  color: var(--muted);
+  font-weight: 500;
+  font-size: var(--t-xs);
+  margin-left: auto;
+  text-align: right;
+}
+.portion-facts .nutrient-table {
+  padding-bottom: 10px;
+}
+.portion-facts .nutrient-table:not(:last-child) {
+  padding-bottom: 4px;
+}
+.portion-facts .nutrient-table h3 {
+  font-size: var(--t-sm);
+  font-weight: 700;
+  letter-spacing: 0;
+}
+.portion-facts .nutrient-table > div:first-child h3 {
+  padding-top: 0;
+}
+.portion-facts .fine-print {
+  padding-bottom: 12px;
+}
 .nutrient-inputs {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -376,7 +429,4 @@
 }
 .modal .portion-fields + .portion-editor {
   margin-top: 14px;
-}
-.entry-tools + .nutrient-table {
-  margin-top: 10px;
 }

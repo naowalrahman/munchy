@@ -1,8 +1,9 @@
 "use client";
 import { useState } from "react";
-import type { Food, Portion } from "@/utils/model";
+import { nutrientKeys, type Food, type Portion } from "@/utils/model";
 import { parseQuantity, portionFactor, unitOptions } from "@/utils/units";
 import { formatNumber, scale } from "@/utils/nutrition";
+import { NutrientTable } from "../diary/NutrientTable";
 export function PortionEditor({
   food,
   initial,
@@ -25,6 +26,9 @@ export function PortionEditor({
     factor = portionFactor(parseQuantity(quantity), unit, serving);
   } catch {}
   const n = scale(serving.nutrients, factor);
+  const portion: Portion | null = factor
+    ? { food, servingId: serving.id, quantity: parseQuantity(quantity), unit, factor }
+    : null;
   return (
     <form
       className="portion-editor"
@@ -108,6 +112,22 @@ export function PortionEditor({
       <button className="primary full" disabled={busy || !factor}>
         {busy ? "Saving…" : label}
       </button>
+      {portion && (
+        <details className="portion-facts" open>
+          <summary>
+            Full nutrition
+            <span>
+              {portion.unit === "serving"
+                ? `${formatNumber(portion.quantity, 2)} \u00d7 ${serving.label}`
+                : `${formatNumber(portion.quantity, 2)} ${portion.unit}`}
+            </span>
+          </summary>
+          <NutrientTable portions={[portion]} />
+          {nutrientKeys.some((k) => n[k] === null) && (
+            <p className="fine-print">A dash means this food does not report it.</p>
+          )}
+        </details>
+      )}
     </form>
   );
 }
