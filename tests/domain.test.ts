@@ -144,3 +144,16 @@ test("backup rejects inconsistent portion factors and future dates", async () =>
   incoming.days[0].date = shiftDate(today(), 1);
   expect(() => importBackup(JSON.parse(exportBackup(incoming)), data)).toThrow();
 });
+test("older backups import and keep this device's Drive client ID", async () => {
+  const { exportBackup, importBackup } = await import("../src/utils/backup");
+  const raw = JSON.parse(exportBackup(data)) as { data: { settings: Record<string, unknown> } };
+  delete raw.data.settings.driveClientId;
+  const current = { ...data, settings: { ...defaultSettings, driveClientId: "mine.apps.googleusercontent.com" } };
+  const statements = importBackup(raw, current);
+  const db = new Database(":memory:");
+  db.run(schema);
+  for (const s of statements) db.run(s.sql, s.params ?? []);
+  const row = db.query("SELECT payload FROM settings").get() as { payload: string };
+  expect(JSON.parse(row.payload).driveClientId).toBe("mine.apps.googleusercontent.com");
+  db.close();
+});

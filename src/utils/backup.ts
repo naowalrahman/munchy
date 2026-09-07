@@ -78,6 +78,7 @@ export function importBackup(raw: unknown, current: Snapshot): Statement[] {
       ...data.settings,
       proxyUrl: current.settings.proxyUrl,
       proxyToken: current.settings.proxyToken,
+      driveClientId: current.settings.driveClientId,
     }),
   ];
 }

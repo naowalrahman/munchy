@@ -9,6 +9,7 @@ import { request } from "@/utils/food/api";
 import { today } from "@/utils/dates";
 import { z } from "zod";
 import { Modal } from "../ui/Modal";
+import { DriveBackup } from "./DriveBackup";
 import { readThemeSetting, saveThemeSetting, type ThemeSetting } from "@/utils/theme";
 const themeOptions: { id: ThemeSetting; label: string }[] = [
   { id: "system", label: "Match device" },
@@ -245,6 +246,7 @@ export function Settings() {
               </p>
             )}
           </section>
+          <DriveBackup onRestore={(raw) => setBackup(raw)} />
           <section className="settings-section">
             <h2>Install as an app</h2>
             <p className="muted">
