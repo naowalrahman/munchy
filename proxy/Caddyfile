@@ -1,0 +1,16 @@
+{$MUNCHY_DOMAIN} {
+    root * /opt/munchy/out
+    encode zstd gzip
+    header {
+        X-Content-Type-Options nosniff
+        Referrer-Policy no-referrer
+        Permissions-Policy "camera=(), microphone=(), geolocation=()"
+    }
+    @api path /v1/* /health
+    handle @api {
+        reverse_proxy 127.0.0.1:8787
+    }
+    handle {
+        file_server
+    }
+}

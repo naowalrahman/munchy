@@ -1,54 +1,30 @@
 import type { Metadata, Viewport } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import "@fontsource-variable/libre-franklin";
 import "./globals.css";
-import { Provider } from "@/components/ui/provider";
-import { Toaster } from "@/components/ui/toaster";
-import Navbar from "@/components/Navbar";
-import { SpeedInsights } from "@vercel/speed-insights/next";
-import { Analytics } from "@vercel/analytics/next";
-import { Box, Flex } from "@chakra-ui/react";
-
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
-
+import { themeBootScript } from "@/utils/theme";
 export const metadata: Metadata = {
-  title: "Munchy - AI Calorie Tracker",
-  description: "Track your calories with AI precision.",
+  title: "Munchy",
+  description: "A fast, private food diary that works offline. Nutrition facts for every day, stored on your device.",
+  manifest: "/manifest.webmanifest",
+  appleWebApp: { capable: true, title: "Munchy", statusBarStyle: "default" },
+  icons: { icon: "/icon.svg", apple: "/icon-192.png" },
 };
-
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#fbf9f4" },
+    { media: "(prefers-color-scheme: dark)", color: "#1b1917" },
+  ],
 };
-
-export default function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className="dark" suppressHydrationWarning>
-      <body className={`${geistSans.variable} ${geistMono.variable}`}>
-        <Provider>
-          <Flex direction="column" h="100dvh" overflow="hidden">
-            <Navbar />
-            <Box as="main" flex="1" overflow="auto">
-              {children}
-            </Box>
-            <Toaster />
-          </Flex>
-        </Provider>
-        <SpeedInsights />
-        <Analytics />
-      </body>
+    <html lang="en" suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: themeBootScript }} />
+      </head>
+      <body>{children}</body>
     </html>
   );
 }

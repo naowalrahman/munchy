@@ -1,0 +1,329 @@
+.day-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 16px;
+}
+.day-head > button {
+  min-width: 38px;
+  padding: 0;
+}
+.day-title {
+  position: relative;
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  padding: 4px 8px;
+  border-radius: var(--radius);
+  cursor: pointer;
+}
+.day-title:hover {
+  background: var(--wash);
+}
+.day-title small {
+  font-size: var(--t-sm);
+  font-weight: 600;
+  color: var(--muted);
+  white-space: nowrap;
+}
+.day-title input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  min-height: 0;
+  opacity: 0;
+  cursor: pointer;
+  padding: 0;
+  border: 0;
+}
+.day-title input:focus-visible {
+  opacity: 0;
+}
+.day-title:has(input:focus-visible) {
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
+}
+.day-head .today-jump {
+  margin-left: 4px;
+}
+.page-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+.page-heading p {
+  color: var(--muted);
+  margin-top: 4px;
+  font-size: var(--t-sm);
+}
+.diary-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 320px;
+  gap: 36px;
+  align-items: start;
+}
+.section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+.inline-actions {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+}
+.empty-day {
+  background: var(--wash);
+  border-radius: var(--radius);
+  padding: 12px 14px;
+  margin-bottom: 10px;
+  font-size: var(--t-sm);
+  color: var(--muted);
+}
+.meal-section {
+  margin-bottom: 16px;
+}
+/* A hairline rule keeps meals apart the way the label rules separate nutrient groups. */
+.meal-section + .meal-section {
+  border-top: var(--rule-hair);
+  padding-top: 16px;
+}
+.meal-header {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  padding: 0 0 4px;
+}
+.meal-header h3 {
+  font-size: var(--t-md);
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+.meal-header > span {
+  color: var(--muted);
+  font-size: var(--t-sm);
+  font-weight: 600;
+}
+.meal-header > button {
+  margin-left: auto;
+  align-self: center;
+}
+.empty-meal {
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  color: var(--muted);
+  padding: 4px 0;
+  width: 100%;
+  justify-content: flex-start;
+  font-size: var(--t-sm);
+  font-weight: 500;
+  min-height: 0;
+}
+.empty-meal:hover {
+  background: none;
+  color: var(--ink);
+}
+.entry {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto auto;
+  align-items: start;
+  padding: 4px 0;
+}
+/* The name row carries its own dot leader, so the leader starts right after the name. */
+.entry-main {
+  display: grid;
+  grid-template-columns: minmax(0, max-content) minmax(14px, 1fr);
+  min-width: 0;
+  text-align: left;
+  justify-items: start;
+  row-gap: 1px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  padding: 2px 0;
+  min-height: 0;
+  line-height: 1.3;
+  font-weight: 400;
+}
+.entry-main::after {
+  content: "";
+  grid-column: 2;
+  grid-row: 1;
+  align-self: start;
+  justify-self: stretch;
+  height: 3px;
+  margin: 11px 8px 0;
+  background-image: var(--leader);
+  background-size: 5px 3px;
+  background-repeat: repeat-x;
+}
+.entry > .entry-main {
+  grid-column: 1;
+}
+.entry-main:hover {
+  background: none;
+  border-color: transparent;
+}
+.entry-main:hover strong {
+  text-decoration: underline;
+  text-decoration-color: var(--yolk);
+  text-decoration-thickness: 1.5px;
+  text-underline-offset: 3px;
+}
+.entry-main strong {
+  grid-column: 1;
+  grid-row: 1;
+  font-weight: 600;
+  font-size: var(--t-base);
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.entry-main small {
+  grid-column: 1 / -1;
+  grid-row: 2;
+  font-size: var(--t-xs);
+}
+.entry > b {
+  grid-column: 3;
+  font-size: var(--t-base);
+  white-space: nowrap;
+  text-align: right;
+  padding-top: 2px;
+}
+.entry > b small {
+  font-weight: 400;
+}
+.entry-protein {
+  grid-column: 2;
+  text-align: right;
+  white-space: nowrap;
+  font-size: var(--t-sm);
+  color: var(--muted);
+  margin-right: 14px;
+  padding-top: 3px;
+}
+.entry-actions {
+  grid-column: 4;
+  display: flex;
+  gap: 0;
+  margin: -3px 0 0 6px;
+}
+.entry .icon-button {
+  padding: 5px;
+  min-width: 28px;
+  min-height: 28px;
+}
+.entry .icon-button svg {
+  width: 15px;
+  height: 15px;
+}
+.suggestions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding-top: 8px;
+}
+.suggestions > small {
+  margin-right: 2px;
+  font-weight: 600;
+}
+.suggestions button {
+  font-size: var(--t-xs);
+  font-weight: 600;
+  border: 1px solid var(--hair);
+  border-radius: 14px;
+  min-height: 28px;
+  padding: 2px 10px;
+}
+.suggestions button:hover {
+  border-color: var(--ink);
+}
+.diary-tools {
+  display: flex;
+  gap: 18px;
+  padding: 2px 0 12px;
+}
+.day-notes {
+  margin-top: 6px;
+}
+.day-notes summary {
+  cursor: pointer;
+  list-style: none;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 0;
+  font-weight: 700;
+  font-size: var(--t-base);
+}
+.day-notes summary::-webkit-details-marker {
+  display: none;
+}
+.day-notes summary::before {
+  content: "+";
+  font-weight: 700;
+  width: 16px;
+  text-align: center;
+  color: var(--muted);
+}
+.day-notes[open] summary::before {
+  content: "–";
+}
+.day-notes summary span {
+  color: var(--muted);
+  font-weight: 500;
+  font-size: var(--t-sm);
+  margin-left: auto;
+  text-align: right;
+}
+.day-notes form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding-bottom: 14px;
+}
+.day-notes-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+.day-notes-row button {
+  margin-left: auto;
+}
+.weight-input {
+  width: 100px;
+}
+.check-label {
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+  font-size: var(--t-sm);
+  font-weight: 500;
+  min-height: 40px;
+}
+.undo-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 4px 8px 12px;
+  background: var(--wash);
+  margin: 12px 0;
+  border-radius: var(--radius);
+  font-size: var(--t-sm);
+  font-weight: 600;
+}
+.undo-bar button {
+  min-height: 30px;
+  padding: 3px 10px;
+  font-size: var(--t-sm);
+}

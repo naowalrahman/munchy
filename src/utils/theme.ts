@@ -1,58 +1,35 @@
-import { createSystem, defaultConfig, defineConfig } from "@chakra-ui/react";
-import { liquidGlassStyles } from "./liquidGlassStyles";
-
-const config = defineConfig({
-  theme: {
-    tokens: {
-      colors: {
-        brand: {
-          50: { value: "#e6fffa" },
-          100: { value: "#b2f5ea" },
-          200: { value: "#81e6d9" },
-          300: { value: "#4fd1c5" },
-          400: { value: "#38b2ac" },
-          500: { value: "#319795" },
-          600: { value: "#2c7a7b" },
-          700: { value: "#285e61" },
-          800: { value: "#234e52" },
-          900: { value: "#1d4044" },
-        },
-      },
-    },
-    semanticTokens: {
-      colors: {
-        brand: {
-          solid: { value: "{colors.brand.500}" },
-          contrast: { value: "{colors.brand.100}" },
-          fg: { value: "{colors.brand.700}" },
-          muted: { value: "{colors.brand.200}" },
-          subtle: { value: "{colors.brand.100}" },
-          emphasized: { value: "{colors.brand.300}" },
-          focusRing: { value: "{colors.brand.500}" },
-        },
-        background: {
-          default: { value: "#09090b" },
-          canvas: { value: "#18181b" },
-          panel: { value: "#18181b" },
-          subtle: { value: "#27272a" },
-        },
-        text: {
-          default: { value: "#f4f4f5" },
-          muted: { value: "#a1a1aa" },
-          inverted: { value: "#09090b" },
-        },
-        border: {
-          default: { value: "#27272a" },
-          muted: { value: "#27272a" },
-        },
-      },
-    },
-    textStyles: {
-      "liquid-glass": {
-        value: liquidGlassStyles,
-      },
-    },
-  },
-});
-
-export const system = createSystem(defaultConfig, config);
+export type ThemeSetting = "system" | "light" | "dark";
+const KEY = "munchy-theme";
+const query = "(prefers-color-scheme: dark)";
+export function readThemeSetting(): ThemeSetting {
+  try {
+    const v = localStorage.getItem(KEY);
+    return v === "light" || v === "dark" ? v : "system";
+  } catch {
+    return "system";
+  }
+}
+export function resolveTheme(setting: ThemeSetting): "light" | "dark" {
+  if (setting !== "system") return setting;
+  return typeof matchMedia === "function" && matchMedia(query).matches ? "dark" : "light";
+}
+export function applyTheme(setting: ThemeSetting) {
+  document.documentElement.dataset.theme = resolveTheme(setting);
+}
+export function saveThemeSetting(setting: ThemeSetting) {
+  try {
+    if (setting === "system") localStorage.removeItem(KEY);
+    else localStorage.setItem(KEY, setting);
+  } catch {}
+  applyTheme(setting);
+}
+/** Keeps the page in step with the OS while the setting is "system". Returns an unsubscribe. */
+export function watchSystemTheme() {
+  if (typeof matchMedia !== "function") return () => {};
+  const media = matchMedia(query);
+  const update = () => applyTheme(readThemeSetting());
+  media.addEventListener("change", update);
+  return () => media.removeEventListener("change", update);
+}
+/** Runs before first paint so the page never flashes the wrong theme. Mirrors readThemeSetting + applyTheme. */
+export const themeBootScript = `(function(){try{var t=localStorage.getItem(${JSON.stringify(KEY)});var d=t==="dark"||(t!=="light"&&matchMedia(${JSON.stringify(query)}).matches);document.documentElement.dataset.theme=d?"dark":"light"}catch(e){}})()`;

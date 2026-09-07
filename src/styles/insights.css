@@ -1,0 +1,228 @@
+.range-controls {
+  display: flex;
+  gap: 8px;
+  align-items: flex-end;
+}
+.range-controls label {
+  font-size: var(--t-xs);
+}
+.range-controls input {
+  min-height: 38px;
+}
+.insight-controls {
+  display: flex;
+  gap: 14px 20px;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  margin-bottom: 18px;
+}
+.insight-controls select {
+  width: auto;
+  min-height: 36px;
+  padding: 4px 8px;
+  font-size: var(--t-sm);
+}
+.insight-controls .check-label {
+  min-height: 0;
+}
+.segmented {
+  display: flex;
+}
+.segmented button {
+  border-radius: 0;
+  margin-right: -1px;
+  min-height: 36px;
+  padding: 4px 12px;
+  font-size: var(--t-sm);
+}
+.segmented button:first-child {
+  border-radius: var(--radius) 0 0 var(--radius);
+}
+.segmented button:last-child {
+  border-radius: 0 var(--radius) var(--radius) 0;
+  margin-right: 0;
+}
+.segmented button[aria-pressed="true"] {
+  background: var(--custard);
+  border-color: var(--custard-edge);
+  position: relative;
+  z-index: 1;
+}
+.insight-strip {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  background: var(--wash);
+  border-radius: 10px;
+  padding: 12px 16px;
+  margin-bottom: 24px;
+}
+.insight-strip > div {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.15;
+}
+.insight-strip strong {
+  font-size: var(--t-xl);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+.insight-strip strong small {
+  font-size: var(--t-sm);
+  font-weight: 500;
+}
+.insight-strip span {
+  font-size: var(--t-xs);
+  color: var(--muted);
+  font-weight: 600;
+  margin-top: 3px;
+}
+.insights-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 320px;
+  gap: 36px;
+  align-items: start;
+}
+.insights-layout .section-head {
+  padding-bottom: 2px;
+  margin-bottom: 6px;
+}
+.insights-layout .section-head select {
+  width: auto;
+  min-height: 34px;
+  padding: 3px 8px;
+  font-size: var(--t-sm);
+}
+.insights-layout section > .muted {
+  margin-bottom: 6px;
+}
+.trend {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  overflow: auto;
+  min-height: 210px;
+  padding: 16px 0 6px;
+  margin-bottom: 28px;
+}
+.trend-column {
+  flex: 1;
+  min-width: 34px;
+  max-width: 80px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 4px;
+}
+.trend-column > div {
+  width: 100%;
+  background: var(--ink-60);
+  border-radius: 3px 3px 0 0;
+}
+.trend-column:last-child > div {
+  background: var(--yolk);
+}
+.trend-column > span {
+  font-size: 11px;
+  font-weight: 600;
+}
+.trend-column small {
+  font-size: 10px;
+}
+.contributor {
+  display: grid;
+  grid-template-columns: auto minmax(14px, 1fr) auto;
+  align-items: baseline;
+  row-gap: 5px;
+  padding: 6px 0 8px;
+  font-size: var(--t-sm);
+}
+.contributor::after {
+  content: "";
+  grid-column: 2;
+  grid-row: 1;
+  align-self: end;
+  height: 3px;
+  margin: 0 6px 4px;
+  background-image: var(--leader);
+  background-size: 5px 3px;
+  background-repeat: repeat-x;
+}
+.contributor > span {
+  grid-column: 1;
+}
+.contributor b {
+  grid-column: 3;
+  font-weight: 700;
+}
+.contributor .bar {
+  grid-column: 1/-1;
+  height: 5px;
+}
+.spaced-heading {
+  margin: 30px 0 8px;
+}
+.table-scroll {
+  overflow: auto;
+  margin-top: 8px;
+}
+table {
+  border-collapse: collapse;
+  width: 100%;
+  font-size: var(--t-sm);
+  text-align: left;
+}
+th,
+td {
+  padding: 6px 10px 6px 0;
+  vertical-align: top;
+}
+thead th {
+  font-weight: 700;
+  font-size: var(--t-xs);
+  color: var(--muted);
+  border-bottom: 1px dotted var(--mid);
+  padding-top: 0;
+}
+tbody th {
+  font-weight: 600;
+  white-space: nowrap;
+}
+.settings-layout {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0 40px;
+}
+.settings-section {
+  padding: 0 0 8px;
+  margin-bottom: 28px;
+}
+.settings-section > h2 {
+  margin-bottom: 8px;
+}
+.settings-section > p {
+  margin: 0;
+}
+.settings-section.form-stack {
+  gap: 12px;
+}
+.settings-section.form-stack > h2 {
+  margin-bottom: 0;
+}
+.settings-section.form-stack h2 + .muted {
+  margin-top: -6px;
+}
+.button-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.file-label input {
+  padding: 8px;
+  font-size: var(--t-xs);
+}
+.settings-section .segmented + .muted {
+  margin-top: 10px;
+}
