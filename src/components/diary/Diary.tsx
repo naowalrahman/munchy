@@ -1,6 +1,6 @@
 "use client";
-import { useEffect, useState } from "react";
-import { LuPlus, LuChevronLeft, LuChevronRight, LuSearch } from "react-icons/lu";
+import { useState } from "react";
+import { LuChevronLeft, LuChevronRight } from "react-icons/lu";
 import { useStore } from "../shell/Store";
 import { today, shiftDate, shortDateLabel, relativeDayLabel } from "@/utils/dates";
 import { dayFor, logEntries, entryStatement, newEntry } from "@/utils/db/operations";
@@ -22,16 +22,6 @@ export function Diary() {
   const [removed, setRemoved] = useState<Entry | null>(null);
   const day = dayFor(data, date);
   const entries = data.entries.filter((e) => e.date === date).sort((a, b) => a.createdAt - b.createdAt);
-  useEffect(() => {
-    function key(e: KeyboardEvent) {
-      if ((e.metaKey || e.ctrlKey) && e.key === "k") {
-        e.preventDefault();
-        setMeal(day.meals[0]);
-      }
-    }
-    window.addEventListener("keydown", key);
-    return () => window.removeEventListener("keydown", key);
-  }, [day.meals]);
   async function add(p: Portion, target: string) {
     await run(logEntries(data, [newEntry(p, date, target)]), `Added ${p.food.name} to ${target}`);
   }
@@ -81,17 +71,11 @@ export function Diary() {
           </button>
         )}
       </div>
-      <button className="quick-search" onClick={() => setMeal(day.meals[0])}>
-        <LuSearch />
-        <span>Search foods, brands, or your recipes</span>
-        <kbd>⌘K</kbd>
-        <LuPlus />
-      </button>
       <div className="diary-layout">
         <MobileTotals entries={entries} />
         <section className="diary-meals">
           {!entries.length && (
-            <p className="empty-day">Nothing logged for {title.toLowerCase()}. Search a food or add one to a meal.</p>
+            <p className="empty-day">Nothing logged for {title.toLowerCase()}. Add a food to any meal below.</p>
           )}
           {day.meals.map((name) => (
             <MealSection

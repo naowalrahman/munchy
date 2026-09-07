@@ -58,24 +58,6 @@
   margin-top: 4px;
   font-size: var(--t-sm);
 }
-.quick-search {
-  width: 100%;
-  padding: 0 14px;
-  min-height: 46px;
-  border-radius: var(--radius);
-  text-align: left;
-  margin-bottom: 18px;
-  font-size: var(--t-base);
-  font-weight: 500;
-  color: var(--muted);
-  gap: 12px;
-}
-.quick-search svg:first-child {
-  color: var(--ink);
-}
-.quick-search > span {
-  flex: 1;
-}
 .diary-layout {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 320px;
@@ -103,7 +85,12 @@
   color: var(--muted);
 }
 .meal-section {
-  margin-bottom: 22px;
+  margin-bottom: 16px;
+}
+/* A hairline rule keeps meals apart the way the label rules separate nutrient groups. */
+.meal-section + .meal-section {
+  border-top: var(--rule-hair);
+  padding-top: 16px;
 }
 .meal-header {
   display: flex;

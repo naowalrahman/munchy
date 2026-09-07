@@ -97,14 +97,6 @@
   .page-heading p {
     display: none;
   }
-  .quick-search {
-    min-height: 42px;
-    margin-bottom: 8px;
-    font-size: var(--t-sm);
-  }
-  .quick-search kbd {
-    display: none;
-  }
   .diary-layout,
   .insights-layout,
   .settings-layout {
@@ -115,7 +107,10 @@
     margin-top: 8px;
   }
   .meal-section {
-    margin-bottom: 16px;
+    margin-bottom: 12px;
+  }
+  .meal-section + .meal-section {
+    padding-top: 12px;
   }
   .meal-section:first-of-type {
     margin-top: 6px;
