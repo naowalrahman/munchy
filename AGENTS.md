@@ -1,4 +1,4 @@
-## Code Style
+## Style
 
 - The build is a static export, so there is no server runtime: no Server Components with data, no Server Actions, no route handlers
 - `src/app` is the static shell only (`layout.tsx`, `page.tsx`, `loading.tsx`); every interactive component below it is `'use client'`, because the diary lives in on-device SQLite that only the browser can reach
@@ -9,6 +9,7 @@
 - Keep files under 400 lines; split large components if it aids clarity
 - No `any`; prefer type inference where possible, otherwise define types with interfaces or Zod schemas
 - Comments only when high-value; don't narrate to the user
+- Don't use commit message descriptions
 
 ## Structure
 

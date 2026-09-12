@@ -211,28 +211,6 @@ export function FoodPicker({
               Search
             </button>
           </form>
-          <div className="result-head">
-            <h3>Recent foods and recipes</h3>
-            <button className="text-button" onClick={() => setCustom(true)}>
-              New food from a label
-            </button>
-          </div>
-          <div className="food-results">
-            {local.slice(0, 30).map((food) => (
-              <button className="food-result" key={food.id} onClick={() => pick(food)}>
-                <span>
-                  <strong>{food.name}</strong>
-                  <small>{food.brand || (food.source === "recipe" ? "Your recipe" : "Saved on this device")}</small>
-                </span>
-                <span className={data.favorites.includes(food.id) ? "star" : ""}>
-                  {data.favorites.includes(food.id) ? "★" : "+"}
-                </span>
-              </button>
-            ))}
-          </div>
-          {!local.length && (
-            <p className="empty-small">Foods you log will show up here. Search above or add one from its label.</p>
-          )}
           {busy && (
             <p role="status" className="muted">
               Searching…
@@ -274,6 +252,28 @@ export function FoodPicker({
                 </button>
               </div>
             </>
+          )}
+          <div className="result-head">
+            <h3>Recent foods and recipes</h3>
+            <button className="text-button" onClick={() => setCustom(true)}>
+              New food from a label
+            </button>
+          </div>
+          <div className="food-results">
+            {local.slice(0, 30).map((food) => (
+              <button className="food-result" key={food.id} onClick={() => pick(food)}>
+                <span>
+                  <strong>{food.name}</strong>
+                  <small>{food.brand || (food.source === "recipe" ? "Your recipe" : "Saved on this device")}</small>
+                </span>
+                <span className={data.favorites.includes(food.id) ? "star" : ""}>
+                  {data.favorites.includes(food.id) ? "★" : "+"}
+                </span>
+              </button>
+            ))}
+          </div>
+          {!local.length && (
+            <p className="empty-small">Foods you log will show up here. Search above or add one from its label.</p>
           )}
           <p className="attribution">
             Search results by{" "}
