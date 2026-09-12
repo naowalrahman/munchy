@@ -148,7 +148,7 @@ export function Recipes() {
                     createdAt: Date.now(),
                   },
                 ]),
-                "Recipe logged"
+                ""
               );
               setLogging(null);
             }}

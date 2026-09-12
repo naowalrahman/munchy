@@ -23,7 +23,7 @@ export function Diary() {
   const day = dayFor(data, date);
   const entries = data.entries.filter((e) => e.date === date).sort((a, b) => a.createdAt - b.createdAt);
   async function add(p: Portion, target: string) {
-    await run(logEntries(data, [newEntry(p, date, target)]), `Added ${p.food.name} to ${target}`);
+    await run(logEntries(data, [newEntry(p, date, target)]), "");
   }
   async function copyPrevious() {
     const from = data.entries.filter((e) => e.date === shiftDate(date, -1));

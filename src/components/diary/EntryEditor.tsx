@@ -79,7 +79,7 @@ export function EntryEditor({
           className="small"
           disabled={busy}
           onClick={() =>
-            void run(logEntries(data, [newEntry(entry, entry.date, entry.meal)]), "Food duplicated")
+            void run(logEntries(data, [newEntry(entry, entry.date, entry.meal)]), "")
               .then(onClose)
               .catch(() => {})
           }
