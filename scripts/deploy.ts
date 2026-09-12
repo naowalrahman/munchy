@@ -52,7 +52,12 @@ const checks: [string, number][] = [];
 if (proxy) checks.push([`${url}/health`, 200]);
 if (app) checks.push([url, 200]);
 for (const [target, expected] of checks) {
-  const response = await fetch(target, { cache: "no-store", signal: AbortSignal.timeout(20000) }).catch(() => null);
+  // systemctl restart returns before the proxy binds its port, so allow a brief warm-up.
+  let response: Response | null = null;
+  for (let attempt = 0; attempt < 10 && response?.status !== expected; attempt++) {
+    if (attempt) await Bun.sleep(500);
+    response = await fetch(target, { cache: "no-store", signal: AbortSignal.timeout(20000) }).catch(() => null);
+  }
   if (response?.status !== expected)
     throw new Error(`${target} returned ${response ? response.status : "no response"}, expected ${expected}.`);
   console.log(`${target} ${response.status}`);
