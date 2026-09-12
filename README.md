@@ -44,7 +44,7 @@ Because FatSecret whitelists only the deployed reserved IP, a local proxy answer
 bun run dev:full
 ```
 
-This starts a loopback relay on `http://localhost:8787` that forwards `/v1/*` and `/health` to the deployed proxy, then runs `next dev`. The relay sends no browser `Origin` upstream, so the production origin allowlist stays unchanged, and it supplies the token from ignored `secrets/app-access-token.txt` when the app sends none. In Settings, save `http://localhost:8787`; the token field may stay empty. `MUNCHY_UPSTREAM`, `MUNCHY_RELAY_PORT`, `MUNCHY_APP_ORIGIN`, and `MUNCHY_APP_TOKEN` override the defaults. These requests consume the live daily budget.
+This starts a loopback relay on `http://localhost:8787` that forwards `/v1/*` and `/health` to the deployed proxy and then runs `next dev`. The relay doesn't send a browser `Origin` upstream, so the production origin allowlist doesn't change, and it supplies the token from `secrets/app-access-token.txt` when the app sends none. In Settings, save `http://localhost:8787`; you can leave the token field empty. `MUNCHY_UPSTREAM`, `MUNCHY_RELAY_PORT`, `MUNCHY_APP_ORIGIN`, and `MUNCHY_APP_TOKEN` override the defaults.
 
 ## Development
 
