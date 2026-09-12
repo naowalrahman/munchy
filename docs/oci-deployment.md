@@ -1,3 +1,6 @@
+> [!NOTE]
+> This document is AI-generated.
+
 # OCI static-IP food proxy
 
 ## Current status

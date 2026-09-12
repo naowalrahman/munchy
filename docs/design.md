@@ -1,3 +1,6 @@
+> [!NOTE]
+> This document is AI-generated based on my design preferences.
+
 # Munchy: a kitchen notebook, built for repetition
 
 Palette: paper #FFFFFF, ice #F2F5FA, blueberry #25345A, plum #76518B, cucumber #427A65, apricot #C47C3E. Blueberry text on white; plum for primary actions; the other colors identify nutrients consistently.
