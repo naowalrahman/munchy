@@ -133,7 +133,7 @@
     top: 0;
     z-index: 30;
     display: grid;
-    grid-template-columns: auto 1fr 1fr 1fr;
+    grid-template-columns: 1fr 1fr 1fr auto;
     align-items: end;
     gap: 14px;
     padding: 8px 12px 0;
@@ -143,6 +143,7 @@
     text-decoration: none;
   }
   .totals-strip .bar {
+    order: 2;
     grid-column: 1 / -1;
     height: 3px;
     margin: 6px -12px 0;
@@ -157,14 +158,15 @@
     line-height: 1.1;
     min-width: 0;
   }
-  .totals-strip > div:first-child strong {
+  .totals-strip > div:first-child {
+    order: 1;
+    align-items: flex-end;
+    text-align: right;
+  }
+  .totals-strip strong {
     font-size: 24px;
     font-weight: 700;
     letter-spacing: -0.02em;
-  }
-  .totals-strip strong {
-    font-size: var(--t-base);
-    font-weight: 700;
     white-space: nowrap;
   }
   .totals-strip strong small {
