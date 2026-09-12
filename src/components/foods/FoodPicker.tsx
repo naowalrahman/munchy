@@ -128,7 +128,14 @@ export function FoodPicker({
             }
             onSave={async (p) => {
               await onPick(p);
-              onClose();
+              if (!meal || !data.settings.searchAgain) return onClose();
+              setSelected(null);
+              setQuery("");
+              setResults([]);
+              setTotal(0);
+              setPage(0);
+              setError("");
+              setActive(-1);
             }}
             label={meal ? `Log to ${meal}` : "Add ingredient"}
           />

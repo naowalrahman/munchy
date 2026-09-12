@@ -87,6 +87,7 @@ export const settingsSchema = z.object({
   proxyUrl: z.string(),
   proxyToken: z.string(),
   driveClientId: z.string().default(""),
+  searchAgain: z.boolean().default(false),
 });
 export type Settings = z.infer<typeof settingsSchema>;
 export interface Snapshot {
@@ -103,5 +104,6 @@ export const defaultSettings: Settings = {
   proxyUrl: "",
   proxyToken: "",
   driveClientId: "",
+  searchAgain: false,
 };
 export const emptyNutrients = (): Nutrients => Object.fromEntries(nutrientKeys.map((k) => [k, null])) as Nutrients;

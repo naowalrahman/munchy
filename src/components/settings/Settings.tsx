@@ -50,6 +50,22 @@ export function Settings() {
               ))}
             </div>
           </section>
+          <section className="settings-section">
+            <h2>Logging</h2>
+            <label className="check-label">
+              <input
+                type="checkbox"
+                checked={data.settings.searchAgain}
+                onChange={(e) =>
+                  void run(
+                    [upsert("settings", "main", { ...data.settings, searchAgain: e.target.checked })],
+                    e.target.checked ? "Search will reopen after adding" : "Search will close after adding"
+                  ).catch(() => {})
+                }
+              />
+              Search again after adding a food to a meal
+            </label>
+          </section>
           <form
             className="settings-section form-stack"
             onSubmit={async (e) => {
