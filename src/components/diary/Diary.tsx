@@ -75,7 +75,7 @@ export function Diary() {
         <MobileTotals entries={entries} />
         <section className="diary-meals">
           {!entries.length && (
-            <p className="empty-day">Nothing logged for {title.toLowerCase()}. Add a food to any meal below.</p>
+            <p className="empty-day">You haven&rsquo;t logged anything yet&mdash;let&rsquo;s do it!</p>
           )}
           {day.meals.map((name) => (
             <MealSection

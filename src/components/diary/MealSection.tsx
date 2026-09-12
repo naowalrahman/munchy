@@ -31,10 +31,12 @@ export function MealSection({
     <section className="meal-section">
       <header className="meal-header">
         <h3>{name}</h3>
-        {items.length > 0 && <span>{formatNumber(total.calories, 0)} kcal</span>}
-        <button className="small" onClick={onAdd} aria-label={`Add food to ${name}`}>
-          <LuPlus /> Add
-        </button>
+        {items.length > 0 && (
+          <b>
+            {formatNumber(total.calories, 0)}
+            <small> kcal</small>
+          </b>
+        )}
       </header>
       {items.map((entry) => {
         const n = portionNutrition(entry);
@@ -96,21 +98,26 @@ export function MealSection({
           </div>
         );
       })}
-      {!items.length && !suggested.length && (
-        <button className="empty-meal" onClick={onAdd}>
-          Nothing logged yet
+      <div className="meal-foot">
+        <button className="text-button" onClick={onAdd} aria-label={`Add food to ${name}`}>
+          <LuPlus /> Add food
         </button>
-      )}
-      {!!suggested.length && (
-        <div className="suggestions">
-          <small>Usuals</small>
-          {suggested.map((s) => (
-            <button key={s.food.id} disabled={busy} onClick={() => void onLog(s).catch((e) => notify(e.message))}>
-              + {s.food.name}
-            </button>
-          ))}
-        </div>
-      )}
+        {!!suggested.length && (
+          <>
+            <small>Usuals</small>
+            {suggested.map((s) => (
+              <button
+                key={s.food.id}
+                className="usual"
+                disabled={busy}
+                onClick={() => void onLog(s).catch((e) => notify(e.message))}
+              >
+                + {s.food.name}
+              </button>
+            ))}
+          </>
+        )}
+      </div>
     </section>
   );
 }

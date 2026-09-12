@@ -107,25 +107,24 @@
     margin-top: 8px;
   }
   .meal-section {
-    margin-bottom: 12px;
-  }
-  .meal-section + .meal-section {
-    padding-top: 12px;
+    --indent: 12px;
+    --actions: 0px;
+    margin-bottom: 26px;
   }
   .meal-section:first-of-type {
     margin-top: 6px;
   }
+  .meal-header {
+    padding-bottom: 2px;
+  }
   .meal-header h3 {
+    font-size: 18px;
+  }
+  .meal-header > b {
     font-size: var(--t-base);
   }
-  .meal-header > button {
-    min-height: 28px;
-    padding: 2px 8px;
-    font-size: var(--t-xs);
-    border-width: 1px;
-  }
   .entry {
-    padding: 3px 0;
+    padding-block: 3px;
   }
   .entry-main::after {
     margin-top: 10px;
@@ -145,8 +144,8 @@
   .entry-actions {
     display: none;
   }
-  .suggestions {
-    padding-top: 6px;
+  .meal-foot {
+    padding-top: 2px;
   }
   .diary-tools {
     justify-content: space-between;
