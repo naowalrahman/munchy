@@ -46,10 +46,7 @@ export function DriveBackup({ onRestore }: { onRestore: (raw: unknown) => void }
       }}
     >
       <h2>Google Drive</h2>
-      <p className="muted">
-        Manual backups to a “Munchy backups” folder in your Drive. Munchy only ever sees the files it creates there, and
-        your diary goes straight from this device to Google.
-      </p>
+      <p className="muted">Manual backups to a “Munchy backups” folder in your Drive.</p>
       <label>
         OAuth client ID
         <input
@@ -123,7 +120,7 @@ export function DriveBackup({ onRestore }: { onRestore: (raw: unknown) => void }
       <p className="fine-print">
         Create an OAuth client ID in the Google Cloud console: APIs &amp; Services → Credentials → Web application, with
         this site’s address as an authorised JavaScript origin, and the Drive API enabled. Keep the consent screen in
-        Testing with your own account as a test user; the drive.file scope needs no review.
+        Testing with your own account as a test user. The drive.file scope needs no review.
       </p>
     </form>
   );

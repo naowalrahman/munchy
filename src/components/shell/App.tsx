@@ -75,7 +75,6 @@ function Workspace() {
       </main>
       <footer className="app-footer">
         <AppUpdate />
-        <span>Your diary never leaves this device.</span>
         <a href="https://www.fatsecret.com" rel="noreferrer" target="_blank">
           Food data by fatsecret
         </a>

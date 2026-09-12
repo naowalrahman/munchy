@@ -49,7 +49,6 @@ export function Settings() {
                 </button>
               ))}
             </div>
-            <p className="muted">Applies to this device only.</p>
           </section>
           <form
             className="settings-section form-stack"
@@ -169,16 +168,12 @@ export function Settings() {
                 {status}
               </p>
             )}
-            <p className="fine-print">
-              FatSecret Basic is US-only and does not include caching. The proxy enables offline caching only with
-              configured storage permission. Custom foods work offline without a connection.
-            </p>
           </form>
           <section className="settings-section form-stack">
             <h2>Backups</h2>
             <p className="muted">
               {data.entries.length} food entries, {data.recipes.length} recipes, and {data.foods.length} of 200 recent
-              foods on this device. Clearing site data removes them, so export a backup now and then.
+              foods on this device. Clearing your browser data will remove them, so make regular backups.
             </p>
             <div className="button-row">
               <button onClick={() => download(`munchy-${today()}.json`, exportBackup(data))}>Export backup</button>
@@ -250,8 +245,8 @@ export function Settings() {
           <section className="settings-section">
             <h2>Install as an app</h2>
             <p className="muted">
-              On Android, open this page in Chrome and choose Install app from the menu. On a Mac, use Add to Dock in
-              Safari or Install in Chrome. Open it once while online, and the diary works offline after that.
+              On Android, open this page in your browser and choose Install app from the menu. On a Mac, use Add to Dock
+              in Safari or Install in Chrome. Open it once while online, and the diary works offline after that.
             </p>
           </section>
         </aside>
