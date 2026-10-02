@@ -1,5 +1,5 @@
 import { z } from "zod";
-import type { Settings } from "../model";
+import { barcodeSchema, foodResponseSchema, type Settings } from "../model";
 import { normalizeFood, normalizeSearch } from "./normalize";
 export interface Capabilities {
   cacheSeconds: number;
@@ -24,9 +24,15 @@ export async function request(settings: Settings, path: string, signal?: AbortSi
 }
 export const searchFoods = async (settings: Settings, q: string, page: number, signal?: AbortSignal) =>
   normalizeSearch(await request(settings, `/v1/search?q=${encodeURIComponent(q)}&page=${page}`, signal));
-export async function fetchFood(settings: Settings, id: string) {
-  const response = z
-    .object({ data: z.unknown(), cacheSeconds: z.number().nonnegative() })
-    .parse(await request(settings, `/v1/foods/${encodeURIComponent(id.replace(/^fs:/, ""))}`));
+export async function fetchFood(settings: Settings, id: string, signal?: AbortSignal) {
+  const response = foodResponseSchema.parse(
+    await request(settings, `/v1/foods/${encodeURIComponent(id.replace(/^fs:/, ""))}`, signal)
+  );
+  return normalizeFood(response.data, response.cacheSeconds);
+}
+export async function fetchBarcode(settings: Settings, value: string, signal?: AbortSignal) {
+  const barcode = barcodeSchema.safeParse(value.trim());
+  if (!barcode.success) throw new Error(barcode.error.issues[0].message);
+  const response = foodResponseSchema.parse(await request(settings, `/v1/barcode?barcode=${barcode.data}`, signal));
   return normalizeFood(response.data, response.cacheSeconds);
 }

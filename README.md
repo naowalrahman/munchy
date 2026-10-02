@@ -4,7 +4,7 @@ Munchy is a local food diary intentionally designed for logging at hyperspeed. Y
 
 ## Food logging
 
-- Search FatSecret, pick a recent food, or create a food from its nutrition label.
+- Search FatSecret, scan a barcode, pick a recent food, or create a food from its nutrition label.
 - Your usual foods are automatically detected and displayed for quick logging under each meal.
 - Edit amount, serving, date, or meal; duplicate entries; delete with undo; copy the previous day.
 - Rename and reorder meals per day, optionally setting the defaults for new days. Existing days retain their meals.
@@ -13,7 +13,7 @@ Munchy is a local food diary intentionally designed for logging at hyperspeed. Y
 
 ## FatSecret account requirements
 
-The included proxy uses OAuth 2.0, Basic food search v1, and food details v4. Credentials are stored on proxy VM. Only queries and food IDs are sent to the proxy.
+The included proxy uses OAuth 2.0, Basic food search v1, food details v4, and barcode lookup v2. Credentials are stored on proxy VM. Only queries, food IDs, and barcode numbers are sent to the proxy.
 
 Persistent FatSecret nutrition snapshots and the offline food cache require appropriate storage permission. Set `FATSECRET_STORAGE_PERMISSION=granted` and `FATSECRET_CACHE_SECONDS` after verifying permission with FatSecret.
 
@@ -25,6 +25,7 @@ Live app: [Open Munchy](https://munchy.129.80.164.67.sslip.io). In Settings, sav
 
 - `/v1/search?q=oats&page=0`
 - `/v1/foods/123`
+- `/v1/barcode?barcode=0012345678905`
 - `/v1/capabilities`
 - `/health`
 
@@ -47,6 +48,14 @@ bun run dev:full
 This starts a loopback relay on `http://localhost:8787` that forwards `/v1/*` and `/health` to the deployed proxy and then runs `next dev`. The relay doesn't send a browser `Origin` upstream, so the production origin allowlist doesn't change, and it supplies the token from `secrets/app-access-token.txt` when the app sends none. In Settings, save `http://localhost:8787`; you can leave the token field empty. `MUNCHY_UPSTREAM`, `MUNCHY_RELAY_PORT`, `MUNCHY_APP_ORIGIN`, and `MUNCHY_APP_TOKEN` override the defaults.
 
 ## Development
+
+### Barcode scanning
+
+Choose **Scan barcode** in the food picker, then **Start camera**, or enter the barcode number manually. Camera frames are decoded on the device; only the barcode number goes to the food proxy. Scanning and manual entry support EAN-8, EAN-13, and UPC-A. A match opens the usual portion editor for diary entries or recipe ingredients.
+
+Camera access requires HTTPS (or localhost) and browser permission. The camera stops after a match, when you leave the scanner, or when the app moves into the background. The scanner library loads only when you start the camera.
+
+On a FatSecret account with barcode access, set `FATSECRET_SCOPE="basic barcode"` in the proxy environment and restart the proxy. The default `basic` scope still supports ordinary search; barcode lookup reports a configuration error if access is missing. The proxy uses `food/barcode/find-by-id/v2` and counts each lookup against the existing rate and daily limits. Deploy the updated proxy alongside the app to enable `/v1/barcode`.
 
 ```sh
 bun install

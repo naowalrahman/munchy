@@ -1,5 +1,6 @@
 import { timingSafeEqual } from "node:crypto";
 import { UpstreamError } from "./fatsecret";
+import { barcodeSchema } from "../../src/utils/model";
 export interface ProxyConfig {
   tokens: string[];
   origins: string[];
@@ -55,6 +56,15 @@ export function createHandler(config: ProxyConfig) {
       return json({ configured: config.configured, cacheSeconds: config.cacheSeconds });
     if (!config.configured) return json({ error: "FatSecret credentials are not configured on the proxy." }, 503);
     try {
+      if (url.pathname === "/v1/barcode") {
+        const barcode = barcodeSchema.safeParse(url.searchParams.get("barcode"));
+        if (!barcode.success) return json({ error: barcode.error.issues[0].message }, 400);
+        if (!config.consume()) return json({ error: "The daily API budget has been reached. Use saved foods." }, 429);
+        return json({
+          data: await config.get("food/barcode/find-by-id/v2", { barcode: barcode.data }),
+          cacheSeconds: config.cacheSeconds,
+        });
+      }
       if (url.pathname === "/v1/search") {
         const q = url.searchParams.get("q")?.trim() ?? "";
         const page = url.searchParams.get("page") ?? "0";

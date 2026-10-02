@@ -8,6 +8,7 @@ import type { SearchResult } from "@/utils/food/normalize";
 import { recipeFood } from "@/utils/nutrition";
 import { PortionEditor } from "./PortionEditor";
 import { CustomFood } from "./CustomFood";
+import { BarcodeScanner } from "./BarcodeScanner";
 export function FoodPicker({
   meal,
   onClose,
@@ -24,6 +25,7 @@ export function FoodPicker({
   const [page, setPage] = useState(0);
   const [selected, setSelected] = useState<Food | null>(null);
   const [custom, setCustom] = useState(false);
+  const [scanning, setScanning] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [suggesting, setSuggesting] = useState(false);
@@ -102,7 +104,17 @@ export function FoodPicker({
   }
   return (
     <Modal
-      title={selected ? "How much?" : custom ? "New food" : meal ? `Add to ${meal}` : "Add an ingredient"}
+      title={
+        selected
+          ? "How much?"
+          : scanning
+            ? "Scan barcode"
+            : custom
+              ? "New food"
+              : meal
+                ? `Add to ${meal}`
+                : "Add an ingredient"
+      }
       onClose={() => {
         abort.current?.abort();
         onClose();
@@ -140,6 +152,14 @@ export function FoodPicker({
             label={meal ? `Log to ${meal}` : "Add ingredient"}
           />
         </>
+      ) : scanning ? (
+        <BarcodeScanner
+          onBack={() => setScanning(false)}
+          onPick={(food) => {
+            setScanning(false);
+            pick(food);
+          }}
+        />
       ) : custom ? (
         <>
           <button className="text-button" onClick={() => setCustom(false)}>
@@ -260,11 +280,26 @@ export function FoodPicker({
               </div>
             </>
           )}
-          <div className="result-head">
+          <div className="result-head food-picker-head">
             <h3>Recent foods and recipes</h3>
-            <button className="text-button" onClick={() => setCustom(true)}>
-              New food from a label
-            </button>
+            <div className="food-picker-actions">
+              <button className="text-button" onClick={() => setCustom(true)}>
+                New food
+              </button>
+              <button
+                className="text-button"
+                onClick={() => {
+                  seq.current++;
+                  abort.current?.abort();
+                  setBusy(false);
+                  setSuggesting(false);
+                  setError("");
+                  setScanning(true);
+                }}
+              >
+                Scan
+              </button>
+            </div>
           </div>
           <div className="food-results">
             {local.slice(0, 30).map((food) => (

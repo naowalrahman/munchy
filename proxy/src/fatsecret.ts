@@ -62,6 +62,18 @@ export function createFatSecret(clientId: string, clientSecret: string, scope = 
         token = undefined;
         return get(path, params, false);
       }
+      if (path === "food/barcode/find-by-id/v2") {
+        if (error.data.error.code === 211)
+          throw new UpstreamError(
+            "No food found for this barcode. Try searching by name or add a food from its label.",
+            404
+          );
+        if ([10, 14].includes(error.data.error.code))
+          throw new UpstreamError(
+            "Barcode lookup is not enabled on this proxy. Check the FatSecret barcode permission and FATSECRET_SCOPE.",
+            503
+          );
+      }
       throw new UpstreamError(
         `FatSecret rejected the request (code ${error.data.error.code}). Check API permissions and the VM IP whitelist.`,
         error.data.error.code === 106 ? 429 : 502

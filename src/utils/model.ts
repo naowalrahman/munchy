@@ -1,4 +1,13 @@
 import { z } from "zod";
+export const barcodeSchema = z
+  .string()
+  .regex(/^(?:\d{8}|\d{12}|\d{13})$/, "Enter an 8, 12, or 13-digit barcode.")
+  .transform((value) => value.padStart(13, "0"))
+  .refine((value) => {
+    const sum = [...value.slice(0, -1)].reduce((total, digit, i) => total + Number(digit) * (i % 2 ? 3 : 1), 0);
+    return (10 - (sum % 10)) % 10 === Number(value.at(-1));
+  }, "Check the barcode digits and try again.");
+export const foodResponseSchema = z.object({ data: z.unknown(), cacheSeconds: z.number().finite().nonnegative() });
 export const nutrientKeys = [
   "calories",
   "protein",
