@@ -4,7 +4,7 @@
     header {
         X-Content-Type-Options nosniff
         Referrer-Policy no-referrer
-        Permissions-Policy "camera=(), microphone=(), geolocation=()"
+        Permissions-Policy "camera=(self), microphone=(), geolocation=()"
     }
     @api path /v1/* /health
     handle @api {
