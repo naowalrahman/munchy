@@ -15,6 +15,8 @@ Deployed on 2026-09-05 in the tenancy's home region, US East (Ashburn):
 - `munchy-proxy` and `caddy` system services are enabled. OAuth credentials and app token are root-readable only in `/etc/munchy-proxy.env`.
 - Live search for apples and food detail 35718 both returned HTTP 200 from FatSecret. Missing app token returned 401; foreign Origin returned 403.
 - Storage permission remains pending: `cacheSeconds=0`. Search and inspection work; persisting FatSecret nutrition requires appropriate account permission.
+- Barcode lookup is enabled with `FATSECRET_SCOPE="basic barcode"` in `/etc/munchy-proxy.env`. Verified on 2026-10-21 with an authenticated `/v1/barcode` request returning food details.
+- Caddy allows same-origin camera access with `Permissions-Policy: camera=(self), microphone=(), geolocation=()`.
 
 The IP-based hostname uses third-party DNS. Keep this origin stable because browser data belongs to an origin. Export a backup before moving to a personal domain. The local private app token is in ignored `secrets/app-access-token.txt`; enter it in app Settings. Never distribute the OAuth secret to devices.
 
@@ -59,7 +61,9 @@ bun run deploy --app-only   # static app only, no service restart
 bun run deploy --proxy-only # proxy binary only
 ```
 
-It uploads `out/` as a tar stream because the Minimal image has no `rsync`, unpacks into `/opt/munchy/out.new`, and swaps it into place, leaving the previous tree at `/opt/munchy/out.old` for rollback. The proxy binary lands as `munchy-proxy.new` and is renamed over the running one, so `systemctl restart munchy-proxy` picks it up without `ETXTBSY`. `MUNCHY_SSH_HOST`, `MUNCHY_REMOTE_ROOT`, and `MUNCHY_URL` override the defaults.
+It uploads `out/` as a tar stream because the Minimal image has no `rsync`, unpacks into `/opt/munchy/out.new`, and swaps it into place, leaving the previous tree at `/opt/munchy/out.old` for rollback. The proxy binary lands as `munchy-proxy.new` and is renamed over the running one, so `systemctl restart munchy-proxy` picks it up without `ETXTBSY`. Every deploy also renders `proxy/Caddyfile` with the deployment hostname and static root, validates it, installs it to `/etc/caddy/Caddyfile`, and reloads Caddy. App deploys check that the live response permits same-origin camera access. `MUNCHY_SSH_HOST`, `MUNCHY_REMOTE_ROOT`, and `MUNCHY_URL` override the defaults.
+
+Proxy environment secrets and account permissions are not overwritten by deploys. To enable barcode lookup on an existing server, set `FATSECRET_SCOPE="basic barcode"` in `/etc/munchy-proxy.env` and restart `munchy-proxy`; the FatSecret account must have barcode access. Deploying the binary alone does not change OAuth scopes. For camera scanning, deploy the Caddy policy too, reload the app, and allow camera access in the browser. Keep microphone and geolocation disabled.
 
 Deploys need SSH, which the OCI security list and the guest firewall allow only from the operator's `/32`. Update both rules when that address changes; the script fails its preflight rather than hanging.
 
@@ -70,6 +74,8 @@ Deploys need SSH, which the OCI security list and the guest firewall allow only 
 - HTTPS certificate verifies normally; no browser security bypass.
 - `/health` returns 200; food endpoints without the app token return 401.
 - Authenticated food search and a result's detail request return real FatSecret data.
+- Authenticated `/v1/barcode?barcode=0012345678905` returns food details on an account with barcode access; ordinary search still works after changing scopes.
+- The app response includes `Permissions-Policy: camera=(self), microphone=(), geolocation=()`. After reloading, the browser permits camera access; scan a package or enter its barcode manually to open the portion editor.
 - Foreign browser origins receive 403; arbitrary proxy paths and POST requests fail.
 - The app connects, logs supported foods, reloads its persisted diary, and loads its saved shell offline.
 - Service survives restart. Credentials and app access tokens are absent from `out/`, logs, Git diffs, and documentation.

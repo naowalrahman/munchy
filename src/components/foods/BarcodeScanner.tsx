@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useEffectEvent, useRef, useState } from "react";
 import { useStore } from "../shell/Store";
 import { barcodeSchema, type Food } from "@/utils/model";
 import { fetchBarcode } from "@/utils/food/api";
@@ -13,8 +13,12 @@ export function BarcodeScanner({ onPick, onBack }: { onPick: (food: Food) => voi
   const video = useRef<HTMLVideoElement>(null);
   const cameraAbort = useRef<AbortController | null>(null);
   const lookupAbort = useRef<AbortController | null>(null);
+  const startCameraOnOpen = useEffectEvent(() => {
+    if (data.settings.proxyUrl && !document.hidden) void startCamera();
+  });
 
   useEffect(() => {
+    startCameraOnOpen();
     const pause = () => {
       if (document.hidden) {
         cameraAbort.current?.abort();
@@ -118,7 +122,6 @@ export function BarcodeScanner({ onPick, onBack }: { onPick: (food: Food) => voi
         <label>
           Barcode number
           <input
-            autoFocus
             inputMode="numeric"
             autoComplete="off"
             placeholder="8, 12, or 13 digits"

@@ -51,9 +51,9 @@ This starts a loopback relay on `http://localhost:8787` that forwards `/v1/*` an
 
 ### Barcode scanning
 
-Choose **Scan barcode** in the food picker, then **Start camera**, or enter the barcode number manually. Camera frames are decoded on the device; only the barcode number goes to the food proxy. Scanning and manual entry support EAN-8, EAN-13, and UPC-A. A match opens the usual portion editor for diary entries or recipe ingredients.
+Choose **Scan barcode** in the food picker to start the camera automatically, or enter the barcode number manually. Camera frames are decoded on the device; only the barcode number goes to the food proxy. Scanning and manual entry support EAN-8, EAN-13, and UPC-A. A match opens the usual portion editor for diary entries or recipe ingredients.
 
-Camera access requires HTTPS (or localhost) and browser permission. The camera stops after a match, when you leave the scanner, or when the app moves into the background. The scanner library loads only when you start the camera.
+Camera access requires HTTPS (or localhost), a configured food proxy, and browser permission. If camera access is denied or unavailable, manual entry remains available. Use **Stop camera** to pause and **Start camera** to try again. The camera also stops after a match, when you leave the scanner, or when the app moves into the background. The scanner library loads only when the camera starts.
 
 On a FatSecret account with barcode access, set `FATSECRET_SCOPE="basic barcode"` in the proxy environment and restart the proxy. The default `basic` scope still supports ordinary search; barcode lookup reports a configuration error if access is missing. The proxy uses `food/barcode/find-by-id/v2` and counts each lookup against the existing rate and daily limits. Deploy the updated proxy alongside the app to enable `/v1/barcode`.
 

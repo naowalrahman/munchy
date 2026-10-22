@@ -48,6 +48,17 @@ if (proxy) {
   console.log(`Installed ${root}/munchy-proxy and restarted the service`);
 }
 
+const caddyfile = (await Bun.file("proxy/Caddyfile").text())
+  .replace("{$MUNCHY_DOMAIN}", new URL(url).host)
+  .replace("/opt/munchy/out", `${root}/out`);
+const configureCaddy = `set -e
+  sudo tee /etc/caddy/Caddyfile.new >/dev/null
+  sudo caddy validate --config /etc/caddy/Caddyfile.new --adapter caddyfile
+  sudo mv /etc/caddy/Caddyfile.new /etc/caddy/Caddyfile
+  sudo systemctl reload caddy`;
+await $`ssh ${host} ${configureCaddy} < ${new Response(caddyfile)}`;
+console.log("Installed and reloaded the Caddy configuration");
+
 const checks: [string, number][] = [];
 if (proxy) checks.push([`${url}/health`, 200]);
 if (app) checks.push([url, 200]);
@@ -61,5 +72,7 @@ for (const [target, expected] of checks) {
   if (response?.status !== expected)
     throw new Error(`${target} returned ${response ? response.status : "no response"}, expected ${expected}.`);
   console.log(`${target} ${response.status}`);
+  if (target === url && !response.headers.get("Permissions-Policy")?.includes("camera=(self)"))
+    throw new Error("The deployed Permissions-Policy does not allow same-origin camera access.");
 }
 console.log("Deployed. Hard-reload an installed device so the service worker picks up the new build.");
