@@ -6,6 +6,7 @@
   gap: 36px;
   background: var(--paper);
 }
+
 .brand {
   font-size: 24px;
   letter-spacing: -0.04em;
@@ -16,17 +17,20 @@
   align-items: center;
   line-height: 1;
 }
+
 .brand-mark {
   color: var(--yolk);
   font-size: 22px;
   position: relative;
   top: -1px;
 }
+
 .app-header nav {
   display: flex;
   gap: 4px;
   align-items: stretch;
 }
+
 .app-header nav button {
   border: 0;
   border-radius: 0;
@@ -37,13 +41,16 @@
   font-weight: 600;
   position: relative;
 }
+
 .app-header nav button:hover {
   background: none;
   color: var(--ink);
 }
+
 .app-header nav button[aria-current="page"] {
   color: var(--ink);
 }
+
 .app-header nav button[aria-current="page"]::after {
   content: "";
   position: absolute;
@@ -54,6 +61,7 @@
   border-radius: 2px 2px 0 0;
   background: var(--yolk);
 }
+
 .device-status {
   margin-left: auto;
   display: flex;
@@ -63,17 +71,20 @@
   font-size: var(--t-xs);
   font-weight: 600;
 }
+
 .device-status > span {
   width: 8px;
   height: 8px;
   border-radius: 50%;
   background: var(--yolk);
 }
+
 .workspace {
   max-width: 1240px;
   margin: auto;
   padding: 28px max(4vw, 20px) 48px;
 }
+
 .app-footer {
   max-width: 1240px;
   margin: 0 auto;
@@ -84,6 +95,7 @@
   font-size: var(--t-xs);
   color: var(--muted);
 }
+
 .app-footer button.update-app {
   min-height: 30px;
   padding: 3px 10px;
@@ -91,10 +103,12 @@
   background: var(--custard);
   border-color: var(--custard-edge);
 }
+
 .toast {
   position: fixed;
-  bottom: 20px;
-  left: 50%;
+  inset: auto auto 20px 50%;
+  margin: 0;
+  border: 0;
   transform: translateX(-50%);
   z-index: 100;
   background: var(--ink);
@@ -109,9 +123,15 @@
   box-shadow: 0 8px 30px var(--shadow);
   max-width: 90vw;
 }
+
+.toast:not(:popover-open) {
+  display: none;
+}
+
 .toast svg {
   color: var(--yolk);
 }
+
 .toast button {
   background: none;
   color: var(--paper);
@@ -119,6 +139,7 @@
   min-height: 24px;
   padding: 2px 6px;
 }
+
 .toast button:hover {
   background: color-mix(in srgb, var(--paper) 15%, transparent);
   border-color: transparent;
@@ -127,6 +148,7 @@
 .totals-strip {
   display: none;
 }
+
 @media (max-width: 760px) {
   .totals-strip {
     position: sticky;
@@ -142,6 +164,7 @@
     border-radius: 8px;
     text-decoration: none;
   }
+
   .totals-strip .bar {
     order: 2;
     grid-column: 1 / -1;
@@ -149,35 +172,42 @@
     margin: 6px -12px 0;
     border-radius: 0 0 8px 8px;
   }
+
   .totals-strip:not(:has(.bar)) {
     padding-bottom: 8px;
   }
+
   .totals-strip > div {
     display: flex;
     flex-direction: column;
     line-height: 1.1;
     min-width: 0;
   }
+
   .totals-strip > div:first-child {
     order: 1;
     align-items: flex-end;
     text-align: right;
   }
+
   .totals-strip strong {
     font-size: 24px;
     font-weight: 700;
     letter-spacing: -0.02em;
     white-space: nowrap;
   }
+
   .totals-strip strong small {
     font-weight: 400;
     font-size: var(--t-xs);
   }
+
   .totals-strip span {
     font-size: 11px;
     color: var(--muted);
     margin-top: 2px;
   }
+
   #daily-nutrients {
     scroll-margin-top: 72px;
   }

@@ -10,9 +10,31 @@ CREATE TABLE IF NOT EXISTS settings(id TEXT PRIMARY KEY, payload TEXT NOT NULL);
 CREATE TABLE IF NOT EXISTS favorites(id TEXT PRIMARY KEY);
 CREATE TABLE IF NOT EXISTS revision(value INTEGER NOT NULL);
 INSERT INTO revision(value) SELECT 0 WHERE NOT EXISTS (SELECT 1 FROM revision);
-PRAGMA user_version = 1;
 `;
+
+/** `migrations[i]` upgrades a version i + 1 database; `schema` alone is version 1. */
+export const migrations = [
+  // Recipes are derived from the recipes table, so their snapshots no longer occupy the recent-foods cache.
+  "DELETE FROM foods WHERE id LIKE 'recipe:%'",
+];
+
+export const schemaVersion = 1 + migrations.length;
+
+type Table = "entries" | "foods" | "recipes" | "days" | "settings" | "favorites";
+
+export type Row = Record<string, string | number>;
+
+export type Rows = Record<Table, Row[]> & { revision: number };
+
 export interface Statement {
   sql: string;
   params?: (string | number | null)[];
 }
+
+export interface WorkerRequest {
+  id: string;
+  statements: Statement[];
+  revision: number;
+}
+
+export type WorkerResponse = { id: string; result: Rows } | { id: string; error: string };

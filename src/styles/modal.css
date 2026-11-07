@@ -1,0 +1,48 @@
+.modal {
+  margin: auto;
+  border: 0;
+  border-radius: 8px;
+  padding: 0;
+  width: min(560px, calc(100vw - 24px));
+  max-height: 90dvh;
+  color: var(--ink);
+  background: var(--paper);
+  box-shadow: 0 24px 80px var(--shadow);
+}
+
+.modal.wide {
+  width: min(760px, calc(100vw - 24px));
+}
+
+.modal::backdrop {
+  background: var(--backdrop);
+}
+
+.modal-inner {
+  padding: 16px 20px 20px;
+  overflow: auto;
+  max-height: inherit;
+}
+
+.modal header {
+  position: sticky;
+  top: -16px;
+  background: var(--paper);
+  z-index: 1;
+  padding: 6px 0 4px;
+  margin-bottom: 6px;
+}
+
+.modal header h2 {
+  font-size: var(--t-lg);
+}
+
+.modal header .icon-button {
+  font-size: 22px;
+  line-height: 1;
+  color: var(--ink);
+}
+
+.modal > .modal-inner > .text-button {
+  margin: 6px 0 4px;
+}

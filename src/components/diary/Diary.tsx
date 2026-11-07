@@ -1,18 +1,20 @@
 "use client";
+
 import { useState } from "react";
 import { LuChevronLeft, LuChevronRight } from "react-icons/lu";
-import { useStore } from "../shell/Store";
-import { today, shiftDate, shortDateLabel, relativeDayLabel } from "@/utils/dates";
-import { dayFor, logEntries, entryStatement, newEntry } from "@/utils/db/operations";
+import { isLogDate, relativeDayLabel, shiftDate, shortDateLabel, today } from "@/utils/dates";
+import { dayFor, logEntries, saveEntry } from "@/utils/db/operations";
 import type { Entry, Portion } from "@/utils/model";
 import { suggestions } from "@/utils/suggestions";
 import { FoodPicker } from "../foods/FoodPicker";
+import { useStore } from "../shell/Store";
 import { DailyTotals } from "./DailyTotals";
-import { MobileTotals } from "./MobileTotals";
-import { EntryEditor } from "./EntryEditor";
-import { MealSettings } from "./MealSettings";
-import { MealSection } from "./MealSection";
 import { DayNotes } from "./DayNotes";
+import { EntryEditor } from "./EntryEditor";
+import { MealSection } from "./MealSection";
+import { MealSettings } from "./MealSettings";
+import { MobileTotals } from "./MobileTotals";
+
 export function Diary() {
   const { data, run, notify } = useStore();
   const [date, setDate] = useState(today);
@@ -20,29 +22,27 @@ export function Diary() {
   const [edit, setEdit] = useState<Entry | null>(null);
   const [mealsOpen, setMealsOpen] = useState(false);
   const [removed, setRemoved] = useState<Entry | null>(null);
+
   const day = dayFor(data, date);
   const entries = data.entries.filter((e) => e.date === date).sort((a, b) => a.createdAt - b.createdAt);
-  async function add(p: Portion, target: string) {
-    await run(logEntries(data, [newEntry(p, date, target)]), "");
-  }
-  async function copyPrevious() {
+  const log = (portion: Portion, target: string) => run(() => logEntries(day, [{ portion, meal: target }]));
+
+  function copyPrevious() {
     const from = data.entries.filter((e) => e.date === shiftDate(date, -1));
-    if (!from.length) {
-      notify("Yesterday has no foods to copy.");
-      return;
-    }
-    const meals = [...new Set([...day.meals, ...from.map((e) => e.meal)])];
-    const next = { ...day, meals };
-    const withDay = { ...data, days: [...data.days.filter((d) => d.date !== date), next] };
-    await run(
-      logEntries(
-        withDay,
-        from.map((e) => ({ ...e, id: crypto.randomUUID(), date, createdAt: Date.now() }))
-      ),
+    if (!from.length) return notify("Yesterday has no foods to copy.");
+    const added = from.map((e) => e.meal).filter((m) => !day.meals.includes(m));
+    void run(
+      () =>
+        logEntries(
+          { ...day, meals: [...day.meals, ...new Set(added)] },
+          from.map((e) => ({ portion: e, meal: e.meal }))
+        ),
       "Yesterday's foods copied"
     );
   }
+
   const title = relativeDayLabel(date);
+
   return (
     <>
       <div className="day-head">
@@ -58,7 +58,7 @@ export function Diary() {
             max={today()}
             value={date}
             onChange={(e) => {
-              if (e.target.value && e.target.value <= today()) setDate(e.target.value);
+              if (isLogDate(e.target.value)) setDate(e.target.value);
             }}
           />
         </h1>
@@ -84,7 +84,7 @@ export function Diary() {
               items={entries.filter((e) => e.meal === name)}
               suggested={suggestions(data, name, date)}
               onAdd={() => setMeal(name)}
-              onLog={(p) => add(p, name)}
+              onLog={(p) => void log(p, name)}
               onEdit={setEdit}
               onRemoved={setRemoved}
             />
@@ -94,9 +94,9 @@ export function Diary() {
               Removed {removed.food.name}
               <button
                 onClick={() =>
-                  void run([entryStatement(removed)], "Food restored")
-                    .then(() => setRemoved(null))
-                    .catch(() => {})
+                  void run(() => [saveEntry(removed)], "Food restored").then((ok) => {
+                    if (ok) setRemoved(null);
+                  })
                 }
               >
                 Undo
@@ -104,7 +104,7 @@ export function Diary() {
             </div>
           )}
           <div className="diary-tools">
-            <button className="text-button" onClick={() => void copyPrevious().catch((e) => notify(e.message))}>
+            <button className="text-button" onClick={copyPrevious}>
               Copy yesterday&rsquo;s foods
             </button>
             <button className="text-button" onClick={() => setMealsOpen(true)}>
@@ -115,7 +115,7 @@ export function Diary() {
         </section>
         <DailyTotals entries={entries} day={day} title={title} />
       </div>
-      {meal && <FoodPicker meal={meal} onClose={() => setMeal(null)} onPick={(p) => add(p, meal)} />}
+      {meal && <FoodPicker meal={meal} onClose={() => setMeal(null)} onPick={(p) => log(p, meal)} />}
       {edit && <EntryEditor entry={edit} onClose={() => setEdit(null)} onRemoved={setRemoved} />}
       {mealsOpen && <MealSettings day={day} onClose={() => setMealsOpen(false)} />}
     </>

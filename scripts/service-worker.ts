@@ -1,11 +1,14 @@
-import { readdir, readFile, writeFile } from "node:fs/promises";
 import { createHash } from "node:crypto";
+import { readdir, readFile, writeFile } from "node:fs/promises";
+
 async function walk(dir: string): Promise<string[]> {
   const files = await readdir(dir, { withFileTypes: true });
+
   return (
     await Promise.all(files.map((f) => (f.isDirectory() ? walk(`${dir}/${f.name}`) : [`${dir}/${f.name}`])))
   ).flat();
 }
+
 const files = (await walk("out")).filter((f) => !f.endsWith(".map") && !f.endsWith("/sw.js") && !f.endsWith(".txt"));
 const hash = createHash("sha256");
 for (const file of files) hash.update(await readFile(file));

@@ -1,10 +1,13 @@
 "use client";
+
+import { saveDay } from "@/utils/db/operations";
 import type { Day } from "@/utils/model";
-import { useStore } from "../shell/Store";
-import { upsert } from "@/utils/db/client";
 import { formatNumber } from "@/utils/nutrition";
+import { useStore } from "../shell/Store";
+
 export function DayNotes({ day }: { day: Day }) {
   const { run } = useStore();
+
   const summary = [
     day.weight !== null ? `${formatNumber(day.weight)} kg` : "",
     day.complete ? "fully logged" : "",
@@ -12,6 +15,7 @@ export function DayNotes({ day }: { day: Day }) {
   ]
     .filter(Boolean)
     .join(", ");
+
   return (
     <details className="day-notes" open={Boolean(day.note)}>
       <summary>
@@ -24,8 +28,8 @@ export function DayNotes({ day }: { day: Day }) {
           e.preventDefault();
           const f = new FormData(e.currentTarget);
           void run(
-            [
-              upsert("days", day.date, {
+            () => [
+              saveDay({
                 ...day,
                 note: String(f.get("note")),
                 weight: f.get("weight") ? Number(f.get("weight")) : null,
@@ -33,7 +37,7 @@ export function DayNotes({ day }: { day: Day }) {
               }),
             ],
             "Day details saved"
-          ).catch(() => {});
+          );
         }}
       >
         <textarea

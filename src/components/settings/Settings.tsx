@@ -1,28 +1,24 @@
 "use client";
-import { useEffect, useState } from "react";
-import { useStore } from "../shell/Store";
-import { settingsSchema, nutrientKeys } from "@/utils/model";
-import { nutrients, portionNutrition } from "@/utils/nutrition";
-import { upsert } from "@/utils/db/client";
-import { download, exportBackup, importBackup } from "@/utils/backup";
-import { request } from "@/utils/food/api";
-import { today } from "@/utils/dates";
-import { z } from "zod";
-import { Modal } from "../ui/Modal";
-import { DriveBackup } from "./DriveBackup";
+
+import { useState } from "react";
+import { saveSettings } from "@/utils/db/operations";
+import { issueText, mealsSchema, nutrientKeys, type Settings as SettingsModel } from "@/utils/model";
+import { nutrients } from "@/utils/nutrition";
 import { readThemeSetting, saveThemeSetting, type ThemeSetting } from "@/utils/theme";
+import { useStore } from "../shell/Store";
+import { BackupSettings } from "./BackupSettings";
+import { ProxySettings } from "./ProxySettings";
+
 const themeOptions: { id: ThemeSetting; label: string }[] = [
   { id: "system", label: "Match device" },
   { id: "light", label: "Light" },
   { id: "dark", label: "Dark" },
 ];
+
 export function Settings() {
   const { data, run, notify } = useStore();
-  const [status, setStatus] = useState("");
-  const [backup, setBackup] = useState<unknown>();
-  const [storage, setStorage] = useState("");
-  const [theme, setTheme] = useState<ThemeSetting>("system");
-  useEffect(() => setTheme(readThemeSetting()), []);
+  const [theme, setTheme] = useState(readThemeSetting);
+
   return (
     <>
       <div className="page-heading">
@@ -35,6 +31,7 @@ export function Settings() {
         <section>
           <section className="settings-section">
             <h2>Appearance</h2>
+            {/* biome-ignore lint/a11y/useSemanticElements: segmented control styling relies on a plain div */}
             <div className="segmented" role="group" aria-label="Appearance">
               {themeOptions.map((o) => (
                 <button
@@ -58,9 +55,9 @@ export function Settings() {
                 checked={data.settings.searchAgain}
                 onChange={(e) =>
                   void run(
-                    [upsert("settings", "main", { ...data.settings, searchAgain: e.target.checked })],
+                    () => [saveSettings({ ...data.settings, searchAgain: e.target.checked })],
                     e.target.checked ? "Search will reopen after adding" : "Search will close after adding"
-                  ).catch(() => {})
+                  )
                 }
               />
               Search again after adding a food to a meal
@@ -68,25 +65,24 @@ export function Settings() {
           </section>
           <form
             className="settings-section form-stack"
-            onSubmit={async (e) => {
+            onSubmit={(e) => {
               e.preventDefault();
               const f = new FormData(e.currentTarget);
-              try {
-                const names = String(f.get("meals"))
+
+              const meals = mealsSchema.safeParse(
+                String(f.get("meals"))
                   .split("\n")
                   .map((v) => v.trim())
-                  .filter(Boolean);
-                if (new Set(names.map((n) => n.toLowerCase())).size !== names.length)
-                  throw new Error("Use unique meal names.");
-                const goals: Record<string, number> = {};
-                for (const k of nutrientKeys) {
-                  if (f.get(k)) goals[k] = Number(f.get(k));
-                }
-                const settings = settingsSchema.parse({ ...data.settings, defaultMeals: names, goals });
-                await run([upsert("settings", "main", settings)], "Preferences saved");
-              } catch (e) {
-                notify(e instanceof Error ? e.message : "Could not save.");
-              }
+                  .filter(Boolean)
+              );
+
+              if (!meals.success) return notify(issueText(meals.error));
+              const goals: SettingsModel["goals"] = {};
+              for (const k of nutrientKeys) if (f.get(k)) goals[k] = Number(f.get(k));
+              void run(
+                () => [saveSettings({ ...data.settings, defaultMeals: meals.data, goals })],
+                "Preferences saved"
+              );
             }}
           >
             <h2>Default meals</h2>
@@ -109,155 +105,8 @@ export function Settings() {
           </form>
         </section>
         <aside>
-          <form
-            className="settings-section form-stack"
-            onSubmit={async (e) => {
-              e.preventDefault();
-              const f = new FormData(e.currentTarget);
-              try {
-                const url = String(f.get("url")).trim().replace(/\/$/, "");
-                if (url) {
-                  const parsed = new URL(url);
-                  if (parsed.protocol !== "https:" && !["localhost", "127.0.0.1"].includes(parsed.hostname))
-                    throw new Error("Use an HTTPS address.");
-                }
-                await run(
-                  [
-                    upsert("settings", "main", {
-                      ...data.settings,
-                      proxyUrl: url,
-                      proxyToken: String(f.get("token")).trim(),
-                    }),
-                  ],
-                  "Food search connection saved"
-                );
-                setStatus("Connection saved. Test it below.");
-              } catch (e) {
-                setStatus(String(e));
-              }
-            }}
-          >
-            <h2>Food search</h2>
-            <p className="muted">
-              Only search queries go to this service. Your diary, recipes, and targets stay on this device.
-            </p>
-            <label>
-              Proxy address
-              <input
-                name="url"
-                type="url"
-                defaultValue={data.settings.proxyUrl || (typeof location !== "undefined" ? location.origin : "")}
-                placeholder="https://food.example.com"
-              />
-            </label>
-            <label>
-              App access token
-              <input name="token" type="password" defaultValue={data.settings.proxyToken} autoComplete="off" />
-            </label>
-            <div className="button-row">
-              <button className="primary">Save connection</button>
-              <button
-                type="button"
-                onClick={async () => {
-                  setStatus("Testing…");
-                  try {
-                    const result = z
-                      .object({ configured: z.boolean(), cacheSeconds: z.number() })
-                      .parse(await request(data.settings, "/v1/capabilities"));
-                    setStatus(
-                      result.configured
-                        ? result.cacheSeconds > 0
-                          ? "Proxy connected. Offline FatSecret logging is enabled; search also requires IP whitelisting."
-                          : "Proxy connected. Search requires IP whitelisting; persistent FatSecret logging needs storage permission on your account."
-                        : "Proxy reachable, but FatSecret credentials are missing."
-                    );
-                  } catch (e) {
-                    setStatus(String(e));
-                  }
-                }}
-              >
-                Test connection
-              </button>
-            </div>
-            {status && (
-              <p role="status" className="muted">
-                {status}
-              </p>
-            )}
-          </form>
-          <section className="settings-section form-stack">
-            <h2>Backups</h2>
-            <p className="muted">
-              {data.entries.length} food entries, {data.recipes.length} recipes, and {data.foods.length} of 200 recent
-              foods on this device. Clearing your browser data will remove them, so make regular backups.
-            </p>
-            <div className="button-row">
-              <button onClick={() => download(`munchy-${today()}.json`, exportBackup(data))}>Export backup</button>
-              <button
-                onClick={() => {
-                  const cell = (s: unknown) => {
-                    const text = String(s ?? "");
-                    return '"' + (/^[=+@\-]/.test(text) ? "'" : "") + text.replaceAll('"', '""') + '"';
-                  };
-                  const rows = [
-                    ["Date", "Meal", "Food", "Quantity", "Unit", ...nutrientKeys],
-                    ...data.entries.map((e) => [
-                      e.date,
-                      e.meal,
-                      e.food.name,
-                      e.quantity,
-                      e.unit,
-                      ...nutrientKeys.map((k) => portionNutrition(e)[k] ?? ""),
-                    ]),
-                  ];
-                  download(
-                    `munchy-nutrients-${today()}.csv`,
-                    rows.map((r) => r.map(cell).join(",")).join("\n"),
-                    "text/csv"
-                  );
-                }}
-              >
-                Export CSV
-              </button>
-            </div>
-            <label className="file-label">
-              Import backup
-              <input
-                type="file"
-                accept=".json,application/json"
-                onChange={async (e) => {
-                  const f = e.target.files?.[0];
-                  if (!f) return;
-                  try {
-                    if (f.size > 50 * 1024 * 1024) throw new Error("Backup exceeds 50 MB.");
-                    const raw: unknown = JSON.parse(await f.text());
-                    importBackup(raw, data);
-                    setBackup(raw);
-                  } catch (e) {
-                    notify(String(e));
-                  }
-                  e.target.value = "";
-                }}
-              />
-            </label>
-            <button
-              onClick={async () => {
-                const persisted = await navigator.storage?.persist?.();
-                const estimate = await navigator.storage?.estimate?.();
-                setStorage(
-                  `${persisted ? "Persistent storage granted." : "Browser manages storage; keep regular backups."} ${((estimate?.usage ?? 0) / 1048576).toFixed(1)} MB in use.`
-                );
-              }}
-            >
-              Ask the browser to keep this data
-            </button>
-            {storage && (
-              <p role="status" className="muted">
-                {storage}
-              </p>
-            )}
-          </section>
-          <DriveBackup onRestore={(raw) => setBackup(raw)} />
+          <ProxySettings />
+          <BackupSettings />
           <section className="settings-section">
             <h2>Install as an app</h2>
             <p className="muted">
@@ -267,28 +116,6 @@ export function Settings() {
           </section>
         </aside>
       </div>
-      {backup !== undefined && (
-        <Modal title="Import this backup?" onClose={() => setBackup(undefined)}>
-          <p className="muted">
-            Matching records are replaced and everything else stays. Your food search connection is kept.
-          </p>
-          <div className="button-row">
-            <button onClick={() => download(`munchy-before-import-${today()}.json`, exportBackup(data))}>
-              Export current data first
-            </button>
-            <button
-              className="primary"
-              onClick={() =>
-                void run(importBackup(backup, data), "Backup imported")
-                  .then(() => setBackup(undefined))
-                  .catch(() => {})
-              }
-            >
-              Import backup
-            </button>
-          </div>
-        </Modal>
-      )}
     </>
   );
 }

@@ -1,13 +1,14 @@
 "use client";
+
 import { useState } from "react";
 import { LuCopy, LuStar, LuTrash2 } from "react-icons/lu";
+import { isLogDate, today } from "@/utils/dates";
+import { dayFor, logEntries, removeEntry, saveDay, saveEntry, setFavorite } from "@/utils/db/operations";
 import type { Entry } from "@/utils/model";
+import { PortionEditor } from "../foods/PortionEditor";
 import { useStore } from "../shell/Store";
 import { Modal } from "../ui/Modal";
-import { PortionEditor } from "../foods/PortionEditor";
-import { dayFor, entryStatement, logEntries, newEntry } from "@/utils/db/operations";
-import { today } from "@/utils/dates";
-import { upsert } from "@/utils/db/client";
+
 export function EntryEditor({
   entry,
   onClose,
@@ -15,13 +16,15 @@ export function EntryEditor({
 }: {
   entry: Entry;
   onClose: () => void;
-  onRemoved?: (entry: Entry) => void;
+  onRemoved: (entry: Entry) => void;
 }) {
   const { data, run, busy } = useStore();
   const [date, setDate] = useState(entry.date);
   const [meal, setMeal] = useState(entry.meal);
+
   const day = dayFor(data, date);
   const favorite = data.favorites.includes(entry.food.id);
+
   return (
     <Modal title="Edit food" onClose={onClose}>
       <div className="portion-fields">
@@ -32,7 +35,7 @@ export function EntryEditor({
             max={today()}
             value={date}
             onChange={(e) => {
-              if (e.target.value && e.target.value <= today()) {
+              if (isLogDate(e.target.value)) {
                 setDate(e.target.value);
                 setMeal(dayFor(data, e.target.value).meals[0]);
               }
@@ -53,8 +56,8 @@ export function EntryEditor({
         initial={entry}
         label="Save food"
         onSave={async (p) => {
-          await run([entryStatement({ ...entry, ...p, date, meal }), upsert("days", date, day)], "Food updated");
-          onClose();
+          // Editing keeps the stored snapshot, so unlike logging it doesn't require the food to be storable now.
+          if (await run(() => [saveEntry({ ...entry, ...p, date, meal }), saveDay(day)], "Food updated")) onClose();
         }}
       />
       <div className="entry-tools">
@@ -63,14 +66,9 @@ export function EntryEditor({
           disabled={busy}
           onClick={() =>
             void run(
-              [
-                {
-                  sql: favorite ? "DELETE FROM favorites WHERE id=?" : "INSERT OR IGNORE INTO favorites(id) VALUES(?)",
-                  params: [entry.food.id],
-                },
-              ],
+              () => [setFavorite(entry.food.id, !favorite)],
               favorite ? "Removed from favorites" : "Added to favorites"
-            ).catch(() => {})
+            )
           }
         >
           <LuStar /> {favorite ? "Favorited" : "Favorite"}
@@ -79,9 +77,9 @@ export function EntryEditor({
           className="small"
           disabled={busy}
           onClick={() =>
-            void run(logEntries(data, [newEntry(entry, entry.date, entry.meal)]), "")
-              .then(onClose)
-              .catch(() => {})
+            void run(() => logEntries(dayFor(data, entry.date), [{ portion: entry, meal: entry.meal }])).then((ok) => {
+              if (ok) onClose();
+            })
           }
         >
           <LuCopy /> Duplicate
@@ -90,12 +88,11 @@ export function EntryEditor({
           className="small danger"
           disabled={busy}
           onClick={() =>
-            void run([{ sql: "DELETE FROM entries WHERE id=?", params: [entry.id] }], "Food removed")
-              .then(() => {
-                onRemoved?.(entry);
-                onClose();
-              })
-              .catch(() => {})
+            void run(() => [removeEntry(entry.id)], "Food removed").then((ok) => {
+              if (!ok) return;
+              onRemoved(entry);
+              onClose();
+            })
           }
         >
           <LuTrash2 /> Remove

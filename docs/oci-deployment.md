@@ -11,7 +11,7 @@ Deployed on 2026-09-05 in the tenancy's home region, US East (Ashburn):
 - Network: `munchy-network`, public subnet `munchy-public`, internet gateway and default route verified in the OCI browser.
 - Reserved public IPv4: **129.80.164.67**. Outgoing address verified from the VM.
 - App and proxy: https://munchy.129.80.164.67.sslip.io (trusted HTTPS through Caddy).
-- OCI and guest firewall: TCP 22 restricted to operator `100.12.70.19/32`; TCP 80/443 public. Bun listens only on loopback.
+- OCI and guest firewall: TCP 22 restricted to operator `71.227.135.163/32`; TCP 80/443 public. Bun listens only on loopback. SSH access was updated and verified through a normal reboot on 2026-10-11.
 - `munchy-proxy` and `caddy` system services are enabled. OAuth credentials and app token are root-readable only in `/etc/munchy-proxy.env`.
 - Live search for apples and food detail 35718 both returned HTTP 200 from FatSecret. Missing app token returned 401; foreign Origin returned 403.
 - Storage permission remains pending: `cacheSeconds=0`. Search and inspection work; persisting FatSecret nutrition requires appropriate account permission.
@@ -66,6 +66,10 @@ It uploads `out/` as a tar stream because the Minimal image has no `rsync`, unpa
 Proxy environment secrets and account permissions are not overwritten by deploys. To enable barcode lookup on an existing server, set `FATSECRET_SCOPE="basic barcode"` in `/etc/munchy-proxy.env` and restart `munchy-proxy`; the FatSecret account must have barcode access. Deploying the binary alone does not change OAuth scopes. For camera scanning, deploy the Caddy policy too, reload the app, and allow camera access in the browser. Keep microphone and geolocation disabled.
 
 Deploys need SSH, which the OCI security list and the guest firewall allow only from the operator's `/32`. Update both rules when that address changes; the script fails its preflight rather than hanging.
+
+Check the operator's current public address with `curl https://api.ipify.org`. Change only the TCP 22 source CIDR in the OCI security list and the guest firewall; keep it a single `/32`. Persist guest changes in `/etc/iptables/rules.v4` using `sudo iptables-save | sudo tee /etc/iptables/rules.v4`, then verify a new SSH connection.
+
+If the old guest rule locks you out, changing OCI alone is not enough. Use the instance's **OS Management → Console connection → Launch Cloud Shell connection**. Exit any existing Cloud Shell session first. Ubuntu console login requires an existing password; if none is available, an authorized recovery reboot is needed. Interrupt GRUB, boot the installed kernel with its existing root UUID and temporary `rw console=ttyAMA0 init=/bin/bash` arguments, repair and persist the firewall rule, then return to normal boot. Verify SSH and the app/proxy services after a clean reboot. Do not open TCP 22 to `0.0.0.0/0`.
 
 ## Verify before calling it deployed
 

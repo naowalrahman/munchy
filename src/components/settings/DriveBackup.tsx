@@ -1,48 +1,53 @@
 "use client";
+
 import { useEffect, useState } from "react";
-import { useStore } from "../shell/Store";
-import { upsert } from "@/utils/db/client";
-import { exportBackup, importBackup } from "@/utils/backup";
+import { type Backup, exportBackup, parseBackup } from "@/utils/backup";
 import { today } from "@/utils/dates";
-import { backupToDrive, listBackups, loadGoogle, readBackup, type DriveFile } from "@/utils/drive";
-export function DriveBackup({ onRestore }: { onRestore: (raw: unknown) => void }) {
+import { saveSettings } from "@/utils/db/operations";
+import { backupToDrive, type DriveFile, listBackups, loadGoogle, readBackup } from "@/utils/drive";
+import { errorMessage } from "@/utils/errors";
+import { useStore } from "../shell/Store";
+
+export function DriveBackup({ onRestore }: { onRestore: (backup: Backup) => void }) {
   const { data, run } = useStore();
   const clientId = data.settings.driveClientId;
   const [status, setStatus] = useState("");
   const [files, setFiles] = useState<DriveFile[]>();
   const [busy, setBusy] = useState(false);
+
   // Load Google's script up front: awaiting it inside the click handler loses the user
   // gesture, and the sign-in popup gets blocked.
   useEffect(() => {
     if (clientId) void loadGoogle().catch(() => {});
   }, [clientId]);
+
   async function attempt(pending: string, work: () => Promise<string>) {
     if (!navigator.onLine) {
       setStatus("You are offline. Connect and try again.");
       return;
     }
+
     setBusy(true);
     setStatus(pending);
+
     try {
       setStatus(await work());
     } catch (e) {
-      setStatus(e instanceof Error ? e.message : String(e));
+      setStatus(errorMessage(e, "Google Drive request failed."));
     } finally {
       setBusy(false);
     }
   }
+
   return (
     <form
       className="settings-section form-stack"
       onSubmit={async (e) => {
         e.preventDefault();
         const id = String(new FormData(e.currentTarget).get("clientId")).trim();
-        try {
-          await run([upsert("settings", "main", { ...data.settings, driveClientId: id })], "Google Drive saved");
-          setStatus(id ? "Client ID saved. Back up whenever you like." : "Google Drive backups turned off.");
-        } catch {
-          setStatus("Could not save the client ID.");
-        }
+        const saved = await run(() => [saveSettings({ ...data.settings, driveClientId: id })], "Google Drive saved");
+        if (!saved) setStatus("Could not save the client ID.");
+        else setStatus(id ? "Client ID saved. Back up whenever you like." : "Google Drive backups turned off.");
       }}
     >
       <h2>Google Drive</h2>
@@ -78,6 +83,7 @@ export function DriveBackup({ onRestore }: { onRestore: (raw: unknown) => void }
             void attempt("Looking for backups…", async () => {
               const found = await listBackups(clientId);
               setFiles(found);
+
               return found.length ? "Pick a backup to restore." : "No Munchy backups in this Drive account yet.";
             })
           }
@@ -95,10 +101,10 @@ export function DriveBackup({ onRestore }: { onRestore: (raw: unknown) => void }
               disabled={busy}
               onClick={() =>
                 void attempt("Downloading…", async () => {
-                  const raw = await readBackup(clientId, file.id);
-                  importBackup(raw, data);
+                  const backup = parseBackup(await readBackup(clientId, file.id));
                   setFiles(undefined);
-                  onRestore(raw);
+                  onRestore(backup);
+
                   return "";
                 })
               }

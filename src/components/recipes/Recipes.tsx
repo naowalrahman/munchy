@@ -1,24 +1,26 @@
 "use client";
+
 import { useState } from "react";
-import type { Recipe } from "@/utils/model";
-import { useStore } from "../shell/Store";
-import { RecipeEditor } from "./RecipeEditor";
-import { recipeFood, formatNumber } from "@/utils/nutrition";
-import { Modal } from "../ui/Modal";
-import { PortionEditor } from "../foods/PortionEditor";
-import { dayFor, logEntries } from "@/utils/db/operations";
-import { upsert } from "@/utils/db/client";
 import { today } from "@/utils/dates";
-import { portionLabel } from "../diary/MealSection";
+import { copyRecipe, dayFor, logEntries, removeRecipe, saveRecipe } from "@/utils/db/operations";
+import type { Recipe } from "@/utils/model";
+import { formatNumber, portionLabel, recipeFood } from "@/utils/nutrition";
+import { PortionEditor } from "../foods/PortionEditor";
+import { useStore } from "../shell/Store";
+import { Modal } from "../ui/Modal";
+import { RecipeEditor } from "./RecipeEditor";
+
 export function Recipes() {
   const { data, run } = useStore();
+  const day = dayFor(data, today());
   const [query, setQuery] = useState("");
-  const [editing, setEditing] = useState<Recipe | null | undefined>();
+  // `recipe: undefined` opens the editor on a new recipe.
+  const [editor, setEditor] = useState<{ recipe: Recipe | undefined } | null>(null);
   const [logging, setLogging] = useState<Recipe | null>(null);
   const [detail, setDetail] = useState<Recipe | null>(null);
-  const [meal, setMeal] = useState(data.settings.defaultMeals[0]);
+  const [meal, setMeal] = useState(day.meals[0]);
   const [removed, setRemoved] = useState<Recipe | null>(null);
-  const day = dayFor(data, today());
+
   return (
     <>
       <div className="page-heading">
@@ -26,7 +28,7 @@ export function Recipes() {
           <h1>Recipes</h1>
           <p>Build a dish once, then log a serving or a weighed amount.</p>
         </div>
-        <button className="primary" onClick={() => setEditing(null)}>
+        <button className="primary" onClick={() => setEditor({ recipe: undefined })}>
           New recipe
         </button>
       </div>
@@ -45,8 +47,8 @@ export function Recipes() {
               .includes(query.toLowerCase())
           )
           .map((r) => {
-            const food = recipeFood(r);
-            const n = food.servings[0].nutrients;
+            const n = recipeFood(r).servings[0].nutrients;
+
             return (
               <article className="recipe-row" key={r.id}>
                 <div>
@@ -68,27 +70,18 @@ export function Recipes() {
                   <button className="primary small" onClick={() => setLogging(r)}>
                     Log a serving
                   </button>
-                  <button className="text-button" onClick={() => setEditing(r)}>
+                  <button className="text-button" onClick={() => setEditor({ recipe: r })}>
                     Edit
                   </button>
-                  <button
-                    className="text-button"
-                    onClick={() => {
-                      const id = crypto.randomUUID();
-                      void run(
-                        [upsert("recipes", id, { ...r, id, name: `${r.name} (copy)` })],
-                        "Recipe duplicated"
-                      ).catch(() => {});
-                    }}
-                  >
+                  <button className="text-button" onClick={() => void run(() => [copyRecipe(r)], "Recipe duplicated")}>
                     Duplicate
                   </button>
                   <button
                     className="text-button"
                     onClick={() =>
-                      void run([{ sql: "DELETE FROM recipes WHERE id=?", params: [r.id] }], "Recipe removed")
-                        .then(() => setRemoved(r))
-                        .catch(() => {})
+                      void run(() => [removeRecipe(r.id)], "Recipe removed").then((ok) => {
+                        if (ok) setRemoved(r);
+                      })
                     }
                   >
                     Remove
@@ -105,7 +98,7 @@ export function Recipes() {
             Add ingredients with their real portions and the number of servings. Munchy works out the nutrition per
             serving, so logging a repeat meal takes one tap.
           </p>
-          <button className="primary" onClick={() => setEditing(null)}>
+          <button className="primary" onClick={() => setEditor({ recipe: undefined })}>
             Create a recipe
           </button>
         </div>
@@ -115,16 +108,16 @@ export function Recipes() {
           Removed {removed.name}
           <button
             onClick={() =>
-              void run([upsert("recipes", removed.id, removed)], "Recipe restored")
-                .then(() => setRemoved(null))
-                .catch(() => {})
+              void run(() => [saveRecipe(removed)], "Recipe restored").then((ok) => {
+                if (ok) setRemoved(null);
+              })
             }
           >
             Undo
           </button>
         </div>
       )}
-      {editing !== undefined && <RecipeEditor recipe={editing ?? undefined} onClose={() => setEditing(undefined)} />}
+      {editor && <RecipeEditor recipe={editor.recipe} onClose={() => setEditor(null)} />}
       {logging && (
         <Modal title="Log to today" onClose={() => setLogging(null)}>
           <label>
@@ -137,20 +130,8 @@ export function Recipes() {
           </label>
           <PortionEditor
             food={recipeFood(logging)}
-            onSave={async (p) => {
-              await run(
-                logEntries(data, [
-                  {
-                    ...p,
-                    id: crypto.randomUUID(),
-                    date: today(),
-                    meal: day.meals.includes(meal) ? meal : day.meals[0],
-                    createdAt: Date.now(),
-                  },
-                ]),
-                ""
-              );
-              setLogging(null);
+            onSave={async (portion) => {
+              if (await run(() => logEntries(day, [{ portion, meal }]))) setLogging(null);
             }}
           />
         </Modal>
@@ -160,6 +141,7 @@ export function Recipes() {
           <p className="method">{detail.instructions || "No method written yet."}</p>
           <ul className="ingredient-list">
             {detail.ingredients.map((p, i) => (
+              // biome-ignore lint/suspicious/noArrayIndexKey: the same food can appear twice, so position is the identity
               <li key={i}>
                 <span>{p.food.name}</span>
                 <span>{portionLabel(p)}</span>
@@ -168,7 +150,7 @@ export function Recipes() {
           </ul>
           <button
             onClick={() => {
-              setEditing(detail);
+              setEditor({ recipe: detail });
               setDetail(null);
             }}
           >

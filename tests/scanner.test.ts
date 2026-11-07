@@ -14,6 +14,7 @@ function media() {
   const stop = mock(() => {});
   const stream = { getTracks: () => [{ stop }] } as unknown as MediaStream;
   const video = { srcObject: stream } as HTMLVideoElement;
+
   return { stop, stream, video };
 }
 
@@ -60,6 +61,7 @@ test("scan results preserve leading zeros and abort suppresses repeated detectio
       const result = new Result("012345678905", new Uint8Array(), 0, [], BarcodeFormat.UPC_A);
       callback(result, undefined, controls);
       callback(result, undefined, controls);
+
       return controls;
     }
   );

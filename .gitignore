@@ -46,6 +46,7 @@ secrets/
 
 /secrets/
 /public/vendor/
+/public/db-worker.js
 /proxy/data/
 
 !proxy/.env.example

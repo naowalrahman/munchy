@@ -1,7 +1,10 @@
 @import "../styles/base.css";
 @import "../styles/diary.css";
 @import "../styles/facts.css";
+@import "../styles/nutrient-sources.css";
+@import "../styles/modal.css";
 @import "../styles/forms.css";
+@import "../styles/portion.css";
 @import "../styles/foods.css";
 @import "../styles/barcode.css";
 @import "../styles/insights.css";

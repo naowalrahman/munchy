@@ -1,49 +1,45 @@
 "use client";
+
 import { useState } from "react";
-import type { Day } from "@/utils/model";
+import { saveDay, saveEntry, saveSettings } from "@/utils/db/operations";
+import { type Day, issueText, mealsSchema } from "@/utils/model";
 import { useStore } from "../shell/Store";
 import { Modal } from "../ui/Modal";
-import { upsert } from "@/utils/db/client";
-import { entryStatement } from "@/utils/db/operations";
+
 export function MealSettings({ day, onClose }: { day: Day; onClose: () => void }) {
   const { data, run } = useStore();
   const [meals, setMeals] = useState(day.meals.map((name) => ({ original: name, name })));
   const [future, setFuture] = useState(false);
   const [error, setError] = useState("");
+
+  const dayEntries = data.entries.filter((e) => e.date === day.date);
+
   return (
     <Modal title="Meals for this day" onClose={onClose}>
       <form
         className="form-stack"
         onSubmit={async (e) => {
           e.preventDefault();
-          const names = meals.map((m) => m.name.trim());
-          if (names.some((n) => !n) || new Set(names.map((n) => n.toLowerCase())).size !== names.length) {
-            setError("Give each meal a unique name.");
-            return;
-          }
-          const updates = data.entries
-            .filter((e) => e.date === day.date)
-            .map((e) => {
-              const match = meals.find((m) => m.original === e.meal);
-              if (!match) throw new Error("Move foods before removing their meal.");
-              return entryStatement({ ...e, meal: match.name.trim() });
-            });
-          try {
-            await run(
-              [
-                ...updates,
-                upsert("days", day.date, { ...day, meals: names }),
-                ...(future ? [upsert("settings", "main", { ...data.settings, defaultMeals: names })] : []),
-              ],
-              "Meals updated"
-            );
-            onClose();
-          } catch (e) {
-            setError(String(e));
-          }
+          const parsed = mealsSchema.safeParse(meals.map((m) => m.name.trim()));
+          if (!parsed.success) return setError(issueText(parsed.error));
+          const names = parsed.data;
+          // Meals holding foods can't be removed, so every entry's meal has a (possibly renamed) match.
+          const renamed = new Map(meals.map((m) => [m.original, m.name.trim()]));
+
+          const saved = await run(
+            () => [
+              ...dayEntries.map((entry) => saveEntry({ ...entry, meal: renamed.get(entry.meal) ?? entry.meal })),
+              saveDay({ ...day, meals: names }),
+              ...(future ? [saveSettings({ ...data.settings, defaultMeals: names })] : []),
+            ],
+            "Meals updated"
+          );
+
+          if (saved) onClose();
         }}
       >
         {meals.map((m, i) => (
+          // biome-ignore lint/suspicious/noArrayIndexKey: names are being edited, so the position is the only stable identity
           <div className="meal-name-row" key={i}>
             <input
               aria-label={`Meal ${i + 1} name`}
@@ -57,7 +53,7 @@ export function MealSettings({ day, onClose }: { day: Day; onClose: () => void }
               disabled={!i}
               onClick={() => {
                 const next = [...meals];
-                [next[i - 1], next[i]] = [next[i], next[i - 1]];
+                next.splice(i - 1, 0, ...next.splice(i, 1));
                 setMeals(next);
               }}
             >
@@ -66,7 +62,7 @@ export function MealSettings({ day, onClose }: { day: Day; onClose: () => void }
             <button
               type="button"
               aria-label={`Remove meal ${i + 1}`}
-              disabled={meals.length === 1 || data.entries.some((e) => e.date === day.date && e.meal === m.original)}
+              disabled={meals.length === 1 || dayEntries.some((e) => e.meal === m.original)}
               onClick={() => setMeals(meals.filter((_, j) => i !== j))}
             >
               ×

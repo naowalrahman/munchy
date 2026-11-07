@@ -1,7 +1,11 @@
-import { nutrientKeys, type Portion, type NutrientKey } from "@/utils/model";
-import { nutrients, totalNutrition, formatNumber } from "@/utils/nutrition";
+"use client";
+
+import { type NutrientKey, nutrientKeys, type Portion, type Settings } from "@/utils/model";
+import { formatNumber, nutrients, totalNutrition } from "@/utils/nutrition";
+
 export function GoalBar({ value, goal, label }: { value: number; goal: number; label: string }) {
   const share = Math.min(1, value / goal);
+
   return (
     <div
       className={`bar ${value > goal ? "over" : ""}`}
@@ -15,6 +19,7 @@ export function GoalBar({ value, goal, label }: { value: number; goal: number; l
     </div>
   );
 }
+
 export function NutrientTable({
   portions,
   goals = {},
@@ -22,29 +27,30 @@ export function NutrientTable({
   onSelect,
 }: {
   portions: Portion[];
-  goals?: Record<string, number>;
+  goals?: Settings["goals"];
   divisor?: number;
   onSelect?: (key: NutrientKey) => void;
 }) {
   const { total, coverage, count } = totalNutrition(portions);
+
   return (
     <div className="nutrient-table">
       {nutrientKeys.map((k, i) => {
         const meta = nutrients[k];
+        const previous = nutrientKeys[i - 1];
         const value = total[k] === null ? null : total[k] / divisor;
+        const Row = onSelect ? "button" : "div";
+
         return (
           <div key={k}>
-            {(i === 0 || meta.group !== nutrients[nutrientKeys[i - 1]].group) && <h3>{meta.group}</h3>}
-            <div className="nutrient-row">
-              <span className="nutrient-name">
-                {onSelect ? (
-                  <button className="text-button" onClick={() => onSelect(k)}>
-                    {meta.label}
-                  </button>
-                ) : (
-                  meta.label
-                )}
-              </span>
+            {(!previous || meta.group !== nutrients[previous].group) && <h3>{meta.group}</h3>}
+            <Row
+              className={`nutrient-row${onSelect ? " fact-button" : ""}`}
+              onClick={onSelect ? () => onSelect(k) : undefined}
+              type={onSelect ? "button" : undefined}
+              aria-label={onSelect ? `View ${meta.label.toLowerCase()} food sources` : undefined}
+            >
+              <span className="nutrient-name">{meta.label}</span>
               <span className="nutrient-value">
                 {formatNumber(value)} <small>{meta.unit}</small>
                 {goals[k] && <small> of {formatNumber(goals[k])}</small>}
@@ -54,7 +60,7 @@ export function NutrientTable({
                   {coverage[k]} of {count} foods report this
                 </small>
               )}
-            </div>
+            </Row>
             {goals[k] && value !== null && <GoalBar value={value} goal={goals[k]} label={meta.label} />}
           </div>
         );

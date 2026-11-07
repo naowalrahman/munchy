@@ -1,5 +1,7 @@
 "use client";
-import { useEffect, useRef, type ReactNode } from "react";
+
+import { type ReactNode, useEffect, useRef } from "react";
+
 export function Modal({
   title,
   children,
@@ -12,17 +14,21 @@ export function Modal({
   wide?: boolean;
 }) {
   const ref = useRef<HTMLDialogElement>(null);
+
   useEffect(() => {
     const d = ref.current;
     const previous = document.activeElement;
     d?.showModal();
     d?.querySelector<HTMLInputElement>("input:not([type=checkbox]), textarea")?.focus();
+
     return () => {
       d?.close();
       if (previous instanceof HTMLElement) previous.focus();
     };
   }, []);
+
   return (
+    // biome-ignore lint/a11y/useKeyWithClickEvents: backdrop click only; Escape is handled natively via onCancel
     <dialog
       ref={ref}
       className={wide ? "modal wide" : "modal"}

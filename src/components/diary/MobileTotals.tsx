@@ -8,6 +8,7 @@ export function MobileTotals({ entries }: { entries: Entry[] }) {
   const goal = data.settings.goals.calories;
   const calories = total.calories ?? 0;
   const share = goal ? Math.min(1, calories / goal) : 0;
+
   return (
     <a className="totals-strip" href="#daily-nutrients" aria-label="Today's totals. Jump to nutrition facts">
       <div>

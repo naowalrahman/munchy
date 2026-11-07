@@ -1,56 +1,61 @@
-import { schema, type Statement } from "./schema";
 import {
+  daySchema,
   defaultSettings,
   entrySchema,
   foodSchema,
   recipeSchema,
-  daySchema,
-  settingsSchema,
   type Snapshot,
+  settingsSchema,
 } from "../model";
-type Rows = Record<string, Record<string, string | number>[]>;
+import type { Rows, Statement, WorkerRequest, WorkerResponse } from "./schema";
+
 let worker: Worker | undefined;
 let revision = 0;
 const pending = new Map<string, { resolve: (r: Rows) => void; reject: (e: Error) => void }>();
+
 function database() {
   if (!worker) {
     worker = new Worker("/db-worker.js");
-    worker.onmessage = ({ data }: { data: { id: string; result: Rows; error?: string } }) => {
+
+    worker.onmessage = ({ data }: MessageEvent<WorkerResponse>) => {
       const request = pending.get(data.id);
       if (!request) return;
       pending.delete(data.id);
-      if (data.error) request.reject(new Error(data.error));
+      if ("error" in data) request.reject(new Error(data.error));
       else request.resolve(data.result);
     };
+
     worker.onerror = () => {
-      pending.forEach((p) => p.reject(new Error("Could not open SQLite. Reload the app while online.")));
+      for (const p of pending.values()) p.reject(new Error("Could not open SQLite. Reload the app while online."));
       pending.clear();
       worker?.terminate();
       worker = undefined;
     };
   }
+
   return worker;
 }
+
 export async function transaction(statements: Statement[] = []): Promise<Snapshot> {
   const rows = await new Promise<Rows>((resolve, reject) => {
-    const id = crypto.randomUUID();
-    pending.set(id, { resolve, reject });
-    database().postMessage({ id, statements, schema, revision });
+    const request: WorkerRequest = { id: crypto.randomUUID(), statements, revision };
+    pending.set(request.id, { resolve, reject });
+    database().postMessage(request);
   });
-  revision = Number(rows.revision[0].value);
-  const json = (table: string) => rows[table].map((r) => JSON.parse(String(r.payload)) as unknown);
+
+  revision = rows.revision;
+
+  const payloads = (table: "entries" | "foods" | "recipes" | "days") =>
+    rows[table].map((r): unknown => JSON.parse(String(r.payload)));
+
+  const [settings] = rows.settings;
+
   return {
-    entries: json("entries").map((e) => entrySchema.parse(e)),
-    foods: json("foods").map((f) => foodSchema.parse(f)),
-    recipes: json("recipes").map((r) => recipeSchema.parse(r)),
-    days: json("days").map((d) => daySchema.parse(d)),
-    settings: rows.settings.length
-      ? settingsSchema.parse(JSON.parse(String(rows.settings[0].payload)))
-      : defaultSettings,
+    entries: payloads("entries").map((e) => entrySchema.parse(e)),
+    foods: payloads("foods").map((f) => foodSchema.parse(f)),
+    recipes: payloads("recipes").map((r) => recipeSchema.parse(r)),
+    days: payloads("days").map((d) => daySchema.parse(d)),
+    settings: settings ? settingsSchema.parse(JSON.parse(String(settings.payload))) : defaultSettings,
     favorites: rows.favorites.map((r) => String(r.id)),
   };
 }
-export const upsert = (table: "recipes" | "days" | "settings", id: string, value: unknown): Statement => ({
-  sql: `INSERT OR REPLACE INTO ${table}(id,payload) VALUES(?,?)`,
-  params: [id, JSON.stringify(value)],
-});

@@ -1,0 +1,6 @@
+{
+  "$schema": "https://unpkg.com/knip@6/schema.json",
+  "entry": ["scripts/*.ts", "src/utils/db/worker.ts"],
+  "ignoreDependencies": ["sql.js"],
+  "ignoreExportsUsedInFile": true
+}

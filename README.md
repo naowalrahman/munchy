@@ -8,6 +8,7 @@ Munchy is a local food diary intentionally designed for logging at hyperspeed. Y
 - Your usual foods are automatically detected and displayed for quick logging under each meal.
 - Edit amount, serving, date, or meal; duplicate entries; delete with undo; copy the previous day.
 - Rename and reorder meals per day, optionally setting the defaults for new days. Existing days retain their meals.
+- Tap a nutrient in the day’s nutrition facts (including calories and macros) for a ranked food breakdown with contribution bars, amounts, percentage shares, and meal labels. Repeated foods are combined; unreported values and reported zeroes are shown separately.
 - Recipes include ingredient portions, instructions, tags, batch servings, and optional prepared weight. Ingredient weights are not assumed to equal cooked yield.
 - See insights including 19 documented food-detail nutrients, reporting coverage, trends, contributors, meal averages, water, weight, and notes.
 
@@ -74,8 +75,11 @@ Open [localhost:3000](http://localhost:3000). Deploy the generated `out/` folder
 Other commands:
 
 ```sh
-bun run typecheck
+bun run format     # Biome formatting and import order
+bun run check      # Biome, ESLint, tsc, Knip, and tests
 bun run lint
+bun run typecheck
+bun run knip
 bun run test
 bun run build
 ```
@@ -84,7 +88,7 @@ Repo structure:
 
 - `src/components/`: diary, foods, recipes, insights, settings, shell
 - `src/utils/`: typed domain model, units, nutrition, backup validation, SQLite operations
-- `public/db-worker.js`: SQLite execution and durable persistence
+- `src/utils/db/worker.ts`: SQLite execution, schema migrations, and durable persistence (built to `public/db-worker.js`)
 - `proxy/`: Bun FatSecret service and host configuration
 - `scripts/`: assets, static hosting, offline build, local proxy
 - `tests/`: unit conversion, missing nutrients, recipe yield, cache eviction, date constraints, API security

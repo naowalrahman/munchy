@@ -1,8 +1,10 @@
 "use client";
+
 import { useEffect, useEffectEvent, useRef, useState } from "react";
-import { useStore } from "../shell/Store";
-import { barcodeSchema, type Food } from "@/utils/model";
+import { errorMessage } from "@/utils/errors";
 import { fetchBarcode } from "@/utils/food/api";
+import { barcodeSchema, type Food, issueText } from "@/utils/model";
+import { useStore } from "../shell/Store";
 
 export function BarcodeScanner({ onPick, onBack }: { onPick: (food: Food) => void; onBack: () => void }) {
   const { data } = useStore();
@@ -13,19 +15,23 @@ export function BarcodeScanner({ onPick, onBack }: { onPick: (food: Food) => voi
   const video = useRef<HTMLVideoElement>(null);
   const cameraAbort = useRef<AbortController | null>(null);
   const lookupAbort = useRef<AbortController | null>(null);
+
   const startCameraOnOpen = useEffectEvent(() => {
     if (data.settings.proxyUrl && !document.hidden) void startCamera();
   });
 
   useEffect(() => {
     startCameraOnOpen();
+
     const pause = () => {
       if (document.hidden) {
         cameraAbort.current?.abort();
         setCamera("off");
       }
     };
+
     document.addEventListener("visibilitychange", pause);
+
     return () => {
       document.removeEventListener("visibilitychange", pause);
       cameraAbort.current?.abort();
@@ -41,21 +47,24 @@ export function BarcodeScanner({ onPick, onBack }: { onPick: (food: Food) => voi
   async function lookup(raw: string) {
     if (lookupAbort.current && !lookupAbort.current.signal.aborted) return;
     const barcode = barcodeSchema.safeParse(raw.trim());
+
     if (!barcode.success) {
-      setError(barcode.error.issues[0].message);
+      setError(issueText(barcode.error));
       return;
     }
+
     stopCamera();
     setValue(raw);
     setError("");
     setBusy(true);
     const controller = new AbortController();
     lookupAbort.current = controller;
+
     try {
       const food = await fetchBarcode(data.settings, barcode.data, controller.signal);
       if (!controller.signal.aborted) onPick(food);
     } catch (e) {
-      if (!controller.signal.aborted) setError(e instanceof Error ? e.message : "Barcode lookup failed.");
+      if (!controller.signal.aborted) setError(errorMessage(e, "Barcode lookup failed."));
     } finally {
       if (!controller.signal.aborted) {
         lookupAbort.current = null;
@@ -69,11 +78,13 @@ export function BarcodeScanner({ onPick, onBack }: { onPick: (food: Food) => voi
       setError("Camera scanning needs HTTPS and a browser with camera access. You can enter the barcode below.");
       return;
     }
+
     stopCamera();
     const controller = new AbortController();
     cameraAbort.current = controller;
     setCamera("starting");
     setError("");
+
     try {
       const { startScanner } = await import("@/utils/food/scanner");
       if (controller.signal.aborted || !video.current) return;

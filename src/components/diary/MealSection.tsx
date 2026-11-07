@@ -1,13 +1,11 @@
 "use client";
-import { LuPlus, LuCopy, LuTrash2, LuStar } from "react-icons/lu";
-import { useStore } from "../shell/Store";
-import { formatNumber, portionNutrition, totalNutrition } from "@/utils/nutrition";
+
+import { LuCopy, LuPlus, LuStar, LuTrash2 } from "react-icons/lu";
+import { removeEntry, setFavorite } from "@/utils/db/operations";
 import type { Entry, Portion } from "@/utils/model";
-export function portionLabel(p: Portion) {
-  return `${p.quantity} ${
-    p.unit === "serving" ? `× ${p.food.servings.find((s) => s.id === p.servingId)?.label}` : p.unit
-  }`;
-}
+import { formatNumber, portionLabel, portionNutrition, totalNutrition } from "@/utils/nutrition";
+import { useStore } from "../shell/Store";
+
 export function MealSection({
   name,
   items,
@@ -21,12 +19,13 @@ export function MealSection({
   items: Entry[];
   suggested: Entry[];
   onAdd: () => void;
-  onLog: (p: Portion) => Promise<void>;
+  onLog: (p: Portion) => void;
   onEdit: (entry: Entry) => void;
   onRemoved: (entry: Entry) => void;
 }) {
-  const { data, run, notify, busy } = useStore();
+  const { data, run, busy } = useStore();
   const { total } = totalNutrition(items);
+
   return (
     <section className="meal-section">
       <header className="meal-header">
@@ -41,6 +40,7 @@ export function MealSection({
       {items.map((entry) => {
         const n = portionNutrition(entry);
         const favorite = data.favorites.includes(entry.food.id);
+
         return (
           <div className="entry" key={entry.id}>
             <button className="entry-main" onClick={() => onEdit(entry)}>
@@ -61,16 +61,9 @@ export function MealSection({
                 aria-label={`${favorite ? "Unfavorite" : "Favorite"} ${entry.food.name}`}
                 onClick={() =>
                   void run(
-                    [
-                      {
-                        sql: favorite
-                          ? "DELETE FROM favorites WHERE id=?"
-                          : "INSERT OR IGNORE INTO favorites(id) VALUES(?)",
-                        params: [entry.food.id],
-                      },
-                    ],
+                    () => [setFavorite(entry.food.id, !favorite)],
                     favorite ? "Removed from favorites" : "Added to favorites"
-                  ).catch(() => {})
+                  )
                 }
               >
                 <LuStar />
@@ -79,7 +72,7 @@ export function MealSection({
                 className="icon-button"
                 aria-label={`Duplicate ${entry.food.name}`}
                 disabled={busy}
-                onClick={() => void onLog(entry).catch((e) => notify(e.message))}
+                onClick={() => onLog(entry)}
               >
                 <LuCopy />
               </button>
@@ -87,9 +80,9 @@ export function MealSection({
                 className="icon-button"
                 aria-label={`Delete ${entry.food.name}`}
                 onClick={() =>
-                  void run([{ sql: "DELETE FROM entries WHERE id=?", params: [entry.id] }], "Food removed")
-                    .then(() => onRemoved(entry))
-                    .catch(() => {})
+                  void run(() => [removeEntry(entry.id)], "Food removed").then((ok) => {
+                    if (ok) onRemoved(entry);
+                  })
                 }
               >
                 <LuTrash2 />
@@ -106,12 +99,7 @@ export function MealSection({
           <>
             <small>Usuals</small>
             {suggested.map((s) => (
-              <button
-                key={s.food.id}
-                className="usual"
-                disabled={busy}
-                onClick={() => void onLog(s).catch((e) => notify(e.message))}
-              >
+              <button key={s.food.id} className="usual" disabled={busy} onClick={() => onLog(s)}>
                 + {s.food.name}
               </button>
             ))}

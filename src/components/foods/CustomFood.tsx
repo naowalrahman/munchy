@@ -1,23 +1,31 @@
 "use client";
+
 import { useState } from "react";
-import { emptyNutrients, nutrientKeys, type Food } from "@/utils/model";
+import { errorMessage } from "@/utils/errors";
+import { emptyNutrients, type Food, nutrientKeys, servingSchema } from "@/utils/model";
 import { nutrients } from "@/utils/nutrition";
+
 export function CustomFood({ onSave }: { onSave: (food: Food) => void }) {
   const [error, setError] = useState("");
+
   return (
     <form
       className="form-stack"
       onSubmit={(e) => {
         e.preventDefault();
         const f = new FormData(e.currentTarget);
+
         try {
           const n = emptyNutrients();
+
           for (const k of nutrientKeys) {
             const value = String(f.get(k) ?? "");
             n[k] = value === "" ? null : Number(value);
           }
+
           const amount = Number(f.get("amount"));
           if (!amount || amount <= 0) throw new Error("Enter the label serving amount.");
+          const unit = servingSchema.shape.unit.parse(f.get("unit"));
           onSave({
             id: `custom:${crypto.randomUUID()}`,
             name: String(f.get("name")).trim(),
@@ -28,15 +36,15 @@ export function CustomFood({ onSave }: { onSave: (food: Food) => void }) {
             servings: [
               {
                 id: "label",
-                label: `${amount} ${f.get("unit")}`,
+                label: `${amount} ${unit}`,
                 amount,
-                unit: f.get("unit") as "g" | "ml" | "portion",
+                unit,
                 nutrients: n,
               },
             ],
           });
         } catch (e) {
-          setError(String(e));
+          setError(errorMessage(e, "Could not create this food."));
         }
       }}
     >

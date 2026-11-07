@@ -1,4 +1,5 @@
 import { z } from "zod";
+
 export const barcodeSchema = z
   .string()
   .regex(/^(?:\d{8}|\d{12}|\d{13})$/, "Enter an 8, 12, or 13-digit barcode.")
@@ -7,7 +8,13 @@ export const barcodeSchema = z
     const sum = [...value.slice(0, -1)].reduce((total, digit, i) => total + Number(digit) * (i % 2 ? 3 : 1), 0);
     return (10 - (sum % 10)) % 10 === Number(value.at(-1));
   }, "Check the barcode digits and try again.");
+
+export const issueText = (error: z.ZodError) => error.issues.map((i) => i.message).join(" ");
+
 export const foodResponseSchema = z.object({ data: z.unknown(), cacheSeconds: z.number().finite().nonnegative() });
+
+export const capabilitiesSchema = z.object({ configured: z.boolean(), cacheSeconds: z.number() });
+
 export const nutrientKeys = [
   "calories",
   "protein",
@@ -29,9 +36,22 @@ export const nutrientKeys = [
   "vitamin_c",
   "vitamin_d",
 ] as const;
+
 export type NutrientKey = (typeof nutrientKeys)[number];
+
 export const nutrientsSchema = z.record(z.enum(nutrientKeys), z.number().finite().nonnegative().nullable());
+
 export type Nutrients = z.infer<typeof nutrientsSchema>;
+
+const nonEmpty = <T extends z.ZodType>(item: T) => z.tuple([item], item);
+const mealName = z.string().min(1, "Give each meal a name.").max(40, "Keep meal names to 40 characters.");
+const mealList = nonEmpty(mealName).check(z.maxLength(12, "Use at most 12 meals."));
+
+export const mealsSchema = mealList.refine(
+  (v) => new Set(v.map((s) => s.toLowerCase())).size === v.length,
+  "Give each meal a unique name."
+);
+
 export const servingSchema = z.object({
   id: z.string(),
   label: z.string().min(1),
@@ -39,7 +59,9 @@ export const servingSchema = z.object({
   unit: z.enum(["g", "ml", "portion"]),
   nutrients: nutrientsSchema,
 });
+
 export type Serving = z.infer<typeof servingSchema>;
+
 export const foodSchema = z.object({
   id: z.string().min(1),
   name: z.string().min(1).max(200),
@@ -48,9 +70,14 @@ export const foodSchema = z.object({
   url: z.string().optional(),
   fetchedAt: z.number(),
   cacheUntil: z.number(),
-  servings: z.array(servingSchema).min(1),
+  servings: nonEmpty(servingSchema),
 });
+
 export type Food = z.infer<typeof foodSchema>;
+
+/** FatSecret data may be stored only within the cache period its plan grants; custom foods and recipes never expire. */
+export const isStorable = (food: Food) => food.source !== "fatsecret" || food.cacheUntil > Date.now();
+
 export const portionSchema = z.object({
   food: foodSchema,
   servingId: z.string(),
@@ -58,14 +85,18 @@ export const portionSchema = z.object({
   unit: z.string(),
   factor: z.number().positive().max(100000),
 });
+
 export type Portion = z.infer<typeof portionSchema>;
+
 export const entrySchema = portionSchema.extend({
   id: z.string(),
   date: z.iso.date(),
   meal: z.string().min(1),
   createdAt: z.number(),
 });
+
 export type Entry = z.infer<typeof entrySchema>;
+
 export const recipeSchema = z.object({
   id: z.string(),
   name: z.string().min(1).max(200),
@@ -76,29 +107,31 @@ export const recipeSchema = z.object({
   tags: z.string(),
   updatedAt: z.number(),
 });
+
 export type Recipe = z.infer<typeof recipeSchema>;
+
 export const daySchema = z.object({
   date: z.iso.date(),
-  meals: z
-    .array(z.string().min(1).max(40))
-    .min(1)
-    .max(12)
-    .refine((v) => new Set(v.map((s) => s.toLowerCase())).size === v.length, "Meal names must be unique"),
+  meals: mealsSchema,
   water: z.number().nonnegative(),
   weight: z.number().positive().nullable(),
   note: z.string(),
   complete: z.boolean(),
 });
+
 export type Day = z.infer<typeof daySchema>;
+
 export const settingsSchema = z.object({
-  defaultMeals: z.array(z.string().min(1).max(40)).min(1).max(12),
-  goals: z.record(z.string(), z.number().positive()),
+  defaultMeals: mealList,
+  goals: z.partialRecord(z.enum(nutrientKeys), z.number().positive()),
   proxyUrl: z.string(),
   proxyToken: z.string(),
   driveClientId: z.string().default(""),
   searchAgain: z.boolean().default(false),
 });
+
 export type Settings = z.infer<typeof settingsSchema>;
+
 export interface Snapshot {
   entries: Entry[];
   foods: Food[];
@@ -107,6 +140,7 @@ export interface Snapshot {
   settings: Settings;
   favorites: string[];
 }
+
 export const defaultSettings: Settings = {
   defaultMeals: ["Breakfast", "Lunch", "Dinner", "Snacks"],
   goals: {},
@@ -115,4 +149,5 @@ export const defaultSettings: Settings = {
   driveClientId: "",
   searchAgain: false,
 };
+
 export const emptyNutrients = (): Nutrients => Object.fromEntries(nutrientKeys.map((k) => [k, null])) as Nutrients;

@@ -1,0 +1,126 @@
+.portion-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.portion-editor h3 {
+  font-size: var(--t-xl);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+  margin-top: 4px;
+}
+
+.portion-editor h3 + .muted {
+  margin-top: -8px;
+}
+
+.portion-fields {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+/* A label that wraps to two lines must not push its field out of line with its neighbour. */
+.portion-fields > label > :last-child,
+.nutrient-inputs > label > :last-child {
+  margin-top: auto;
+}
+
+.portion-presets {
+  display: flex;
+  gap: 6px;
+}
+
+.portion-presets button {
+  flex: 1;
+  border-color: var(--hair);
+}
+
+.portion-presets button:hover {
+  border-color: var(--ink);
+}
+
+.macro-line {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+  font-size: var(--t-sm);
+  padding: 8px 12px;
+  background: var(--wash);
+  border-radius: var(--radius);
+}
+
+.macro-line b {
+  font-weight: 700;
+  font-size: var(--t-base);
+}
+
+/* The whole panel below the log button, folded away like the back of a carton. */
+.portion-facts {
+  background: var(--wash);
+  border-radius: 10px;
+  padding: 0 14px 4px;
+  margin-top: -2px;
+}
+
+.portion-facts summary {
+  cursor: pointer;
+  list-style: none;
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  padding: 11px 0;
+  font-weight: 700;
+  font-size: var(--t-sm);
+}
+
+.portion-facts summary::-webkit-details-marker {
+  display: none;
+}
+
+.portion-facts summary::before {
+  content: "+";
+  font-weight: 700;
+  width: 12px;
+  color: var(--muted);
+}
+
+.portion-facts[open] summary::before {
+  content: "\2013";
+}
+
+.portion-facts summary span {
+  color: var(--muted);
+  font-weight: 500;
+  font-size: var(--t-xs);
+  margin-left: auto;
+  text-align: right;
+}
+
+.portion-facts .nutrient-table {
+  padding-bottom: 10px;
+}
+
+.portion-facts .nutrient-table:not(:last-child) {
+  padding-bottom: 4px;
+}
+
+.portion-facts .nutrient-table h3 {
+  font-size: var(--t-sm);
+  font-weight: 700;
+  letter-spacing: 0;
+}
+
+.portion-facts .nutrient-table > div:first-child h3 {
+  padding-top: 0;
+}
+
+.portion-facts .fine-print {
+  padding-bottom: 12px;
+}
+
+.modal .portion-fields + .portion-editor {
+  margin-top: 14px;
+}

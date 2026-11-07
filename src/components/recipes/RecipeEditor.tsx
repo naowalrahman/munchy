@@ -1,15 +1,16 @@
 "use client";
+
 import { useState } from "react";
-import type { Portion, Recipe } from "@/utils/model";
-import { recipeSchema } from "@/utils/model";
-import { recipeFood, formatNumber, portionNutrition } from "@/utils/nutrition";
-import { upsert } from "@/utils/db/client";
-import { useStore } from "../shell/Store";
-import { Modal } from "../ui/Modal";
+import { saveRecipe } from "@/utils/db/operations";
+import { isStorable, type Portion, type Recipe } from "@/utils/model";
+import { formatNumber, portionLabel, portionNutrition } from "@/utils/nutrition";
+import { NutrientTable } from "../diary/NutrientTable";
 import { FoodPicker } from "../foods/FoodPicker";
 import { PortionEditor } from "../foods/PortionEditor";
-import { NutrientTable } from "../diary/NutrientTable";
-export function RecipeEditor({ recipe, onClose }: { recipe?: Recipe; onClose: () => void }) {
+import { useStore } from "../shell/Store";
+import { Modal } from "../ui/Modal";
+
+export function RecipeEditor({ recipe, onClose }: { recipe?: Recipe | undefined; onClose: () => void }) {
   const { run } = useStore();
   const [ingredients, setIngredients] = useState<Portion[]>(recipe?.ingredients ?? []);
   const [picker, setPicker] = useState(false);
@@ -17,6 +18,9 @@ export function RecipeEditor({ recipe, onClose }: { recipe?: Recipe; onClose: ()
   const [servings, setServings] = useState(String(recipe?.servings ?? 4));
   const [grams, setGrams] = useState(String(recipe?.cookedGrams ?? ""));
   const [error, setError] = useState("");
+
+  const editingIngredient = editing === null ? undefined : ingredients[editing];
+
   return (
     <Modal title={recipe ? "Edit recipe" : "Create a recipe"} wide onClose={onClose}>
       <form
@@ -24,24 +28,21 @@ export function RecipeEditor({ recipe, onClose }: { recipe?: Recipe; onClose: ()
         onSubmit={async (e) => {
           e.preventDefault();
           const f = new FormData(e.currentTarget);
-          try {
-            if (ingredients.some((p) => p.food.source === "fatsecret" && p.food.cacheUntil <= Date.now()))
-              throw new Error("Refresh expired FatSecret ingredients before saving.");
-            const next = recipeSchema.parse({
-              id: recipe?.id ?? crypto.randomUUID(),
-              name: String(f.get("name")).trim(),
-              servings: Number(servings),
-              cookedGrams: grams ? Number(grams) : null,
-              ingredients,
-              instructions: f.get("instructions"),
-              tags: f.get("tags"),
-              updatedAt: Date.now(),
-            });
-            await run([upsert("recipes", next.id, next)], "Recipe saved");
-            onClose();
-          } catch (e) {
-            setError(e instanceof Error ? e.message : "Could not save recipe.");
-          }
+          if (!ingredients.every((p) => isStorable(p.food)))
+            return setError("Refresh expired FatSecret ingredients before saving.");
+
+          const next: Recipe = {
+            id: recipe?.id ?? crypto.randomUUID(),
+            name: String(f.get("name")).trim(),
+            servings: Number(servings),
+            cookedGrams: grams ? Number(grams) : null,
+            ingredients,
+            instructions: String(f.get("instructions")),
+            tags: String(f.get("tags")),
+            updatedAt: Date.now(),
+          };
+
+          if (await run(() => [saveRecipe(next)], "Recipe saved")) onClose();
         }}
       >
         <label>
@@ -83,13 +84,11 @@ export function RecipeEditor({ recipe, onClose }: { recipe?: Recipe; onClose: ()
           </button>
         </div>
         {ingredients.map((p, i) => (
+          // biome-ignore lint/suspicious/noArrayIndexKey: the same food can appear twice, so position is the identity
           <div className="recipe-ingredient" key={i}>
             <button className="entry-main" type="button" onClick={() => setEditing(i)}>
               <strong>{p.food.name}</strong>
-              <small>
-                {p.quantity}{" "}
-                {p.unit === "serving" ? `× ${p.food.servings.find((s) => s.id === p.servingId)?.label}` : p.unit}
-              </small>
+              <small>{portionLabel(p)}</small>
             </button>
             <span>{formatNumber(portionNutrition(p).calories, 0)} kcal</span>
             <button
@@ -134,14 +133,15 @@ export function RecipeEditor({ recipe, onClose }: { recipe?: Recipe; onClose: ()
           onClose={() => setPicker(false)}
           onPick={(p) => {
             setIngredients([...ingredients, p]);
+            return true;
           }}
         />
       )}
-      {editing !== null && (
+      {editingIngredient && (
         <Modal title="Ingredient amount" onClose={() => setEditing(null)}>
           <PortionEditor
-            food={ingredients[editing].food}
-            initial={ingredients[editing]}
+            food={editingIngredient.food}
+            initial={editingIngredient}
             label="Update ingredient"
             onSave={(p) => {
               setIngredients(ingredients.map((v, i) => (i === editing ? p : v)));
@@ -153,4 +153,3 @@ export function RecipeEditor({ recipe, onClose }: { recipe?: Recipe; onClose: ()
     </Modal>
   );
 }
-export { recipeFood };
