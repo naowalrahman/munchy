@@ -10,7 +10,6 @@ Munchy is a local food diary intentionally designed for logging at hyperspeed. Y
 - Rename and reorder meals per day, optionally setting the defaults for new days. Existing days retain their meals.
 - Tap a nutrient in the day’s nutrition facts (including calories and macros) for a ranked food breakdown with contribution bars, amounts, percentage shares, and meal labels. Repeated foods are combined; unreported values and reported zeroes are shown separately.
 - Recipes include ingredient portions, instructions, tags, batch servings, and optional prepared weight. Ingredient weights are not assumed to equal cooked yield.
-  - Recipe diary entries retain known nutrient contributions even when other ingredients omit them, with ingredient reporting coverage shown alongside totals. Missing values remain unknown, not zero.
 - See insights including 19 documented food-detail nutrients, reporting coverage, trends, contributors, meal averages, water, weight, and notes.
 
 ## FatSecret account requirements
