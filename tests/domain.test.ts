@@ -5,8 +5,16 @@ import { shiftDate, today } from "../src/utils/dates";
 import { cacheFood, copyRecipe, dayFor, logEntries } from "../src/utils/db/operations";
 import { migrations, type Statement, schema } from "../src/utils/db/schema";
 import { normalizeFood, normalizeSearch } from "../src/utils/food/normalize";
-import { type Day, defaultSettings, emptyNutrients, type Food, type Recipe, type Snapshot } from "../src/utils/model";
-import { recipeFood, totalNutrition } from "../src/utils/nutrition";
+import {
+  type Day,
+  defaultSettings,
+  emptyNutrients,
+  entrySchema,
+  type Food,
+  type Recipe,
+  type Snapshot,
+} from "../src/utils/model";
+import { nutrientSources, portionNutrition, recipeFood, totalNutrition } from "../src/utils/nutrition";
 import { parseQuantity, portionFactor, unitOptions } from "../src/utils/units";
 
 function apply(statements: Statement[]) {
@@ -126,6 +134,79 @@ const recipe: Recipe = {
   tags: "",
   updatedAt: 1,
 };
+
+const partialRecipe: Recipe = {
+  ...recipe,
+  name: "Partial nutrition",
+  servings: 2,
+  cookedGrams: 400,
+  ingredients: [
+    {
+      ...portion,
+      food: {
+        ...food,
+        servings: [
+          {
+            ...food.servings[0],
+            nutrients: { ...n, potassium: 600, calcium: 120, iron: 4, vitamin_c: 0 },
+          },
+        ],
+      },
+    },
+    portion,
+  ],
+};
+
+test("logged recipe servings and cooked weights retain partial micronutrients, zeroes and unknowns", () => {
+  const prepared = recipeFood(partialRecipe);
+  const day = dayFor(data, today());
+
+  for (const [servingId, quantity, unit, factor] of [
+    ["portion", 1, "serving", 1],
+    ["weight", 200, "g", 2],
+  ] as const) {
+    const db = apply(
+      logEntries(day, [{ portion: { food: prepared, servingId, quantity, unit, factor }, meal: "Breakfast" }])
+    );
+
+    const entry = entrySchema.parse(payload(db, "entries"));
+    const values = portionNutrition(entry);
+    expect(values.potassium).toBe(150);
+    expect(values.calcium).toBe(30);
+    expect(values.iron).toBe(1);
+    expect(values.vitamin_c).toBe(0);
+    expect(values.vitamin_d).toBeNull();
+    const totals = totalNutrition([entry]);
+    expect(totals.total.potassium).toBe(150);
+    expect(totals.coverage.potassium).toBe(1);
+    expect(totals.coverage.calories).toBe(2);
+    expect(totals.count).toBe(2);
+    expect(nutrientSources([entry], "potassium").ranked[0]?.partial).toBe(true);
+    expect(nutrientSources([entry], "vitamin_c").zero[0]?.partial).toBe(true);
+    expect(nutrientSources([entry], "vitamin_d").missing).toEqual([entry]);
+    db.close();
+  }
+});
+
+test("nested recipes preserve ingredient coverage rather than making partial values complete", () => {
+  const inner = {
+    ...portion,
+    food: recipeFood(partialRecipe),
+    servingId: "portion",
+    factor: 1,
+    unit: "serving",
+    quantity: 1,
+  };
+
+  const outer = recipeFood({ ...recipe, ingredients: [inner, portion] });
+  const result = totalNutrition([{ ...inner, food: outer }]);
+  expect(result.total.potassium).toBe(150);
+  expect(result.coverage.potassium).toBe(1);
+  expect(result.coverage.calories).toBe(3);
+  expect(result.count).toBe(3);
+  expect(result.total.vitamin_c).toBe(0);
+  expect(result.total.vitamin_d).toBeNull();
+});
 
 test("recipes stay out of the recent-foods cache, including rows cached by older versions", () => {
   expect(cacheFood(recipeFood(recipe))).toEqual([]);

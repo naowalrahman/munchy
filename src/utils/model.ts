@@ -70,6 +70,13 @@ export const foodSchema = z.object({
   url: z.string().optional(),
   fetchedAt: z.number(),
   cacheUntil: z.number(),
+  nutritionCoverage: z
+    .object({
+      count: z.number().int().positive(),
+      reported: z.record(z.enum(nutrientKeys), z.number().int().nonnegative()),
+    })
+    .refine(({ count, reported }) => nutrientKeys.every((k) => reported[k] <= count))
+    .optional(),
   servings: nonEmpty(servingSchema),
 });
 

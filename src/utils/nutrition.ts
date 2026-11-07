@@ -52,18 +52,21 @@ export function portionLabel(p: Portion) {
 export function totalNutrition(portions: Portion[]) {
   const total = emptyNutrients();
   const coverage = Object.fromEntries(nutrientKeys.map((k) => [k, 0])) as Record<NutrientKey, number>;
+  let count = 0;
 
   for (const p of portions) {
     const n = portionNutrition(p);
+    const reporting = p.food.nutritionCoverage;
+    count += reporting?.count ?? 1;
 
     for (const k of nutrientKeys)
       if (n[k] !== null) {
         total[k] = (total[k] ?? 0) + n[k];
-        coverage[k]++;
+        coverage[k] += reporting?.reported[k] ?? 1;
       }
   }
 
-  return { total, coverage, count: portions.length };
+  return { total, coverage, count };
 }
 
 export interface SourceFood {
@@ -71,6 +74,7 @@ export interface SourceFood {
   name: string;
   value: number;
   meals: Set<string>;
+  partial: boolean;
 }
 
 /** Splits entries into per-food contributions to one nutrient, plus the portions that don't report it. */
@@ -88,7 +92,17 @@ export function nutrientSources(entries: Entry[], key: NutrientKey) {
     }
 
     total = (total ?? 0) + value;
-    const food = foods.get(entry.food.id) ?? { id: entry.food.id, name: entry.food.name, value: 0, meals: new Set() };
+
+    const food = foods.get(entry.food.id) ?? {
+      id: entry.food.id,
+      name: entry.food.name,
+      value: 0,
+      meals: new Set(),
+      partial: false,
+    };
+
+    const reporting = entry.food.nutritionCoverage;
+    food.partial ||= reporting !== undefined && reporting.reported[key] < reporting.count;
     food.value += value;
     food.meals.add(entry.meal);
     foods.set(entry.food.id, food);
@@ -106,7 +120,6 @@ export function nutrientSources(entries: Entry[], key: NutrientKey) {
 
 export function recipeFood(recipe: Recipe): Food {
   const { total, coverage, count } = totalNutrition(recipe.ingredients);
-  for (const k of nutrientKeys) if (coverage[k] < count) total[k] = null;
 
   const servings: Food["servings"] = [
     {
@@ -133,6 +146,7 @@ export function recipeFood(recipe: Recipe): Food {
     source: "recipe",
     fetchedAt: recipe.updatedAt,
     cacheUntil: Number.MAX_SAFE_INTEGER,
+    nutritionCoverage: { count, reported: coverage },
     servings,
   };
 }

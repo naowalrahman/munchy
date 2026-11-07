@@ -40,6 +40,9 @@ export function NutrientSources({
           <p>
             {entries.length - missing.length} of {entries.length} logged portions report this nutrient
           </p>
+          {(ranked.some((food) => food.partial) || zero.some((food) => food.partial)) && (
+            <p>Partial recipe values include known ingredients only. The actual total may be higher.</p>
+          )}
         </div>
         {total !== null && ranked.length > 0 && (
           <>
@@ -59,6 +62,7 @@ export function NutrientSources({
                     <div className="source-food">
                       <strong>{food.name}</strong>
                       <small>{[...food.meals].join(" · ")}</small>
+                      {food.partial && <small>Partial ingredient data</small>}
                     </div>
                     <div className="source-amount">
                       <strong>
@@ -96,6 +100,7 @@ export function NutrientSources({
                 <li key={food.id}>
                   {food.name}
                   <small>{[...food.meals].join(" · ")}</small>
+                  {food.partial && <small>Partial ingredient data</small>}
                 </li>
               ))}
             </ul>
